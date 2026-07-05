@@ -1,0 +1,18 @@
+# Strummer (strummer.fun)
+
+> Strummer is Adam's build of Nuclear, the free, open-source desktop music player with no ads and no tracking, run under his own domain.
+
+Strummer is a cross-platform desktop music player (Windows, macOS, Linux) built on the open-source Nuclear project. You search for any song or artist, stream it from pluggable sources, build and import playlists, and manage a queue. It is driven by a plugin system: streaming sources, metadata, playlists, and dashboard content all come from plugins you install from a built-in store. It also ships an MCP server, so an AI agent can drive the player directly. This repo is Adam's fork of Nuclear (github.com/nukeop/nuclear); the website is currently the upstream single-page site, so treat this as an early, in-progress rebrand.
+
+The app is a pnpm + Turborepo monorepo built with Tauri (Rust + React). The web presence that deploys to the domain is the Astro package at packages/website (a single landing page: hero, features, MCP showcase, testimonials, FAQ).
+
+## Key links
+- [Home](https://strummer.fun/): landing page for the player (download, features, MCP)
+- [GitHub (fork)](https://github.com/adamtpang/strummer.fun): source for this build
+- [Upstream project](https://github.com/nukeop/nuclear): the Nuclear music player this is based on
+- MCP server: enable in Settings, Integrations; connect an AI agent at http://127.0.0.1:8800/mcp
+
+## About
+- Part of adam.inc, the internet portfolio of Adam Pangelinan (Anchor Marianas LLC).
+- Builder: https://adampang.com
+- Note: llms.txt written at repo root because this is a monorepo; the deployed site is the Astro app in packages/website. Licensed AGPL-3.0.
