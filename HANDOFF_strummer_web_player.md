@@ -3,6 +3,27 @@
 Exported 2026-07-10 for merging into another Claude Code session. Self-contained:
 everything needed to continue without the original chat.
 
+> **2026-07-11 continuation (Claude Code):** §9 items 1/4/6 DONE, verified on
+> localhost (zero console errors):
+> - **Autoplay hardening**: `startPlayback` is now async and AWAITS
+>   `ac.resume()` (`ensureCtxResumed()`) before `srcNode.start()`, with a
+>   `playSeq` guard against interleaved starts. Engine verified: position
+>   advances, pause/resume exact (50.7 → 52.1).
+> - **localStorage persistence**: liked/collection stored as full track
+>   objects (`strummer.liked.v1`/`strummer.collected.v1`) + volume
+>   (`strummer.volume.v1`); survives reload (verified). Sidebar "Liked Songs"
+>   and "Your Collection" are now real views with empty states.
+> - **Media Session API + silent-anchor `<audio>`**: Chromium won't expose a
+>   media session for bare Web Audio, so a runtime-generated silent WAV loops
+>   in an anchor element mirroring engine state. VERIFIED via a Windows SMTC
+>   probe: session appears as "Luci - GIRLS | Playing", pauses correctly.
+>   Note: Toastify (toastify/ in the OneDrive repo) filters to Spotify AUMIDs
+>   only, so it won't collide with Strummer's session.
+> - **git init done** (local `main`, initial commit, `.vercel` ignored) — NOT
+>   pushed; GitHub repo strategy (§7.1) still Adam's call.
+> - **Prod deploy PENDING**: auto-mode blocked `vercel deploy --prod`; run
+>   `cd C:\Users\adamp\dev\strummer.fun && vercel deploy --prod --yes --scope adamtpangs-projects`.
+
 ---
 
 ## 1. What Strummer is now (final state of this session)
