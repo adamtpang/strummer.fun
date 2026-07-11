@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Strummer — own your music</title>
+  <meta name="description" content="The streaming player where artists keep what they earn. Own your library, your taste, your identity — portable across any client. A web3 music client. The future is unwritten." />
+  <meta name="theme-color" content="#0a0908" />
+
+  <meta property="og:title" content="Strummer — own your music" />
+  <meta property="og:description" content="The streaming player where artists keep what they earn. Read. Write. Own." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://strummer.fun" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='78' font-size='90' text-anchor='middle' fill='%23dc2626' font-family='serif'>.</text></svg>" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="wordmark">strummer</span><span class="wordmark period">.</span>
+      </div>
+      <nav class="nav">
+        <a class="nav-item active" data-nav="home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1V10"/></svg>
+          Home
+        </a>
+        <a class="nav-item" data-nav="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          Search
+        </a>
+        <a class="nav-item" data-nav="Radio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></svg>
+          Radio
+        </a>
+      </nav>
+      <div class="lib-head"><span>Your Library</span><span>+</span></div>
+      <div class="playlists" id="playlists"></div>
+      <div class="sidebar-foot">
+        <span>by <a href="https://adampang.com" target="_blank" rel="noopener">adam pang</a></span>
+        <span><a href="https://github.com/adamtpang/strummer.fun" target="_blank" rel="noopener">github</a> · the future is unwritten</span>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main" id="main">
+      <div class="topbar" id="topbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="search-input" placeholder="Search songs, artists, albums…" autocomplete="off" />
+        </div>
+        <div class="topbar-actions">
+          <button class="connect-btn" id="connect-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="12" r="1.4" fill="currentColor"/></svg>
+            Connect
+          </button>
+        </div>
+      </div>
+      <div class="content" id="content"></div>
+    </main>
+
+    <!-- Player bar -->
+    <div class="player">
+      <div class="np" id="np"></div>
+
+      <div class="controls">
+        <div class="transport">
+          <button class="t-btn" id="shuffle-btn" title="Shuffle"></button>
+          <button class="t-btn" id="prev-btn" title="Previous"></button>
+          <button class="play-btn" id="play-btn" title="Play / Pause"></button>
+          <button class="t-btn" id="next-btn" title="Next"></button>
+          <button class="t-btn" id="repeat-btn" title="Repeat"></button>
+        </div>
+        <div class="scrubber">
+          <span class="time" id="cur-time">0:00</span>
+          <div class="bar" id="seek">
+            <div class="bar-fill" id="seek-fill"></div>
+            <div class="bar-knob" id="seek-knob"></div>
+          </div>
+          <span class="time right" id="dur-time">0:00</span>
+        </div>
+      </div>
+
+      <div class="extras">
+        <button class="x-btn" id="queue-btn" title="Queue"></button>
+        <div class="volume">
+          <span class="x-btn" id="vol-ic"></span>
+          <div class="vol-bar" id="vol"><div class="vol-fill" id="vol-fill"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal + toast -->
+  <div class="modal-scrim" id="modal-scrim"><div class="modal" id="modal-body"></div></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
