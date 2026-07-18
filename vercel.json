@@ -1,0 +1,10 @@
+{
+  "buildCommand": "cd vibe && npm install && npm run build && cd .. && node build.mjs",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/vibe/share/compare/:idA/:idB", "destination": "/api/share/compare/[idA]/[idB]" },
+    { "source": "/vibe/share/:spotifyId", "destination": "/api/share/[spotifyId]" },
+    { "source": "/vibe", "destination": "/vibe/index.html" },
+    { "source": "/vibe/((?!assets/|share/).*)", "destination": "/vibe/index.html" }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "strummer",
+  "private": true,
+  "description": "strummer.fun — Audius web player (static, /) + vibecheck (/vibe)",
+  "scripts": {
+    "build": "cd vibe && npm install && npm run build && cd .. && node build.mjs",
+    "assemble": "node build.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "@vercel/og": "^0.6.5"
+  }
+}

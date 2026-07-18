@@ -24,6 +24,29 @@ everything needed to continue without the original chat.
 > - **Prod deploy PENDING**: auto-mode blocked `vercel deploy --prod`; run
 >   `cd C:\Users\adamp\dev\strummer.fun && vercel deploy --prod --yes --scope adamtpangs-projects`.
 
+> **2026-07-11 — vibecheck consolidated into strummer.fun/vibe** (branch
+> `feat/vibecheck-consolidation`). vibecheck.style's domain lapsed, so its app
+> was folded into THIS repo and will be served at **strummer.fun/vibe**:
+> - `vibe/` = vibecheck's Vite+React client (Vite `base:'/vibe/'`, React Router
+>   `basename="/vibe"`, OAuth redirect `${origin}/vibe`). `api/` = its Vercel
+>   serverless functions (Neon). Build: `npm run build` (root) builds the client
+>   then `build.mjs` assembles `dist/` = strummer static at `/` + vibe at `/vibe`.
+>   `vercel.json` adds `/vibe/*` SPA fallback + `/vibe/share/*` → OG functions.
+> - **Deploy model:** ONE Vercel project (`strummer`) now has a build step. The
+>   static player at `/` is unchanged; vibecheck mounts at `/vibe`. Deploy is
+>   the same `vercel deploy --prod` (founder-gated, not run).
+> - **Restyled** with strummer's design system: strummer tokens/fonts in
+>   `vibe/src/index.css` `:root` (+ JetBrains Mono), warm `#0a0908` backgrounds,
+>   red-period `vibecheck.` wordmark, off-brand navy/green swapped out. Verified
+>   at `/vibe/` (warm bg, mono loaded, zero console errors); strummer still 200 at `/`.
+> - **Spotify "friends can't check their vibe":** it's the dev-mode 25-user cap —
+>   no code fix. Slimmed scopes (dropped `playlist-modify-public`). Full path in
+>   `vibe/SPOTIFY_EXTENDED_QUOTA.md` (add test users now + apply for extended quota).
+> - **Founder to-dos:** (1) Vercel env on the `strummer` project:
+>   `DATABASE_URL` (Neon) + `VITE_SPOTIFY_CLIENT_ID`. (2) Spotify dashboard:
+>   allowlist redirect `https://strummer.fun/vibe` + add test users. (3) deploy.
+>   (4) rotate the vibecheck Spotify secret still in the old repo's git history.
+
 ---
 
 ## 1. What Strummer is now (final state of this session)
