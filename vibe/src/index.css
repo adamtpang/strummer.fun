@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* strummer.fun's design system, verbatim — vibecheck is the /vibe surface of
+     the same music suite. Warm near-black chrome; the user's dynamic gradient
+     is the only saturated thing. Red is the accent; Spotify green is reserved
+     strictly for the Connect-Spotify action. */
+  --vc-bg:        #0a0908;
+  --vc-panel:     #121110;
+  --vc-panel-2:   #1a1816;
+  --vc-elevated:  #211e1b;
+  --vc-fg:        #f5f5f4;
+  --vc-muted:     #8a857f;
+  --vc-muted-2:   #b8b3ad;
+  --vc-accent:    #dc2626;
+  --vc-accent-dim:#7f1d1d;
+  --vc-rule:      #262320;
+  --vc-rule-2:    #322e29;
+  --vc-good:      #4ade80;
+  --vc-spotify:   #1DB954;
+
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: var(--font-ui);
+    background: var(--vc-bg);
+    color: var(--vc-fg);
+    font-feature-settings: 'cv11', 'ss01', 'ss03'; /* Inter alt styles for cleaner numerals */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  ::selection { background: var(--vc-accent); color: #fff; }
+  /* Numbers everywhere should be tabular by default — keeps stat columns aligned */
+  h1, h2, h3, .stat, .num {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Mono for stats/meta — matches strummer's JetBrains Mono numerals + eyebrows */
+.font-mono-stat {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--vc-muted);
+}
+
+/* Wordmark period — the red dot that ties vibecheck. to strummer. */
+.wordmark-dot {
+  color: var(--vc-accent);
+}
+
+/* Editorial serif accent — used for taglines, oversized hero punctuation,
+   the "vibe" → score moment in /compare. Pairs with Inter for the
+   playful-professional balance. */
+.font-serif-accent {
+  font-family: 'Instrument Serif', 'New York', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scrollbar — strummer's warm rules */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--vc-rule-2);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #45403a;
+  background-clip: padding-box;
+}
+
+/* Solid warm panels — strummer's surface language, for cards that sit on the
+   chrome (not over a dynamic gradient, where .glass is still right). */
+.panel {
+  background: var(--vc-panel);
+  border: 1px solid var(--vc-rule);
+  border-radius: 12px;
+}
+.panel-2 { background: var(--vc-panel-2); border: 1px solid var(--vc-rule); border-radius: 12px; }
+
+/* --------------------------------------------------------------------------
+   Glassmorphism utilities (v2.17)
+   Drop one of these on a card and it becomes a frosted layer over whatever
+   gradient or art is behind. `.glass` is the default; `-strong` for hero
+   surfaces; `-dark` when the parent is bright and you need the card to recede.
+   -------------------------------------------------------------------------- */
+
+/* Refined glass (v2.19) — less aggressive blur, subtler borders, calmer
+   shadows. Reads as "frosted material" instead of "smoke filter".
+*/
+.glass {
+  background: rgba(255, 255, 255, 0.045);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.07);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  backdrop-filter: blur(16px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28);
+}
+
+/* Restrained ambient (v2.19) — single soft conic drift instead of three
+   chaotic blobs. Reads as "premium dark" instead of "rave poster". */
+.ambient-bg {
+  position: relative;
+  isolation: isolate;
+}
+.ambient-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(90px);
+  opacity: 0.40;
+  background:
+    radial-gradient(ellipse 70% 50% at 70% 15%, hsl(265 70% 45% / 0.55), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 25% 85%, hsl(190 60% 40% / 0.45), transparent 60%);
+  animation: ambient-drift 40s ease-in-out infinite alternate;
+}
+@keyframes ambient-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(2%, -2%, 0) scale(1.06);
+  }
+}
+
+/* Number count-up sheen — applied to compat scores and meters */
+.shimmer-text {
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.85) 30%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.85) 70%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Reduce motion preference — respect users who opted out */
+@media (prefers-reduced-motion: reduce) {
+  .ambient-bg::before,
+  .ambient-bg::after,
+  .shimmer-text {
+    animation: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Contrast halo (v2.18)
+   Apply this to any text whose color is computed from a dynamic gradient
+   (vibe cards, compare cards, tile labels). The double text-shadow paints
+   a soft dark glow on light text and a soft light glow on dark text, which
+   keeps the word legible even when the gradient passes through a tone too
+   close to the text color.
+   -------------------------------------------------------------------------- */
+
+.contrast-halo-light {
+  /* For white/light text: dark halo */
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.45),
+    0 0 14px rgba(0, 0, 0, 0.30);
+}
+.contrast-halo-dark {
+  /* For black/dark text: light halo */
+  text-shadow:
+    0 1px 2px rgba(255, 255, 255, 0.45),
+    0 0 14px rgba(255, 255, 255, 0.30);
+}

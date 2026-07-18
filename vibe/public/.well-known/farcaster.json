@@ -1,0 +1,42 @@
+{
+  "version": "1",
+  "name": "vibecheck.style",
+  "homeUrl": "https://vibecheck.style",
+  "iconUrl": "https://vibecheck.style/icon-192.png",
+  "subtitle": "Discover Your Music Vibe",
+  "description": "Connect your Spotify to analyze listening patterns, create your ultimate vibe playlist, and discover music compatibility with others. Powered by your musical DNA.",
+  "categories": ["music", "social", "entertainment"],
+  "screenshots": [
+    {
+      "url": "https://vibecheck.style/screenshot-1.png",
+      "label": "Music Analysis Dashboard"
+    },
+    {
+      "url": "https://vibecheck.style/screenshot-2.png",
+      "label": "Vibe Compatibility"
+    }
+  ],
+  "embeds": [
+    {
+      "url": "https://vibecheck.style",
+      "metadata": {
+        "image": {
+          "url": "https://vibecheck.style/embed-image.png"
+        },
+        "button": {
+          "title": "Check Your Vibe",
+          "action": {
+            "type": "launch",
+            "name": "vibecheck",
+            "url": "https://vibecheck.style?fc=1"
+          }
+        }
+      }
+    }
+  ],
+  "accountAssociation": {
+    "header": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9",
+    "payload": "eyJkb21haW4iOiJ2aWJlY2hlY2suc3R5bGUiLCJmaWQiOjEyMzQ1Nn0",
+    "signature": "placeholder_signature_will_be_generated"
+  }
+}
