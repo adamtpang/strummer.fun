@@ -3,7 +3,10 @@
 import { cpSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 
 const OUT = 'dist';
-const STRUMMER_STATIC = ['index.html', 'app.js', 'styles.css'];
+const STRUMMER_STATIC = [
+  'index.html', 'app.js', 'styles.css',
+  'tune.html', 'tune.js', 'tune.css',
+];
 
 if (existsSync(OUT)) rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
