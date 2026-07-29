@@ -24,6 +24,45 @@ interface VibeCardProps {
   setUser: (user: User | null) => void;
 }
 
+/** Playlist we create on the user's account. First entry is the current name;
+ *  the rest are legacy names we still match so we update instead of duplicate. */
+const PLAYLIST_NAME = 'vibecheck wrapped';
+const PLAYLIST_NAMES = [PLAYLIST_NAME, 'vibecheck.style'];
+
+/** Weights for merging Spotify's three top-track windows into one ranking.
+ *  Recent listening counts most, but all-time favourites still make the cut. */
+const RANGE_WEIGHTS: Record<string, number> = { short_term: 100, medium_term: 50, long_term: 25 };
+
+/**
+ * The on-demand Wrapped: fetch all three Spotify time ranges and merge them
+ * into a single ranked track list (a song high in several windows outranks one
+ * that only spiked recently). Returns up to 100 URIs, Spotify's PUT limit.
+ */
+async function fetchWrappedUris(): Promise<string[]> {
+  const ranges = Object.keys(RANGE_WEIGHTS);
+  const results = await Promise.all(
+    ranges.map(range =>
+      spotifyApiGet(`https://api.spotify.com/v1/me/top/tracks?time_range=${range}&limit=50`)
+        .catch(() => ({ items: [] }))
+    )
+  );
+
+  const scores = new Map<string, number>();
+  results.forEach((res, i) => {
+    const items = res.items || [];
+    items.forEach((track: any, index: number) => {
+      if (!track?.uri) return;
+      const score = (items.length - index) * RANGE_WEIGHTS[ranges[i]];
+      scores.set(track.uri, (scores.get(track.uri) || 0) + score);
+    });
+  });
+
+  return Array.from(scores.entries())
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 100)
+    .map(([uri]) => uri);
+}
+
 export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
@@ -474,17 +513,15 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
     setPlaylistCreating(true);
     setPlaylistError(false);
     try {
-      // Prefer URIs from the latest generation; otherwise pull the user's
-      // top tracks now so a page loaded straight from a saved vibe still works.
+      // Prefer URIs from the latest generation; otherwise rebuild the merge now
+      // so a page loaded straight from a saved vibe still produces a real
+      // Wrapped (all three time ranges), not just the medium-term list.
       let source = playlistSource;
       if (!source || source.uris.length === 0) {
-        const top = await spotifyApiGet(
-          'https://api.spotify.com/v1/me/top/tracks?time_range=medium_term&limit=50'
-        );
         source = {
-          uris: (top.items || []).map((t: any) => t.uri).filter(Boolean),
+          uris: await fetchWrappedUris(),
           gradient: vibeData.vibe_gradient || '',
-          label: vibeData.vibe_label || 'vibecheck.style',
+          label: vibeData.vibe_label || 'vibecheck',
           textColor: '#ffffff' as const,
         };
       }
@@ -493,8 +530,9 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         return;
       }
 
-      const playlistName = 'vibecheck.style';
-      const playlistDescription = `${currentUser.display_name}'s music vibe — ${source.label}`;
+      const playlistDescription =
+        `${currentUser.display_name}'s Wrapped — 4 weeks + 6 months + all time, ` +
+        `merged and ranked. ${source.label} · strummer.fun/vibe`;
       let playlistId = currentUser.playlistId || null;
 
       // Validate a cached playlist still exists (users delete them manually).
@@ -505,18 +543,19 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
           playlistId = null;
         }
       }
-      // Reuse one we previously made before creating a duplicate.
+      // Reuse one we previously made before creating a duplicate. Includes the
+      // legacy name so pre-rename playlists get updated instead of orphaned.
       if (!playlistId) {
         const list = await spotifyApiGet('https://api.spotify.com/v1/me/playlists?limit=50');
         const existing = (list.items || []).find(
-          (p: any) => p.name === playlistName && p.owner?.id === currentUser.id
+          (p: any) => PLAYLIST_NAMES.includes(p.name) && p.owner?.id === currentUser.id
         );
         if (existing) playlistId = existing.id;
       }
       if (!playlistId) {
         const playlist = await spotifyApiPost(
           `https://api.spotify.com/v1/users/${currentUser.id}/playlists`,
-          { name: playlistName, description: playlistDescription, public: false }
+          { name: PLAYLIST_NAME, description: playlistDescription, public: false }
         );
         playlistId = playlist.id;
       }
@@ -529,7 +568,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
       try {
         await spotifyApiPut(
           `https://api.spotify.com/v1/playlists/${playlistId}`,
-          { name: playlistName, description: playlistDescription }
+          { name: PLAYLIST_NAME, description: playlistDescription }
         );
       } catch (descErr) {
         console.warn('Playlist description update failed (non-fatal):', descErr);
@@ -1189,12 +1228,12 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
           >
             <div className="text-sm" style={{ color: textColor }}>
               <p className="font-medium">
-                {vibeData.playlist_id ? 'Your vibe playlist is on Spotify' : 'Save this vibe as a Spotify playlist'}
+                {vibeData.playlist_id ? 'Your Wrapped is on Spotify' : 'Make your Wrapped — on demand'}
               </p>
               <p className="text-xs mt-0.5" style={{ color: subtleColor }}>
                 {vibeData.playlist_id
-                  ? 'Refresh it anytime to match your latest vibe.'
-                  : 'Optional — creates a private “vibecheck.style” playlist on your account.'}
+                  ? 'Refresh anytime to re-merge your latest listening.'
+                  : 'Merges your last 4 weeks, 6 months, and all time into one ranked playlist on your account.'}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -1216,10 +1255,10 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                 style={{ ['--tw-ring-offset-color' as any]: '#0a0908' }}
               >
                 {playlistCreating
-                  ? 'Saving…'
+                  ? 'Merging…'
                   : vibeData.playlist_id
-                    ? 'Refresh playlist'
-                    : 'Save to Spotify'}
+                    ? 'Refresh Wrapped'
+                    : 'Make my Wrapped'}
               </button>
             </div>
           </div>

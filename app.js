@@ -591,6 +591,8 @@ function wireChrome() {
   $('#modal-scrim').onclick = (e) => { if (e.target.id === 'modal-scrim') closeModal(); };
 
   $$('.nav-item').forEach((n) => n.onclick = () => {
+    // Items with a real href (e.g. /vibe) navigate away — don't intercept.
+    if (n.getAttribute('href')) return;
     $$('.nav-item').forEach((x) => x.classList.remove('active'));
     n.classList.add('active');
     if (n.dataset.nav === 'home') { $('#search-input').value = ''; renderHome(); }
