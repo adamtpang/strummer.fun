@@ -1,0 +1,46 @@
+{
+  "buildCommand": "cd client && npm install && npm run build",
+  "outputDirectory": "client/dist",
+  "rewrites": [
+    {
+      "source": "/api/vibe/:spotifyId",
+      "destination": "/api/vibe/[spotifyId]"
+    },
+    {
+      "source": "/api/vibe",
+      "destination": "/api/vibe"
+    },
+    {
+      "source": "/api/users",
+      "destination": "/api/users"
+    },
+    {
+      "source": "/api/og/compare/:idA/:idB",
+      "destination": "/api/og/compare/[idA]/[idB]"
+    },
+    {
+      "source": "/api/og/:spotifyId",
+      "destination": "/api/og/[spotifyId]"
+    },
+    {
+      "source": "/api/share/compare/:idA/:idB",
+      "destination": "/api/share/compare/[idA]/[idB]"
+    },
+    {
+      "source": "/api/share/:spotifyId",
+      "destination": "/api/share/[spotifyId]"
+    },
+    {
+      "source": "/share/compare/:idA/:idB",
+      "destination": "/api/share/compare/[idA]/[idB]"
+    },
+    {
+      "source": "/share/:spotifyId",
+      "destination": "/api/share/[spotifyId]"
+    },
+    {
+      "source": "/((?!api/|share/).*)",
+      "destination": "/"
+    }
+  ]
+}
