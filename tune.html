@@ -65,6 +65,61 @@
       <p class="dim small">Listening for major, minor, 7th, sus and power chords.</p>
     </section>
 
+    <!-- Bring your own audio -->
+    <section class="panel analyzer">
+      <span class="label mono">learn any song — bring your own audio</span>
+      <div id="drop" class="drop" tabindex="0" role="button"
+           aria-label="Choose an audio file to analyze">
+        <div class="drop-inner">
+          <strong>Drop a song here</strong>
+          <span class="dim small">or click to choose — mp3, m4a, wav, flac</span>
+          <span class="dim tiny">Stays on your device. Nothing is uploaded.</span>
+        </div>
+        <input type="file" id="file" accept="audio/*" hidden />
+      </div>
+
+      <div id="progress-wrap" class="progress-wrap" hidden>
+        <div class="progress-bar"><div id="progress" class="progress"></div></div>
+        <span id="progress-label" class="mono tiny dim"></span>
+      </div>
+
+      <div id="analysis" class="analysis" hidden>
+        <div class="a-summary">
+          <div class="a-stat">
+            <span class="mono tiny dim">key</span>
+            <strong id="a-key">–</strong>
+          </div>
+          <div class="a-stat">
+            <span class="mono tiny dim">capo</span>
+            <strong id="a-capo">–</strong>
+          </div>
+          <div class="a-stat">
+            <span class="mono tiny dim">chords</span>
+            <strong id="a-count">–</strong>
+          </div>
+        </div>
+
+        <div class="a-shapes">
+          <span class="mono tiny dim">you'll need these shapes</span>
+          <div id="a-shapes" class="shape-row"></div>
+        </div>
+
+        <audio id="player" controls class="player"></audio>
+
+        <div class="a-now">
+          <span class="mono tiny dim">now playing</span>
+          <div id="a-current" class="a-current">—</div>
+        </div>
+
+        <div id="timeline" class="timeline"></div>
+
+        <p class="dim tiny">
+          Auto-detected, so expect a wrong chord here and there — even Chordify
+          lands 75–90%. Click any chord in the timeline to correct it.
+        </p>
+      </div>
+    </section>
+
     <!-- Songs -->
     <section class="panel songs-panel">
       <span class="label mono">learn a song</span>
@@ -95,6 +150,7 @@
   </div>
 
   <script src="tune.js"></script>
+  <script type="module" src="analyze-ui.js"></script>
 </body>
 
 </html>

@@ -60,6 +60,17 @@ const SONGS = [
     note: 'One loop, the entire song. Verse, chorus, outro — all G–D–Em–C.',
   },
   {
+    id: 'mr-jones',
+    title: 'Mr. Jones',
+    artist: 'Counting Crows',
+    key: 'Am',
+    capo: 0,
+    bpm: 140,
+    loop: ['Am', 'F', 'Dm', 'G'],
+    beatsPerChord: 4,
+    note: 'Am–F–Dm–G on repeat. F is the only tricky one — try the small 4-string F.',
+  },
+  {
     id: 'four-chords',
     title: 'The Four Chords',
     artist: 'every pop song ever',

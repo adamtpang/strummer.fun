@@ -5,7 +5,7 @@ import { cpSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 const OUT = 'dist';
 const STRUMMER_STATIC = [
   'index.html', 'app.js', 'styles.css',
-  'tune.html', 'tune.js', 'tune.css',
+  'tune.html', 'tune.js', 'tune.css', 'analyze.js', 'analyze-ui.js',
 ];
 
 if (existsSync(OUT)) rmSync(OUT, { recursive: true, force: true });
