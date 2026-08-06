@@ -747,8 +747,22 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   // freshly-fetched data; otherwise show the aggregated saved data.
   const activeRange = isOwner && timeRange ? rangeData[timeRange] : null;
   const topTracks = activeRange?.tracks ?? vibeData.top_tracks ?? [];
-  const topGenres = vibeData.top_genres || [];
   const topArtists = activeRange?.artists ?? vibeData.top_artists ?? [];
+
+  // Genre breakdown, statsforspotify-style: ranked by how many of the
+  // window's top artists carry each tag. Recomputed per time-range tab from
+  // the artists we already fetched — no extra API call — so switching
+  // between 4 Weeks / 6 Months / All Time shows genres for THAT window,
+  // not just the one aggregate saved at generation time.
+  const rangeGenres = useMemo(() => {
+    if (!topArtists.length) return [];
+    const counts = new Map<string, number>();
+    for (const artist of topArtists as any[]) {
+      for (const g of artist.genres || []) counts.set(g, (counts.get(g) || 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([g]) => g);
+  }, [topArtists]);
+  const topGenres = rangeGenres.length ? rangeGenres : vibeData.top_genres || [];
 
   // Meters reflect the v2.16 vibe model (mainstream / modernity / diversity / activity).
   // Legacy rows (pre-v2.16) fall back to whatever audio-feature numbers they have
@@ -1132,6 +1146,38 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                     {artist.name}
                   </p>
                 </a>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Top Genres — ranked by artist frequency in the active window, the
+            statsforspotify-style breakdown (distinct from the tag pills under
+            the vibe label above, which only show the top 4). */}
+        {rangeGenres.length > 0 && (
+          <motion.div
+            variants={fadeUp}
+            className="mb-10 p-5 rounded-2xl"
+            style={{
+              background: `${textColor}08`,
+              border: `1px solid ${textColor}15`,
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            }}
+          >
+            <h2 className="text-sm uppercase tracking-widest mb-4" style={{ color: subtleColor }}>
+              Top Genres
+            </h2>
+            <div className="space-y-2.5">
+              {rangeGenres.map((genre, i) => (
+                <div key={genre} className="flex items-center gap-3">
+                  <span className="text-lg font-bold w-6" style={{ color: `${textColor}40` }}>
+                    {i + 1}
+                  </span>
+                  <span className="font-medium capitalize" style={{ color: textColor }}>
+                    {genre}
+                  </span>
+                </div>
               ))}
             </div>
           </motion.div>
