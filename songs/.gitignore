@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+.vercel/
+.env
+.env.local
+
+.vercel
+
+# Separated audio stems from tools/stems.ps1 (big, derived, not source)
+stems/

@@ -1,0 +1,19 @@
+# repos.yaml v0 — see github.com/adamtpang/repo-connect
+repo: strummer.fun
+is: The music/audio surface of the Aether stack. Two layers built on a forked-and-renamed Nuclear open-source player (pnpm/turbo monorepo, packages/) — an aggregating web/desktop music player live at strummer.fun ("own your music"), and beds/, a royalty-safe original-underscore library for VO and book videos. As of 2026-08-09 also home to the 1000-songs practice pipeline, absorbed back in from the short-lived strummer.fun-songs spinout.
+url: https://strummer.fun
+cluster: 1000-life-loop
+
+provides:
+  - id: songs-pillar
+    what: The 1000-songs practice pipeline (SONG-SPEC.md, SONGS-1000.md, MUSIC-GAME.md, the /line manufacturing-line view) and the shared XP/streak scoring engine used by both the CLI and the site's player card
+    at: songs/
+  - id: beds-library
+    what: Royalty-safe original 90s-style essay-video underscore pads, ready to drop under a VO cut
+    at: beds/
+
+stack: [pnpm, turbo, typescript, react, astro]
+
+kin:
+  - repo: pangaea.blog
+    why: The other two pillars of the same three-pillar 1000-life-loop live there (1000 essays via ESSAYS-1000.md, 1000 apps via src/content/apps/). Songs used to be pangaea.blog's third pillar, then spun out to strummer.fun-songs on 2026-08-08, then was folded into strummer.fun/songs/ here on 2026-08-09.

@@ -1,0 +1,95 @@
+/* ============================================================
+   Pangaea — the design system. ONE system, whole site.
+   "The daily page": warm paper, ink, one terracotta accent.
+
+   Imported by BOTH stylesheets, so /posts and / are one family:
+     - global.css  (Base.astro: essays, songs, apps, daily, graph...)
+     - pilot.css   (PilotLayout.astro: homepage, /pilot)
+
+   It is the writing surface made into a website. Paper you want to
+   write on, ink you can read for an hour, one warm accent that means
+   "this is a link", and a gold that means "this is ours".
+
+   The work spans three threads, one voice:
+     MUSIC · PHILOSOPHY · TECH & BUSINESS
+
+   Usage discipline (do not blur these):
+   - PAPER  (--paper / --surface): the page. Background, breathing room.
+   - INK    (--ink): all body copy and every heading. Never color a heading.
+   - TERRACOTTA (--accent): interaction ONLY. Links, focus rings, the
+     reading-flow accent bar, the active state.
+   - GOLD   (--gold): identity ONLY, never interaction. Issue numbers,
+     the brand dot, the /share masthead stripe, progress marks.
+   - Color is never the only affordance: links stay underlined.
+   - Type: Fraunces (display) over Newsreader (body). Serif throughout,
+     the way a writing tool should feel. Mono only for numbers and code.
+   - All text tokens clear WCAG AA on paper.
+   ============================================================ */
+
+:root {
+  /* --- Paper: the page ------------------------------------ */
+  --paper: #fbf7f0; /* warm sheet, the default background */
+  --paper-2: #f5efe4; /* inset bands, alternating sections */
+  --paper-3: #efe7d8; /* pressed state, meter troughs */
+  --surface: #ffffff; /* true white for inputs and the share frame */
+
+  /* --- Ink: the writing ----------------------------------- */
+  --ink: #1c1917; /* near-black, warm undertone (~15:1 on paper) */
+  --ink-soft: #403a34; /* secondary prose (~9.8:1) */
+  --ink-mute: #6b625a; /* meta, timestamps, captions (~5.4:1 AA) */
+
+  /* --- Terracotta: interaction ---------------------------- */
+  --accent: #b34a2f; /* links, focus, active (~5.0:1 AA) */
+  --accent-deep: #8f3721; /* hover / pressed */
+  --accent-tint: #e8cfc3; /* decorative rules, selection */
+
+  /* --- Gold: identity, never interaction ------------------ */
+  --gold: #8a6d34; /* issue numbers, brand mark (~5.1:1 AA) */
+  --gold-soft: #c9b183; /* decorative only, never text */
+
+  /* --- Hairlines ------------------------------------------ */
+  --rule: #d9cfbe;
+  --rule-soft: #e7decf;
+
+  /* --- The three threads ---------------------------------- */
+  /* Topic markers ONLY (tag chips, thread labels). Never body text,
+     never a heading, never a link. Muted on purpose: the system is
+     one voice, and these are just the room it is spoken in. */
+  --music: #6d5580; /* plum */
+  --philosophy: #4f6656; /* moss */
+  --tech: #3f6070; /* slate blue */
+
+  /* --- Legacy aliases -------------------------------------- */
+  /* Kept so existing rules keep resolving. --bg/--muted/--land are
+     the old blue-marble names; new code should use the names above. */
+  --bg: var(--paper);
+  --muted: var(--ink-mute);
+  --accent-soft: var(--accent-tint);
+  --land: var(--gold);
+  --land-soft: var(--gold-soft);
+
+  /* --- Type ------------------------------------------------ */
+  --display: 'Fraunces', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --serif: 'Newsreader', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  /* Serif throughout: meta resolves to the body serif, not a sans. */
+  --sans: var(--serif);
+  --mono: 'IBM Plex Mono', 'Menlo', 'Consolas', monospace;
+
+  /* --- Measure --------------------------------------------- */
+  --measure: 36rem;
+  --column: 640px;
+}
+
+/* The paper has a tooth to it: two barely-there warm washes plus a
+   fractal-noise grain. Subtle enough to read as texture, not pattern. */
+.paper-grain {
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(179, 74, 47, 0.035), transparent 42%),
+    radial-gradient(circle at 88% 78%, rgba(138, 109, 52, 0.045), transparent 46%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.028'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--accent-tint);
+  color: var(--ink);
+}

@@ -1,0 +1,220 @@
+/* Strummer: ported from pangaea.blog's "daily page" system. Same tokens,
+   same layout discipline, so the two sites still feel like one voice even
+   though songs now lives here. Do not redeclare colors or fonts, edit
+   tokens.css. */
+
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.66;
+  font-weight: 380;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(179, 74, 47, 0.035), transparent 42%),
+    radial-gradient(circle at 88% 78%, rgba(138, 109, 52, 0.045), transparent 46%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.028'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+
+main {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 3rem 1.5rem 6rem;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+a:hover {
+  color: var(--ink);
+  text-decoration-thickness: 2px;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  font-weight: 560;
+  line-height: 1.06;
+  letter-spacing: -0.022em;
+  color: var(--ink);
+}
+h1 {
+  font-size: 2.4rem;
+  margin: 0 0 0.5rem;
+}
+h2 {
+  font-size: 1.5rem;
+  margin: 2.2rem 0 0.5rem;
+}
+h3 {
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0.25rem;
+  letter-spacing: 0.04em;
+  font-variant: small-caps;
+  color: var(--ink-soft);
+}
+
+p {
+  margin: 0 0 1.1rem;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 3rem 0;
+}
+
+small,
+.meta {
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+blockquote {
+  border-left: 2px solid var(--accent-soft);
+  margin: 1.5rem 0;
+  padding: 0.25rem 0 0.25rem 1rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+pre {
+  background: rgba(0, 0, 0, 0.04);
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.9rem;
+}
+
+ul,
+ol {
+  padding-left: 1.4rem;
+}
+li {
+  margin: 0.25rem 0;
+}
+
+/* --- Header & nav --- */
+header.site {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+header.site .brand {
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: var(--ink);
+}
+header.site .brand .dot {
+  color: var(--land);
+}
+header.site nav {
+  font-family: var(--sans);
+  font-size: 0.9rem;
+}
+header.site nav a {
+  margin-left: 1.1rem;
+  text-decoration: none;
+  color: var(--muted);
+}
+header.site nav a:hover {
+  color: var(--accent);
+}
+
+/* --- Footer --- */
+footer.site {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+footer.site .footer-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+footer.site a {
+  color: var(--muted);
+  text-decoration: none;
+}
+footer.site a:hover {
+  color: var(--accent);
+}
+
+/* --- Homepage hero --- */
+.hero {
+  font-size: 1.15rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+/* --- Embeds (used on /songs) --- */
+.embed {
+  margin: 1.75rem 0;
+}
+.embed iframe {
+  width: 100%;
+  border: 0;
+  display: block;
+}
+.embed-spotify iframe {
+  height: 152px;
+  border-radius: 12px;
+}
+.embed-soundcloud iframe {
+  height: 166px;
+}
+
+@media (max-width: 540px) {
+  body {
+    font-size: 17px;
+  }
+  h1 {
+    font-size: 1.8rem;
+  }
+  header.site {
+    padding-top: 1.5rem;
+  }
+  header.site nav a {
+    margin-left: 0.7rem;
+  }
+}

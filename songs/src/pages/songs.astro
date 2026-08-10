@@ -1,0 +1,302 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { Spotify, SoundCloud } from '../components/embeds';
+
+const all = await getCollection('songs');
+
+// Released work is public and shown in full. Sketches are private: the COUNT is
+// public (it is proof of practice), the titles are not, because a sketch is a
+// working name in an Ableton folder, not a decision.
+const released = all
+  .filter((s) => !s.data.draft)
+  .sort((a, b) => (b.data.number ?? 0) - (a.data.number ?? 0));
+
+const workshop = all.filter((s) => s.data.draft && s.data.stage !== 'released');
+const byStage = (st: string) => workshop.filter((s) => s.data.stage === st).length;
+
+const total = released.length + workshop.length;
+const remaining = Math.max(0, 1000 - total);
+
+// How thick is a given entry? The stack is what makes a song real.
+const layers = (d: any) => [
+  { on: Boolean(d.key && d.tempo), label: 'key + tempo' },
+  { on: Boolean(d.chords), label: 'chords' },
+  { on: Boolean(d.instruments?.length), label: 'instruments' },
+  { on: Boolean(d.audio || d.soundcloud || d.spotify || d.youtube), label: 'recording' },
+];
+
+// The music game. Same XP table as tools/music-score.ps1 (see MUSIC-GAME.md),
+// computed here so the site and the CLI never drift apart. Scores craft and
+// shipping, not performance: sketch, melody, lyrics, demo, produced, released.
+const checked = (body: string, item: string) =>
+  new RegExp(`^-\\s*\\[x\\]\\s*${item}`, 'im').test(body);
+
+function songXP(s: (typeof all)[number]) {
+  const d = s.data;
+  let xp = 0;
+  if (d.key && d.tempo && d.chords) xp += 1;
+  if (checked(s.body, 'melody')) xp += 2;
+  if (checked(s.body, 'lyrics')) xp += 2;
+  if (checked(s.body, 'recording') || ['demo', 'produced', 'released'].includes(d.stage)) xp += 5;
+  if (d.stage === 'produced') xp += 8;
+  if (!d.draft) xp += 20;
+  if (d.tags?.includes('study')) xp += 3;
+  // Same bonus as a study, on purpose: see MUSIC-GAME.md's speed round.
+  if (d.tags?.includes('speed-round')) xp += 3;
+  return xp;
+}
+
+const totalXP = all.reduce((n, s) => n + songXP(s), 0);
+const LEVELS: [string, number][] = [
+  ['Demo Tape', 0], ['Gold', 50], ['Platinum', 150],
+  ['Multi-Platinum', 400], ['Diamond', 1000], ['Catalog Artist', 2500],
+];
+const level = [...LEVELS].reverse().find(([, floor]) => totalXP >= floor)![0];
+const nextLevel = LEVELS.find(([, floor]) => floor > totalXP);
+---
+
+<Base title="Songs · Pangaea" description="A thousand songs. The stack, not just the masters.">
+  <h1>Songs</h1>
+
+  <div class="cadence">
+    <div class="cadence-row">
+      <span><strong>{total}</strong> / 1,000 songs</span>
+      <span class="split">{released.length} released &middot; {workshop.length} in the workshop</span>
+    </div>
+    <div class="cadence-row meta">
+      A song is a stack, not a master. A sketch counts.
+      {remaining > 0 && <span> {remaining.toLocaleString()} to go.</span>}
+    </div>
+  </div>
+
+  <!-- The music game. Scores craft and shipping, not performance: see MUSIC-GAME.md.
+       Counts only, same privacy rule as the workshop below. -->
+  <section class="player-card">
+    <div class="pc-top">
+      <span class="pc-xp">{totalXP.toLocaleString()} XP</span>
+      <span class="pc-level">{level}</span>
+    </div>
+    {nextLevel && (
+      <div class="pc-next">{(nextLevel[1] - totalXP).toLocaleString()} XP to {nextLevel[0]}</div>
+    )}
+  </section>
+
+  <!-- The workshop: proof of practice, without publishing working titles. -->
+  {workshop.length > 0 && (
+    <section class="workshop">
+      <h2 class="sec">The workshop</h2>
+      <div class="stage-bar">
+        <span class="seg s-sketch" style={`flex:${Math.max(byStage('sketch'), 0.001)}`}></span>
+        <span class="seg s-demo" style={`flex:${Math.max(byStage('demo'), 0.001)}`}></span>
+        <span class="seg s-produced" style={`flex:${Math.max(byStage('produced'), 0.001)}`}></span>
+      </div>
+      <ul class="legend">
+        <li><i class="dot s-sketch"></i>{byStage('sketch')} sketch</li>
+        <li><i class="dot s-demo"></i>{byStage('demo')} demo</li>
+        <li><i class="dot s-produced"></i>{byStage('produced')} produced</li>
+        <li><i class="dot s-released"></i>{released.length} released</li>
+      </ul>
+      <p class="meta workshop-note">
+        Unreleased sketches stay private. The count is the point: it is the pile
+        the practice runs on. See the <a href="/line/">full line</a> for where
+        every song is standing right now.
+      </p>
+    </section>
+  )}
+
+  <h2 class="sec">Released</h2>
+
+  {released.length === 0 && <p class="meta">Nothing released yet.</p>}
+
+  {released.some((s) => s.data.soundcloud) && (
+    <div class="transport" id="transport">
+      <button type="button" class="t-play" id="t-playall" aria-label="Play all released songs">
+        <span class="t-icon" aria-hidden="true">▶</span> Play all released
+      </button>
+      <div class="t-now" id="t-now" hidden>
+        <span class="t-now-label">Now playing</span>
+        <span class="t-now-title" id="t-now-title"></span>
+        <button type="button" class="t-mini" id="t-prev" aria-label="Previous track">⏮</button>
+        <button type="button" class="t-mini" id="t-pause" aria-label="Pause">⏸</button>
+        <button type="button" class="t-mini" id="t-next" aria-label="Next track">⏭</button>
+      </div>
+    </div>
+  )}
+
+  <ul class="song-list">
+    {released.map((s) => {
+      const d = s.data;
+      const stack = layers(d);
+      const done = stack.filter((l) => l.on).length;
+      return (
+        <li data-song-title={d.title} class={d.soundcloud ? 'playable' : ''}>
+          <div class="song-head">
+            {d.number !== undefined && (
+              <span class="num">№ {String(d.number).padStart(3, '0')}</span>
+            )}
+            <span class="song-title">{d.title}</span>
+            <span class={`badge s-${d.stage}`}>{d.stage}</span>
+          </div>
+
+          {d.blurb && <p class="song-blurb">{d.blurb}</p>}
+
+          {/* The craft layer, only rendered when it exists. */}
+          {(d.key || d.tempo || d.chords || d.instruments?.length) && (
+            <dl class="craft">
+              {d.key && (<><dt>key</dt><dd>{d.key}</dd></>)}
+              {d.tempo && (<><dt>tempo</dt><dd>{d.tempo} bpm</dd></>)}
+              {d.chords && (<><dt>chords</dt><dd class="chords">{d.chords}</dd></>)}
+              {d.instruments?.length && (<><dt>played</dt><dd>{d.instruments.join(' · ')}</dd></>)}
+            </dl>
+          )}
+
+          <div class="stack" title={`${done} of ${stack.length} layers`}>
+            {stack.map((l) => (
+              <span class={`layer ${l.on ? 'on' : ''}`}>{l.label}</span>
+            ))}
+          </div>
+
+          {d.spotify && <Spotify uri={d.spotify} />}
+          {d.soundcloud && <SoundCloud url={d.soundcloud} apiWidget />}
+        </li>
+      );
+    })}
+  </ul>
+</Base>
+
+<script is:inline src="https://w.soundcloud.com/player/api.js"></script>
+<script>
+  // Sequential "play all" across every released song's SoundCloud embed, using
+  // the SoundCloud Widget JS API (postMessage-controllable iframes, enabled by
+  // apiWidget on <SoundCloud>). Plays each track in page order (newest first,
+  // same as the list itself) and auto-advances on finish.
+  function initPlayAll() {
+    const w = (window as any).SC;
+    if (!w?.Widget) { setTimeout(initPlayAll, 150); return; }
+
+    const items = Array.from(document.querySelectorAll<HTMLLIElement>('li.playable'));
+    if (!items.length) return;
+
+    const widgets = items.map((li) => {
+      const iframe = li.querySelector<HTMLIFrameElement>('iframe[data-sc-widget]');
+      return iframe ? w.Widget(iframe) : null;
+    });
+
+    let current = -1;
+    const playAllBtn = document.getElementById('t-playall');
+    const nowBox = document.getElementById('t-now');
+    const nowTitle = document.getElementById('t-now-title');
+    const pauseBtn = document.getElementById('t-pause');
+    const prevBtn = document.getElementById('t-prev');
+    const nextBtn = document.getElementById('t-next');
+
+    function setActive(i: number) {
+      items.forEach((li, idx) => li.classList.toggle('now-playing', idx === i));
+      if (i >= 0 && i < items.length) {
+        items[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function playAt(i: number) {
+      if (i < 0 || i >= widgets.length) {
+        // Reached the end of the list.
+        current = -1;
+        nowBox?.setAttribute('hidden', '');
+        if (playAllBtn) playAllBtn.hidden = false;
+        setActive(-1);
+        return;
+      }
+      // Pause whatever is currently playing.
+      if (current >= 0 && widgets[current]) widgets[current].pause();
+      current = i;
+      const widget = widgets[i];
+      if (!widget) { playAt(i + 1); return; }
+      widget.play();
+      setActive(i);
+      if (nowBox) nowBox.hidden = false;
+      if (playAllBtn) playAllBtn.hidden = true;
+      if (nowTitle) nowTitle.textContent = items[i].dataset.songTitle ?? '';
+      widget.bind(w.Widget.Events.FINISH, () => playAt(current + 1));
+    }
+
+    playAllBtn?.addEventListener('click', () => playAt(0));
+    prevBtn?.addEventListener('click', () => current > 0 && playAt(current - 1));
+    nextBtn?.addEventListener('click', () => playAt(current + 1));
+    pauseBtn?.addEventListener('click', () => {
+      if (current < 0) return;
+      const widget = widgets[current];
+      if (!widget) return;
+      widget.isPaused((paused: boolean) => {
+        if (paused) { widget.play(); pauseBtn.textContent = '⏸'; }
+        else { widget.pause(); pauseBtn.textContent = '▶'; }
+      });
+    });
+  }
+
+  initPlayAll();
+</script>
+
+<style>
+  .cadence-row .split { color: var(--muted); font-size: 0.85rem; margin-left: 0.6rem; }
+  .sec { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin: 2.25rem 0 0.75rem; font-weight: 600; }
+
+  /* The player card. XP scores craft and shipping; see MUSIC-GAME.md. */
+  .player-card { display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap; margin: 0.9rem 0 0; padding: 0.6rem 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .pc-top { display: flex; align-items: baseline; gap: 0.6rem; }
+  .pc-xp { font-family: var(--mono); font-size: 1.05rem; color: var(--accent); }
+  .pc-level { font-family: var(--sans); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.15rem 0.5rem; border: 1px solid var(--land-soft); color: var(--land); border-radius: 10px; }
+  .pc-next { font-family: var(--sans); font-size: 0.78rem; color: var(--muted); }
+
+  /* Workshop: a single proportional bar, so the pile is visible at a glance. */
+  .workshop { border: 1px solid var(--rule); border-radius: 6px; padding: 1rem; background: var(--surface); }
+  .stage-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 2px; }
+  .seg { display: block; }
+  .s-sketch { background: var(--accent-soft); }
+  .s-demo { background: var(--accent); }
+  .s-produced { background: #0c3a4b; }
+  .s-released { background: var(--land); }
+  .legend { list-style: none; display: flex; flex-wrap: wrap; gap: 0.9rem; padding: 0; margin: 0.7rem 0 0; font-family: var(--sans); font-size: 0.74rem; color: var(--muted); }
+  .legend li { display: flex; align-items: center; gap: 0.35rem; }
+  .dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+  .workshop-note { margin: 0.7rem 0 0; font-size: 0.78rem; }
+
+  /* Play-all transport: one button until playback starts, then a mini
+     now-playing bar with prev/pause/next. */
+  .transport { margin: 0.75rem 0 0; }
+  .t-play { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--sans); font-size: 0.85rem; font-weight: 600;
+    color: var(--surface); background: var(--accent); border: none; border-radius: 6px; padding: 0.55rem 1rem; cursor: pointer; transition: background .15s; }
+  .t-play:hover { background: var(--accent-deep); }
+  .t-icon { font-size: 0.7rem; }
+  .t-now { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; font-family: var(--sans); font-size: 0.85rem;
+    background: var(--paper-2); border: 1px solid var(--rule); border-radius: 6px; padding: 0.55rem 0.9rem; }
+  .t-now-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .t-now-title { font-weight: 600; color: var(--ink); margin-right: auto; }
+  .t-mini { font-family: var(--sans); font-size: 0.9rem; background: transparent; border: 1px solid var(--rule); border-radius: 5px;
+    color: var(--ink); padding: 0.25rem 0.55rem; cursor: pointer; line-height: 1; transition: border-color .15s,color .15s; }
+  .t-mini:hover { border-color: var(--accent); color: var(--accent); }
+
+  .song-list { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+  .song-list li { padding: 1.25rem 0; border-bottom: 1px solid var(--rule); transition: background .2s; }
+  .song-list li.now-playing { background: var(--paper-2); border-radius: 6px; padding-left: 0.75rem; padding-right: 0.75rem; margin: 0 -0.75rem; }
+  .song-list li.now-playing .song-title { color: var(--accent); }
+  .song-head { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+  .song-head .num { font-family: var(--mono); font-size: 0.72rem; color: var(--land); letter-spacing: 0.05em; }
+  .song-title { font-weight: 600; font-size: 1.1rem; }
+  .badge { font-family: var(--sans); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.07em; padding: 0.1rem 0.4rem; border-radius: 9px; color: #fff; }
+  .badge.s-released { background: var(--land); }
+  .badge.s-produced { background: #0c3a4b; }
+  .badge.s-demo { background: var(--accent); }
+  .badge.s-sketch { background: var(--accent-soft); }
+  .song-blurb { color: var(--muted); margin: 0.3rem 0 0.6rem; }
+
+  /* The craft layer */
+  .craft { display: grid; grid-template-columns: 4.5rem 1fr; gap: 0.15rem 0.75rem; margin: 0.6rem 0; font-family: var(--sans); font-size: 0.78rem; }
+  .craft dt { color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.65rem; padding-top: 0.15rem; }
+  .craft dd { margin: 0; color: var(--ink); }
+  .craft .chords { font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.02em; }
+
+  .stack { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.6rem 0 0.8rem; }
+  .layer { font-family: var(--sans); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.15rem 0.45rem; border-radius: 3px; border: 1px solid var(--rule); color: var(--rule); }
+  .layer.on { color: var(--land); border-color: var(--land-soft); }
+</style>

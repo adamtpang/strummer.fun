@@ -1,0 +1,14 @@
+---
+interface Props {
+  /** Spotify URI or ID, e.g. "track/0NeJjNlprGfZpeX2LQuN6c" or "playlist/..." or "album/..." */
+  uri: string;
+}
+
+const { uri } = Astro.props;
+const cleaned = uri.replace(/^spotify:/, '').replace(/:/g, '/');
+const src = `https://open.spotify.com/embed/${cleaned}`;
+---
+
+<div class="embed embed-spotify">
+  <iframe src={src} loading="lazy" allow="encrypted-media"></iframe>
+</div>

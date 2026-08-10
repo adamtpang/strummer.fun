@@ -1,0 +1,24 @@
+---
+interface Props {
+  /** Full SoundCloud URL, e.g. "https://soundcloud.com/user/track" */
+  url: string;
+  color?: string;
+  /** Set true to expose this iframe to the SoundCloud Widget JS API (postMessage-controllable, needed for the "play all" transport). */
+  apiWidget?: boolean;
+}
+
+const { url, color = 'b34a2f', apiWidget = false } = Astro.props;
+const params = new URLSearchParams({
+  url,
+  color: `#${color}`,
+  inverse: 'false',
+  auto_play: 'false',
+  show_user: 'true',
+});
+if (apiWidget) params.set('api_widget', 'true');
+const src = `https://w.soundcloud.com/player/?${params.toString()}`;
+---
+
+<div class="embed embed-soundcloud">
+  <iframe src={src} loading="lazy" scrolling="no" allow="autoplay" data-sc-widget={apiWidget ? 'true' : undefined}></iframe>
+</div>

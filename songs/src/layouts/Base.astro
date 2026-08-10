@@ -1,0 +1,52 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const DEFAULT_DESCRIPTION = 'Strummer: a thousand songs, made in public, by Adam Pang.';
+const { title, description = DEFAULT_DESCRIPTION } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..700&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&display=swap"
+    />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content="Strummer" />
+    <meta name="twitter:card" content="summary" />
+  </head>
+  <body>
+    <header class="site">
+      <a class="brand" href="/">Strummer<span class="dot">.</span></a>
+      <nav>
+        <a href="/songs/">Songs</a>
+        <a href="/line/">Line</a>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site">
+      <span class="footer-mark">A thousand songs, made in public.</span>
+      <span>by <a href="https://adampang.com">Adam Pang</a> · essays and video at <a href="https://pangaea.blog">pangaea.blog</a></span>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,175 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const all = await getCollection('songs');
+
+// Four stations, matching the stage enum in content.config.ts exactly. A song
+// cannot skip one: production can't happen before a demo, a demo can't happen
+// before a sketch. This is the real gate, unlike the finer melody/lyrics
+// checkboxes below, which are enrichments within a station, not gates.
+const STATIONS = [
+  { key: 'sketch', label: 'Sketch', desc: 'Key, tempo, chords. The frame exists.' },
+  { key: 'demo', label: 'Demo', desc: 'Recorded. A phone voice memo counts.' },
+  { key: 'produced', label: 'Produced', desc: 'Sounds finished, even if it is rough.' },
+  { key: 'released', label: 'Released', desc: 'Public. Someone else can hear it.' },
+] as const;
+
+// Same stack concept as /songs: how thick is this entry, independent of
+// which station it is sitting in. Reused here so the two pages agree.
+const checked = (body: string, item: string) =>
+  new RegExp(`^-\\s*\\[x\\]\\s*${item}`, 'im').test(body);
+
+function layerCount(s: (typeof all)[number]) {
+  const d = s.data;
+  let n = 0;
+  if (d.key && d.tempo && d.chords) n++;
+  if (checked(s.body, 'melody')) n++;
+  if (d.instruments?.length) n++;
+  if (checked(s.body, 'recording') || d.audio || d.soundcloud || d.spotify || d.youtube) n++;
+  return n;
+}
+
+// stage: 'released' is the enum value only when draft is also false is the
+// real public gate; a draft:true song mid-way through 'produced' is not out
+// yet, so it stays in the produced station until it actually ships.
+function stationOf(s: (typeof all)[number]): (typeof STATIONS)[number]['key'] {
+  if (!s.data.draft) return 'released';
+  if (s.data.stage === 'produced') return 'produced';
+  if (s.data.stage === 'demo') return 'demo';
+  return 'sketch';
+}
+
+const byStation = new Map<string, typeof all>();
+for (const st of STATIONS) byStation.set(st.key, []);
+for (const s of all) byStation.get(stationOf(s))!.push(s);
+
+const total = all.length;
+const remaining = Math.max(0, 1000 - total);
+---
+
+<Base
+  title="Line · Pangaea"
+  description="The 1,000-song assembly line. Every song, wherever it actually is: sketch, demo, produced, released."
+>
+  <h1>Line</h1>
+
+  <div class="cadence">
+    <div class="cadence-row">
+      <span><strong>{total}</strong> / 1,000 songs</span>
+      {remaining > 0 && <span class="split">{remaining.toLocaleString()} to go</span>}
+    </div>
+    <div class="cadence-row meta">
+      Four stations. A song moves through them in order, nothing skips a step.
+      Titles stay private until Released, the count never does.
+      See the <a href="/songs/">released catalogue</a> for what has actually shipped.
+    </div>
+  </div>
+
+  <div class="line">
+    {STATIONS.map((st, i) => {
+      const songs = byStation.get(st.key)!;
+      return (
+        <>
+          <section class="station">
+            <div class="st-head">
+              <h2>{st.label}</h2>
+              <span class="st-count">{songs.length}</span>
+            </div>
+            <p class="st-desc">{st.desc}</p>
+            <div class="units">
+              {songs.length === 0 && <span class="empty">empty</span>}
+              {songs.map((s) => {
+                const d = s.data;
+                const layers = layerCount(s);
+                const isPublic = !d.draft;
+                const tip = isPublic
+                  ? `${d.title} (No. ${String(d.number ?? 0).padStart(3, '0')})`
+                  : `No. ${String(d.number ?? 0).padStart(3, '0')} · ${layers}/4 layers`;
+                return (
+                  <span
+                    class={`unit u-${st.key} ${isPublic ? 'public' : ''}`}
+                    title={tip}
+                  >
+                    <i class="fill" style={`width:${(layers / 4) * 100}%`}></i>
+                  </span>
+                );
+              })}
+            </div>
+          </section>
+          {i < STATIONS.length - 1 && <span class="arrow" aria-hidden="true">&rarr;</span>}
+        </>
+      );
+    })}
+  </div>
+
+  <p class="meta line-note">
+    Each square is one song. The fill shows how many layers it has (key and
+    tempo, chords, an instrument played, something recorded), out of four,
+    wherever it is standing in the line right now. Hover a square for what it
+    actually is.
+  </p>
+</Base>
+
+<style>
+  .cadence-row .split { color: var(--muted); font-size: 0.85rem; margin-left: 0.6rem; }
+
+  .line {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 2rem 0 0.75rem;
+    overflow-x: auto;
+  }
+  .arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rule);
+    font-family: var(--mono);
+    font-size: 1rem;
+    padding: 0 0.4rem;
+    flex-shrink: 0;
+  }
+
+  .station {
+    flex: 1 1 0;
+    min-width: 11rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 0.9rem 1rem 1rem;
+    background: var(--surface);
+  }
+  .st-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+  .st-head h2 { font-size: 1rem; margin: 0; }
+  .st-count { font-family: var(--mono); font-size: 0.85rem; color: var(--gold, var(--land)); }
+  .st-desc { font-size: 0.76rem; color: var(--muted); margin: 0.25rem 0 0.85rem; line-height: 1.4; }
+
+  .units { display: flex; flex-wrap: wrap; gap: 0.28rem; min-height: 1.4rem; }
+  .empty { font-size: 0.72rem; color: var(--rule); font-style: italic; }
+
+  .unit {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    border: 1px solid var(--rule);
+    overflow: hidden;
+    background: var(--paper-2);
+    flex-shrink: 0;
+  }
+  .unit .fill { position: absolute; inset: 0 auto 0 0; display: block; }
+  .u-sketch .fill { background: var(--accent-soft); }
+  .u-demo .fill { background: var(--accent); }
+  .u-produced .fill { background: #0c3a4b; }
+  .u-released .fill { background: var(--land); width: 100% !important; }
+  .unit.public { border-color: var(--land-soft); }
+
+  .line-note { max-width: var(--measure); margin-top: 0.9rem; font-size: 0.78rem; }
+
+  @media (max-width: 46rem) {
+    .line { flex-direction: column; overflow-x: visible; }
+    .arrow { display: none; }
+    .station { min-width: 0; }
+  }
+</style>

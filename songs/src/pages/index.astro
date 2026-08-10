@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const all = await getCollection('songs');
+const released = all.filter((s) => !s.data.draft).length;
+const total = all.length;
+---
+
+<Base title="Strummer" description="A thousand songs, made in public, by Adam Pang.">
+  <h1>Strummer<span style="color:var(--land)">.</span></h1>
+  <p class="hero">
+    A thousand songs, made in public. {released} released, {total.toLocaleString()} entries
+    in the stack. Every song is a stack: key and tempo, chords, melody, a
+    recording. A sketch counts.
+  </p>
+  <p>
+    <a href="/songs/">The catalogue</a> · <a href="/line/">The assembly line</a>
+  </p>
+</Base>
