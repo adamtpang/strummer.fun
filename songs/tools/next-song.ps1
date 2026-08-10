@@ -81,10 +81,19 @@ nothing to invent before you start playing.
 - **Budget** $($BUDGETS[$pick.T])
 - **Ship at** ``stage: $($STAGES[$pick.T])``
 
+## The hook
+
+**TBD.** See SONG-SPEC.md: this is the one required piece that can't be
+generated ahead of time. A repeatable identity element (a hook, a stab, a
+chord you let sit) is a choice, not a fact, and this queue only supplies
+facts. Decide it while you play, then fill in the ``hook:`` frontmatter
+field.
+
 ## The stack
 
 - [x] key + tempo
 - [x] chords
+- [ ] hook (see SONG-SPEC.md, required, decide while playing)
 - [ ] melody
 - [ ] lyrics
 - [ ] recording

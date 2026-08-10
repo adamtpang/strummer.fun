@@ -9,3 +9,7 @@ dist/
 
 # Separated audio stems from tools/stems.ps1 (big, derived, not source)
 stems/
+
+# LMMS renders: the .mmp project is the source and is committed, the .wav
+# is derived and regenerable via tools/lmms-mint.py --render
+lmms-projects/*.wav
