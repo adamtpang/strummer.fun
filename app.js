@@ -559,6 +559,7 @@ function postHostState() {
   hostBridge.postMessage({
     type: 'playbackState',
     isPlaying,
+    id: t ? t.id : null,
     title: t ? t.title : '',
     artist: t ? t.artist : '',
     art: t && t.art ? t.art : null,
