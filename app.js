@@ -501,7 +501,15 @@ function anchorPlay() {
 }
 function anchorPause() { if (msAnchor) msAnchor.pause(); }
 
+function applyVolume(pct) {
+  volume = Math.min(1, Math.max(0, pct));
+  if (gainNode) gainNode.gain.value = volume;
+  $('#vol-fill').style.width = `${volume * 100}%`;
+  store.save(VOL_KEY, volume);
+}
+
 function mediaSessionMeta(t) {
+  postHostState();
   if (!('mediaSession' in navigator)) return;
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
@@ -513,6 +521,7 @@ function mediaSessionMeta(t) {
   } catch (e) {}
 }
 function mediaSessionState() {
+  postHostState();
   if (!('mediaSession' in navigator)) return;
   try {
     navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
@@ -536,6 +545,38 @@ function wireMediaSession() {
     if (!trackDur || d.seekTime == null) return;
     if (isPlaying) startPlayback(d.seekTime);
     else { pausedOffset = Math.min(d.seekTime, trackDur); updateProgress(); mediaSessionState(); }
+  });
+}
+
+/* ---------- desktop host bridge ----------
+   Only active inside strummer-desktop's WebView2 (window.chrome.webview exists
+   there, not in a regular browser tab). Lets the native shell's global hotkeys
+   and toast control this page's own player instead of the system Spotify app. */
+const hostBridge = (window.chrome && window.chrome.webview) || null;
+function postHostState() {
+  if (!hostBridge) return;
+  const t = queue[curIndex];
+  hostBridge.postMessage({
+    type: 'playbackState',
+    isPlaying,
+    title: t ? t.title : '',
+    artist: t ? t.artist : '',
+    art: t && t.art ? t.art : null,
+  });
+}
+function wireHostBridge() {
+  if (!hostBridge) return;
+  hostBridge.addEventListener('message', (e) => {
+    const msg = e.data || {};
+    switch (msg.type) {
+      case 'playPause': togglePlay(); break;
+      case 'pause': pause(); break;
+      case 'next': next(false); break;
+      case 'prev': prev(); break;
+      case 'volumeUp': applyVolume(volume + 0.1); break;
+      case 'volumeDown': applyVolume(volume - 0.1); break;
+      case 'mute': applyVolume(volume > 0 ? 0 : (Number(store.load(VOL_KEY, 0.8)) || 0.8)); break;
+    }
   });
 }
 
@@ -628,9 +669,7 @@ function wireChrome() {
   const setVol = (e) => {
     const r = vb.getBoundingClientRect();
     const pct = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-    volume = pct; if (gainNode) gainNode.gain.value = pct;
-    $('#vol-fill').style.width = `${pct * 100}%`;
-    store.save(VOL_KEY, volume);
+    applyVolume(pct);
   };
   let volDrag = false;
   vb.addEventListener('mousedown', (e) => { volDrag = true; setVol(e); });
@@ -658,6 +697,7 @@ async function boot() {
   renderSidebarPlaylists();
   wireChrome();
   wireMediaSession();
+  wireHostBridge();
   $('#vol-fill').style.width = `${volume * 100}%`;
 
   // Unlock the AudioContext on the first genuine user gesture (capture phase,
