@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>strummer. — tuner & chord ear</title>
+  <meta name="description" content="A guitar tuner and chord trainer that listens to you play. Part of strummer.fun." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='78' font-size='90' text-anchor='middle' fill='%23dc2626' font-family='serif'>.</text></svg>" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="tune.css" />
+</head>
+
+<body>
+  <div class="tune-page">
+    <header class="tune-head">
+      <a class="back" href="/">← strummer<span class="period">.</span></a>
+      <h1>tuner <span class="amp">&amp;</span> <em>chord ear</em></h1>
+      <p class="sub">Your mic, your guitar. Nothing leaves this page.</p>
+    </header>
+
+    <p id="error" class="error" hidden></p>
+
+    <!-- Tuner -->
+    <section class="panel tuner">
+      <div class="readout">
+        <div class="note-wrap">
+          <span id="note">–</span><sub id="octave"></sub>
+        </div>
+        <div class="meta">
+          <div id="freq" class="mono">0.0 Hz</div>
+          <div id="string-hint" class="mono dim">play a string</div>
+        </div>
+        <div id="cents" class="mono cents">0¢</div>
+      </div>
+
+      <div id="dial" class="dial">
+        <div class="tick center"></div>
+        <div class="tick t-25"></div>
+        <div class="tick t25"></div>
+        <div id="needle" class="needle"></div>
+      </div>
+
+      <div id="verdict" class="verdict">press start</div>
+
+      <div class="level-wrap" aria-hidden="true">
+        <div id="level" class="level"></div>
+      </div>
+
+      <button id="start" class="btn-primary">Start tuning</button>
+
+      <div class="ref">
+        <span class="label mono">reference tones</span>
+        <div id="strings" class="strings"></div>
+      </div>
+    </section>
+
+    <!-- Chord ear -->
+    <section class="panel chord">
+      <span class="label mono">chord ear — strum a shape</span>
+      <div id="chord-name" class="chord-name">—</div>
+      <p class="dim small">Listening for major, minor, 7th, sus and power chords.</p>
+    </section>
+
+    <!-- Bring your own audio -->
+    <section class="panel analyzer">
+      <span class="label mono">learn any song — bring your own audio</span>
+      <div id="drop" class="drop" tabindex="0" role="button"
+           aria-label="Choose an audio file to analyze">
+        <div class="drop-inner">
+          <strong>Drop a song here</strong>
+          <span class="dim small">or click to choose — mp3, m4a, wav, flac</span>
+          <span class="dim tiny">Stays on your device. Nothing is uploaded.</span>
+        </div>
+        <input type="file" id="file" accept="audio/*" hidden />
+      </div>
+
+      <div id="progress-wrap" class="progress-wrap" hidden>
+        <div class="progress-bar"><div id="progress" class="progress"></div></div>
+        <span id="progress-label" class="mono tiny dim"></span>
+      </div>
+
+      <div id="analysis" class="analysis" hidden>
+        <div class="a-summary">
+          <div class="a-stat">
+            <span class="mono tiny dim">key</span>
+            <strong id="a-key">–</strong>
+          </div>
+          <div class="a-stat">
+            <span class="mono tiny dim">capo</span>
+            <strong id="a-capo">–</strong>
+          </div>
+          <div class="a-stat">
+            <span class="mono tiny dim">chords</span>
+            <strong id="a-count">–</strong>
+          </div>
+        </div>
+
+        <div class="a-shapes">
+          <span class="mono tiny dim">you'll need these shapes</span>
+          <div id="a-shapes" class="shape-row"></div>
+        </div>
+
+        <audio id="player" controls class="player"></audio>
+
+        <div class="a-now">
+          <span class="mono tiny dim">now playing</span>
+          <div id="a-current" class="a-current">—</div>
+        </div>
+
+        <div id="timeline" class="timeline"></div>
+
+        <p class="dim tiny">
+          Auto-detected, so expect a wrong chord here and there — even Chordify
+          lands 75–90%. Click any chord in the timeline to correct it.
+        </p>
+      </div>
+    </section>
+
+    <!-- Songs -->
+    <section class="panel songs-panel">
+      <span class="label mono">learn a song</span>
+      <div id="songs" class="songs"></div>
+      <p class="dim small">
+        Chord progressions only — the shapes and the order. Play along and strummer
+        listens for each chord, Rock-Band style.
+      </p>
+    </section>
+
+    <!-- Practice overlay -->
+    <section id="practice" class="panel practice" hidden>
+      <button id="p-close" class="p-close" aria-label="Close practice">×</button>
+      <div id="p-title" class="p-title"></div>
+      <div id="p-meta" class="mono dim small"></div>
+      <div id="p-diagram" class="p-diagram"></div>
+      <div id="p-loop" class="p-loop"></div>
+      <div class="p-score">
+        <span class="mono dim small">chords landed</span>
+        <span id="p-count" class="p-count mono">0</span>
+      </div>
+      <p id="p-note" class="dim small"></p>
+    </section>
+
+    <footer class="tune-foot">
+      <span>strummer<span class="period">.</span> — the future is unwritten</span>
+    </footer>
+  </div>
+
+  <script src="tune.js"></script>
+  <script type="module" src="analyze-ui.js"></script>
+</body>
+
+</html>
