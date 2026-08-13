@@ -88,7 +88,7 @@ export const QueueItemExpanded: FC<QueueItemProps> = ({
             )}
           >
             <AlertCircle size={12} />
-            <span className="truncate">{labels.playbackError}</span>
+            <span className="truncate">{labels?.playbackError}</span>
           </div>
         )}
       </div>
