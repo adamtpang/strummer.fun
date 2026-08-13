@@ -17,3 +17,9 @@ stack: [pnpm, turbo, typescript, react, astro]
 kin:
   - repo: pangaea.blog
     why: The other two pillars of the same three-pillar 1000-life-loop live there (1000 essays via ESSAYS-1000.md, 1000 apps via src/content/apps/). Songs used to be pangaea.blog's third pillar, then spun out to strummer.fun-songs on 2026-08-08, then was folded into strummer.fun/songs/ here on 2026-08-09.
+  - repo: eyeland.cards
+    why: A fourth 1000-life-loop pillar, "1000 games," named by Adam on 2026-08-10 to sit alongside this repo's songs pillar and pangaea.blog's essays/apps pillars.
+  - repo: youchop.app
+    why: Both are "paste a YouTube (or, here, Spotify) URL and get something extracted back" tools built by Adam. youchop.app's api/transcripts.js and tools/corpus.mjs already solve URL-to-video-ID parsing and resumable yt-dlp-based extraction from YouTube for captions; strummer-desktop's planned AI-stemming feature (import a Spotify/YouTube link, separate vocals/drums/chords into Ableton stems) needs the same YouTube-link ingestion step before the actual audio separation, so youchop.app's extraction pattern is the closest existing reference in the workspace, even though no audio (only transcript text) is extracted there today.
+  - repo: pokedex.life
+    why: pokedex.life's hub-and-spoke identity/platform-mapping work (2026-08-13) is what named music as the one life-project needing a separate pseudonym rather than folding into Adam's main anchor identity across platforms. The Pacifica persona this repo already specs in songs/PACIFICA.md (handle pacificapacifica) is the concrete answer to that question.
