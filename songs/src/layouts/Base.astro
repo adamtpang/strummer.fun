@@ -9,6 +9,31 @@ interface Props {
 const DEFAULT_DESCRIPTION = 'Strummer: a thousand songs, made in public, by Adam Pang.';
 const { title, description = DEFAULT_DESCRIPTION } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const siteURL = new URL('/', Astro.site).toString();
+
+// Real, working links only: Adam Pang's own site, his essays/video site, and
+// the SoundCloud account every released song on this site actually embeds
+// from (see src/content/songs/*.md). No invented social profiles.
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Strummer',
+    url: siteURL,
+    sameAs: [
+      'https://adampang.com',
+      'https://pangaea.blog',
+      'https://soundcloud.com/adamtpang',
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Strummer',
+    url: siteURL,
+    description: DEFAULT_DESCRIPTION,
+  },
+];
 ---
 
 <!doctype html>
@@ -32,6 +57,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:site_name" content="Strummer" />
     <meta name="twitter:card" content="summary" />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body>
     <header class="site">
