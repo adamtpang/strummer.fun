@@ -166,7 +166,10 @@ a { color: inherit; text-decoration: none; }
   padding: 9px 16px; width: 340px; max-width: 42vw;
   transition: border-color .15s;
 }
-.search:focus-within { border-color: var(--muted); }
+.search:focus-within {
+  border-color: #fb7185;
+  box-shadow: 0 0 0 2px rgba(251, 113, 133, 0.24);
+}
 .search svg { width: 17px; height: 17px; color: var(--muted); flex-shrink: 0; }
 .search input { background: none; border: none; outline: none; color: var(--fg); font-size: 0.88rem; width: 100%; }
 .search input::placeholder { color: var(--muted); }
