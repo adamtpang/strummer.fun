@@ -6,6 +6,8 @@ const OUT = 'dist';
 const STRUMMER_STATIC = [
   'index.html', 'app.js', 'styles.css',
   'tune.html', 'tune.js', 'tune.css', 'analyze.js', 'analyze-ui.js',
+  'about.html', 'contact.html', 'privacy.html',
+  'robots.txt', 'llms.txt', 'sitemap.xml',
 ];
 
 if (existsSync(OUT)) rmSync(OUT, { recursive: true, force: true });

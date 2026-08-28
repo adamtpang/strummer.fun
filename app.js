@@ -148,8 +148,10 @@ async function loadTrack(i, autoplay = true) {
   $('#cur-time').textContent = '0:00';
   $('#dur-time').textContent = fmt(t.dur);
   $('#seek-fill').style.width = '0%'; $('#seek-knob').style.left = '0%';
+  $('#seek').setAttribute('aria-valuenow', '0');
   const seq = ++loadSeq;
   $('#play-btn').innerHTML = '<span class="spinner"></span>';
+  $('#play-btn').setAttribute('aria-label', 'Loading track');
   try {
     ensureCtx();
     const resp = await fetch(t.src);
@@ -248,9 +250,13 @@ function updateProgress() {
   const pct = trackDur ? (pos / trackDur) * 100 : 0;
   $('#seek-fill').style.width = pct + '%';
   $('#seek-knob').style.left = pct + '%';
+  $('#seek').setAttribute('aria-valuenow', String(Math.round(pct)));
   $('#cur-time').textContent = fmt(pos);
 }
-function updatePlayBtn() { $('#play-btn').innerHTML = isPlaying ? I.pause : I.play; }
+function updatePlayBtn() {
+  $('#play-btn').innerHTML = isPlaying ? I.pause : I.play;
+  $('#play-btn').setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
+}
 
 /* ============================================================
    Render
@@ -299,7 +305,7 @@ function trackRow(t, i) {
 function listSection(title, sub, tracks, id = 'track-rows') {
   return `
     <section class="section">
-      <div class="section-head"><h2 class="section-title">${esc(title)}</h2><a class="section-link">${esc(sub)}</a></div>
+      <div class="section-head"><h2 class="section-title">${esc(title)}</h2><span class="section-link">${esc(sub)}</span></div>
       <div class="tracklist">
         <div class="tl-head"><div>#</div><div>Title</div><div class="h-album">Genre</div><div class="h-dur" style="text-align:right">Time</div><div></div></div>
         <div id="${id}">${tracks.map((t, i) => trackRow(t, i)).join('')}</div>
@@ -312,23 +318,46 @@ function renderHome() {
   const featured = TRACKS.slice(0, 6);
   $('#content').innerHTML = `
     <section class="hero">
-      <div class="hero-eyebrow">◆ own your music · not your platform's</div>
-      <h1>The streaming player where artists keep what they earn.</h1>
-      <p>Real music, aggregated from open networks — every play pays the artist directly. Your library, your taste, your identity: portable across any client, owned by you. No 30% tax. No lock-in. The future is unwritten.</p>
+      <div class="hero-eyebrow">player · vibe · tune</div>
+      <h1>Strummer is a music workspace for listening, taste, and practice.</h1>
+      <p>Strummer brings three focused music tools into one public site: an Audius player for discovery, a Spotify-connected Vibe card for understanding your taste, and private browser tools for tuning, chord practice, and audio analysis.</p>
       <div class="hero-cta">
         <button class="btn-primary" id="hero-play">${I.play} Play trending</button>
-        <button class="btn-ghost" id="hero-import">${I.spotify} Import from Spotify</button>
+        <a class="btn-ghost" href="/vibe">${I.spotify} Make your Vibe card</a>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="strummer-tools">
+      <div class="section-head"><h2 class="section-title" id="strummer-tools">Three ways to use Strummer</h2></div>
+      <div class="capability-grid">
+        <div class="capability-item">
+          <span class="capability-index">01</span>
+          <h3>Play and discover</h3>
+          <p>Strummer's player loads current tracks from Audius, supports search and playback, and keeps liked track references and volume settings in your browser. Music streams from the source network, while the player interface stays lightweight and requires no Strummer account.</p>
+        </div>
+        <div class="capability-item">
+          <span class="capability-index">02</span>
+          <h3>Understand your taste</h3>
+          <p>Strummer Vibe uses Spotify authorization to turn your top tracks and artists into a customizable visual card. Publishing is optional, profiles are private by default, and the Vibe privacy page explains exactly which profile fields can be stored.</p>
+          <a class="text-link" href="/vibe">Open Strummer Vibe</a>
+        </div>
+        <div class="capability-item">
+          <span class="capability-index">03</span>
+          <h3>Tune and practice</h3>
+          <p>Strummer Tune listens through your microphone for pitch and common chord shapes, or analyzes an audio file you choose. Microphone and file analysis run on your device, so practice audio is not uploaded to Strummer's servers.</p>
+          <a class="text-link" href="/tune">Open Strummer Tune</a>
+        </div>
       </div>
     </section>
 
     <section class="section">
-      <div class="section-head"><h2 class="section-title">Featured</h2><a class="section-link">live on audius</a></div>
+      <div class="section-head"><h2 class="section-title">Featured</h2><span class="section-link">live on audius</span></div>
       <div class="cards">
         ${featured.map((t) => `
           <div class="card" data-card="${esc(t.id)}">
             <div class="card-art" style="${coverStyle(t)}">
               ${coverInner(t)}
-              <button class="card-play" data-card-play="${esc(t.id)}">${I.play}</button>
+              <button class="card-play" data-card-play="${esc(t.id)}" aria-label="Play ${esc(t.title)} by ${esc(t.artist)}">${I.play}</button>
             </div>
             <div class="card-title">${esc(t.title)}</div>
             <div class="card-sub">${esc(t.artist)}</div>
@@ -338,15 +367,14 @@ function renderHome() {
 
     ${listSection('Trending on Audius', `${TRACKS.length} tracks · decentralized`, TRACKS)}
 
-    <section class="own-strip">
-      <div class="os-text">
-        <h3>Read. Write. Own.</h3>
-        <p>Web1 let you read. Web2 let you write — but the platform kept the network, the data, and the money. Strummer is the third era for music: aggregate from open networks, artists own their masters, and your collection belongs to you.</p>
+    <section class="preview-note" aria-labelledby="preview-status">
+      <div>
+        <span class="preview-kicker">Public preview</span>
+        <h2 id="preview-status">Useful now, explicit about what is next</h2>
       </div>
-      <div class="os-badges">
-        <div class="os-badge"><span class="dot"></span> Direct artist payments</div>
-        <div class="os-badge"><span class="dot"></span> Portable identity</div>
-        <div class="os-badge"><span class="dot"></span> Open protocol</div>
+      <div class="preview-copy">
+        <p>Strummer currently includes 3 public tools with different data boundaries: the player reads open music data, Vibe connects only after Spotify authorization, and Tune processes microphone or file input locally. Wallet collection and full Spotify library import remain labeled concepts rather than shipped transactions.</p>
+        <p>Strummer's public preview currently costs $0. There is no paid plan, trial, purchase, or guarantee. Start by playing a trending track, make a Vibe card if you want a taste profile, or open Tune when you want to practice.</p>
       </div>
     </section>`;
   wireHome();
@@ -364,7 +392,7 @@ function renderNowPlaying(t) {
         <span class="src-tag">Audius</span>
       </div>
     </div>
-    <button class="np-like ${liked.has(t.id) ? 'liked' : ''}" id="np-like" title="Like">${liked.has(t.id) ? I.heartFill : I.heart}</button>`;
+    <button class="np-like ${liked.has(t.id) ? 'liked' : ''}" id="np-like" title="Like" aria-label="${liked.has(t.id) ? 'Remove from liked songs' : 'Add to liked songs'}">${liked.has(t.id) ? I.heartFill : I.heart}</button>`;
   mediaSessionMeta(t);
   $('#np-like').onclick = () => toggleLike(t.id);
   const sup = $('.np-supports', $('#np')); if (sup) sup.onclick = () => collect(t.id);
@@ -405,53 +433,66 @@ function collect(id) {
    ============================================================ */
 function openWallet() {
   $('#modal-body').innerHTML = `
-    <button class="modal-close" id="modal-x">${I.close}</button>
+    <button class="modal-close" id="modal-x" type="button" aria-label="Close dialog">${I.close}</button>
     <div class="m-glyph">◆</div>
-    <h2>Own your music identity</h2>
-    <p>Connect a wallet to make your library, playlists, and taste graph <b>yours</b> — portable across any Strummer client, owned by you, not rented from a platform.</p>
+    <h2 id="modal-title">Wallet connection is a concept preview</h2>
+    <p>Strummer does not connect a wallet or submit transactions in the current public preview. This dialog shows the planned direction without asking you to approve or sign anything.</p>
     <ul>
-      <li><span class="ic">${I.check}</span><span><b>Collect songs</b> on-chain — directly funding the artists you love.</span></li>
-      <li><span class="ic">${I.check}</span><span><b>Carry your identity</b> between apps. Your graph isn't trapped in one company.</span></li>
-      <li><span class="ic">${I.check}</span><span><b>Artists keep the upside</b> — no 30% tax, no fractional-cent streams.</span></li>
+      <li><span class="ic">${I.check}</span><span><b>No wallet request</b> is made by this page.</span></li>
+      <li><span class="ic">${I.check}</span><span><b>No transaction</b> can be submitted from this preview.</span></li>
+      <li><span class="ic">${I.check}</span><span>Current playback comes from Audius.</span></li>
     </ul>
-    <div class="modal-cta"><button class="btn-primary" id="wallet-soon">${I.wallet} Connect wallet</button></div>
-    <div class="modal-note">Wallet support ships in v1 · this is the vision</div>`;
+    <div class="modal-cta"><button class="btn-primary" id="wallet-soon">${I.wallet} Acknowledge preview</button></div>
+    <div class="modal-note">Wallet support is not available yet.</div>`;
+  $('#modal-body').setAttribute('aria-labelledby', 'modal-title');
   openModal(); $('#modal-x').onclick = closeModal;
   $('#wallet-soon').onclick = () => { closeModal(); toast('Wallet connect ships in v1 — stay tuned'); };
 }
 function openCollect(t) {
   if (!t) return;
   $('#modal-body').innerHTML = `
-    <button class="modal-close" id="modal-x">${I.close}</button>
+    <button class="modal-close" id="modal-x" type="button" aria-label="Close dialog">${I.close}</button>
     <div class="m-glyph">◆</div>
-    <h2>Collect "${esc(t.title)}"</h2>
-    <p>Own a piece of this track by <b>${esc(t.artist)}</b>. Collecting pays the artist directly and adds it to your portable, on-chain collection.</p>
+    <h2 id="modal-title">Collect "${esc(t.title)}"</h2>
+    <p>Collection is a future concept in this preview. Strummer will not connect a wallet, charge you, or submit a transaction from this dialog.</p>
     <ul>
-      <li><span class="ic">${I.diamondFill}</span><span><b>${esc(t.artist)}</b> receives the proceeds — directly, no middleman.</span></li>
-      <li><span class="ic">${I.check}</span><span>Lives in <b>Your Collection</b>, portable across any client.</span></li>
+      <li><span class="ic">${I.diamondFill}</span><span>The track reference is <b>${esc(t.title)}</b> by ${esc(t.artist)}.</span></li>
+      <li><span class="ic">${I.check}</span><span>No ownership or payment is created by the current preview.</span></li>
     </ul>
-    <div class="modal-cta"><button class="btn-primary" id="collect-go">${I.diamond} Collect — connect wallet</button></div>
-    <div class="modal-note">Collecting ships in v1 · this is the vision</div>`;
+    <div class="modal-cta"><button class="btn-primary" id="collect-go">${I.diamond} View wallet concept</button></div>
+    <div class="modal-note">Collection transactions are not available yet.</div>`;
+  $('#modal-body').setAttribute('aria-labelledby', 'modal-title');
   openModal(); $('#modal-x').onclick = closeModal;
   $('#collect-go').onclick = () => { closeModal(); openWallet(); };
 }
 function openImport() {
   $('#modal-body').innerHTML = `
-    <button class="modal-close" id="modal-x">${I.close}</button>
+    <button class="modal-close" id="modal-x" type="button" aria-label="Close dialog">${I.close}</button>
     <div class="m-glyph" style="color:#1DB954">${I.spotify}</div>
-    <h2>Import from Spotify</h2>
-    <p>Bring your library, playlists, and listening history into Strummer in one click — then own it for good. Same idea as Helium importing your Chrome profile: lower the switching cost to zero.</p>
+    <h2 id="modal-title">Spotify import is not available yet</h2>
+    <p>Strummer Vibe can currently read authorized top tracks and artists to create your taste profile. Full library and playlist import remains a future concept.</p>
     <ul>
       <li><span class="ic">${I.check}</span><span>Playlists, liked songs, and top artists.</span></li>
       <li><span class="ic">${I.check}</span><span>Your taste graph becomes <b>yours</b> — not Spotify's.</span></li>
     </ul>
-    <div class="modal-cta"><button class="btn-primary" id="import-go">${I.spotify} Connect Spotify</button></div>
-    <div class="modal-note">Spotify import ships in v2 · this is the wedge</div>`;
+    <div class="modal-cta"><button class="btn-primary" id="import-go">${I.spotify} Open Strummer Vibe</button></div>
+    <div class="modal-note">Spotify authorization happens only inside Strummer Vibe.</div>`;
+  $('#modal-body').setAttribute('aria-labelledby', 'modal-title');
   openModal(); $('#modal-x').onclick = closeModal;
-  $('#import-go').onclick = () => { closeModal(); toast('Spotify import is the v2 wedge — coming soon'); };
+  $('#import-go').onclick = () => { window.location.href = '/vibe'; };
 }
-function openModal() { $('#modal-scrim').classList.add('open'); }
-function closeModal() { $('#modal-scrim').classList.remove('open'); }
+let modalReturnFocus = null;
+function openModal() {
+  modalReturnFocus = document.activeElement;
+  $('#modal-scrim').classList.add('open');
+  $('#modal-scrim').setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(() => $('#modal-x')?.focus());
+}
+function closeModal() {
+  $('#modal-scrim').classList.remove('open');
+  $('#modal-scrim').setAttribute('aria-hidden', 'true');
+  if (modalReturnFocus && typeof modalReturnFocus.focus === 'function') modalReturnFocus.focus();
+}
 
 let toastTimer;
 function toast(msg) {
@@ -505,6 +546,7 @@ function applyVolume(pct) {
   volume = Math.min(1, Math.max(0, pct));
   if (gainNode) gainNode.gain.value = volume;
   $('#vol-fill').style.width = `${volume * 100}%`;
+  $('#vol').setAttribute('aria-valuenow', String(Math.round(volume * 100)));
   store.save(VOL_KEY, volume);
 }
 
@@ -662,6 +704,16 @@ function wireChrome() {
   };
   let seeking = false;
   bar.addEventListener('mousedown', (e) => { seeking = true; seek(e); });
+  bar.addEventListener('keydown', (e) => {
+    if (!trackDur) return;
+    const step = Math.max(5, trackDur * 0.05);
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    e.preventDefault();
+    const current = position();
+    const to = e.key === 'Home' ? 0 : e.key === 'End' ? trackDur : current + (e.key === 'ArrowRight' ? step : -step);
+    if (isPlaying) startPlayback(Math.min(trackDur, Math.max(0, to)));
+    else { pausedOffset = Math.min(trackDur, Math.max(0, to)); updateProgress(); }
+  });
   window.addEventListener('mousemove', (e) => seeking && seek(e));
   window.addEventListener('mouseup', () => seeking = false);
 
@@ -674,13 +726,20 @@ function wireChrome() {
   };
   let volDrag = false;
   vb.addEventListener('mousedown', (e) => { volDrag = true; setVol(e); });
+  vb.addEventListener('keydown', (e) => {
+    if (!['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    e.preventDefault();
+    const nextVolume = e.key === 'Home' ? 0 : e.key === 'End' ? 1 : volume + (['ArrowUp', 'ArrowRight'].includes(e.key) ? 0.05 : -0.05);
+    applyVolume(nextVolume);
+  });
   window.addEventListener('mousemove', (e) => volDrag && setVol(e));
   window.addEventListener('mouseup', () => volDrag = false);
 
   $('#main').addEventListener('scroll', (e) => { $('#topbar').classList.toggle('scrolled', e.target.scrollTop > 8); });
 
   window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'Escape' && $('#modal-scrim').classList.contains('open')) { closeModal(); return; }
+    if (e.target.closest('input, button, a, [role="slider"]')) return;
     if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
     if (e.code === 'ArrowRight') next(false);
     if (e.code === 'ArrowLeft') prev();

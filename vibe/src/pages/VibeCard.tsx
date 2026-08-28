@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Instagram, Link2 } from 'lucide-react';
 import type { User } from '../App';
 import {
   spotifyApiGet,
@@ -26,11 +27,11 @@ interface VibeCardProps {
 
 /** Playlist we create on the user's account. First entry is the current name;
  *  the rest are legacy names we still match so we update instead of duplicate. */
-const PLAYLIST_NAME = 'vibecheck wrapped';
-const PLAYLIST_NAMES = [PLAYLIST_NAME, 'vibecheck.style'];
+const PLAYLIST_NAME = 'my ult · strummer vibe';
+const PLAYLIST_NAMES = [PLAYLIST_NAME, 'vibecheck wrapped', 'vibecheck.style'];
 
 /** Weights for merging Spotify's three top-track windows into one ranking.
- *  Recent listening counts most, but all-time favourites still make the cut. */
+ *  Recent listening counts most, but year-long favourites still make the cut. */
 const RANGE_WEIGHTS: Record<string, number> = { short_term: 100, medium_term: 50, long_term: 25 };
 
 /**
@@ -70,11 +71,14 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   const [generating, setGenerating] = useState(false);
   const [vibeData, setVibeData] = useState<VibeData | null>(null);
   const [viewerVibe, setViewerVibe] = useState<VibeData | null>(null);
-  const [showStory, setShowStory] = useState(false);
+  const [showStory, setShowStory] = useState(
+    () => import.meta.env.DEV && new URLSearchParams(window.location.search).has('story-preview')
+  );
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playlistError, setPlaylistError] = useState(false);
   const [playlistCreating, setPlaylistCreating] = useState(false);
+  const [playlistSynced, setPlaylistSynced] = useState(false);
   // Track URIs + cover params stashed by the latest generateVibe, so the
   // opt-in "Save as Spotify playlist" button can build the playlist without
   // recomputing. Null until a generation runs; the handler re-fetches if so.
@@ -327,14 +331,14 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
 
         // If owner, also generate fresh in background
         if (isOwner && localStorage.getItem('access_token')) {
-          generateVibe(true);
+          generateVibe(true, saved.is_public !== false, saved.playlist_id);
         }
         return;
       }
 
       // No saved data — if owner, generate it
       if (isOwner && localStorage.getItem('access_token')) {
-        await generateVibe(false);
+        await generateVibe(false, false);
       } else {
         setError('This person hasn\'t created their vibe yet.');
         setLoading(false);
@@ -345,12 +349,16 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
     }
   }
 
-  async function generateVibe(background: boolean) {
+  async function generateVibe(
+    background: boolean,
+    privacyOverride?: boolean,
+    playlistIdOverride?: string | null
+  ) {
     if (!currentUser || !userId) return;
     if (!background) setGenerating(true);
 
     try {
-      // Fetch top tracks AND top artists from all time periods in parallel.
+      // Fetch top tracks AND top artists from all three time windows in parallel.
       // Top artists give us photos + richer genre signal than what we derive
       // from track metadata, and unlock the "Top Artists" section on the card.
       const [shortTerm, mediumTerm, longTerm, artistsShort, artistsMedium, artistsLong] = await Promise.all([
@@ -442,13 +450,16 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
       // Playlist creation is now opt-in (the "Save as Spotify playlist" button)
       // rather than an automatic write to the user's account on every generate.
       // Stash what that action needs; keep any playlist we already made.
-      const playlistId = currentUser.playlistId || null;
-      setPlaylistSource({
+      const playlistId = playlistIdOverride || currentUser.playlistId || vibeData?.playlist_id || null;
+      const nextPlaylistSource = {
         uris: sortedTracks.slice(0, 100).map((t: any) => t.uri).filter(Boolean),
         gradient: gradient.css,
         label: `${vibeLabel.emoji} ${vibeLabel.label}`,
-        textColor: getContrastTextColor(profile.metrics) === '#000000' ? '#000000' : '#ffffff',
-      });
+        textColor: (getContrastTextColor(profile.metrics) === '#000000'
+          ? '#000000'
+          : '#ffffff') as '#000000' | '#ffffff',
+      };
+      setPlaylistSource(nextPlaylistSource);
 
       // Top 5 tracks for display (with album art)
       const top5 = sortedTracks.slice(0, 5).map((t: any) => ({
@@ -456,6 +467,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         artist: t.artists.map((a: any) => a.name).join(', '),
         albumArt: t.album?.images?.[1]?.url || t.album?.images?.[0]?.url || '',
         uri: t.uri,
+        url: t.external_urls?.spotify || `https://open.spotify.com/track/${t.id}`,
       }));
 
       const data: VibeData = {
@@ -471,6 +483,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         top_tracks: top5,
         top_genres: profile.topGenres,
         top_artists: topArtists,
+        is_public: privacyOverride ?? vibeData?.is_public ?? false,
       };
 
       setVibeData(data);
@@ -482,6 +495,18 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
 
       // Save to DB
       await saveVibe(data);
+
+      // First creation remains explicit. After opt-in, the playlist becomes a
+      // living portrait and refreshes whenever its owner returns.
+      if (playlistId) {
+        try {
+          await replacePlaylistItems(playlistId, nextPlaylistSource.uris);
+          setPlaylistSynced(true);
+        } catch (syncErr) {
+          console.warn('Background playlist sync failed (non-fatal):', syncErr);
+          setPlaylistError(true);
+        }
+      }
     } catch (err) {
       console.error('Generate vibe error:', err);
       if (!background) {
@@ -505,7 +530,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
     }
   }
 
-  // Opt-in: build (or refresh) the "vibecheck.style" playlist on the user's
+  // Opt-in: build (or refresh) the Strummer Vibe playlist on the user's
   // own Spotify account. Only runs when they click the button — generating a
   // vibe no longer writes to their account automatically.
   async function createSpotifyPlaylist() {
@@ -531,9 +556,9 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
       }
 
       const playlistDescription =
-        `${currentUser.display_name}'s Wrapped — 4 weeks + 6 months + all time, ` +
+        `${currentUser.display_name}'s living ult · 4 weeks + 6 months + 1 year, ` +
         `merged and ranked. ${source.label} · strummer.fun/vibe`;
-      let playlistId = currentUser.playlistId || null;
+      let playlistId = currentUser.playlistId || vibeData.playlist_id || null;
 
       // Validate a cached playlist still exists (users delete them manually).
       if (playlistId) {
@@ -554,17 +579,15 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
       }
       if (!playlistId) {
         const playlist = await spotifyApiPost(
-          `https://api.spotify.com/v1/users/${currentUser.id}/playlists`,
+          'https://api.spotify.com/v1/me/playlists',
           { name: PLAYLIST_NAME, description: playlistDescription, public: false }
         );
         playlistId = playlist.id;
       }
+      if (!playlistId) throw new Error('Spotify did not return a playlist id.');
 
-      // Replace tracks (PUT replaces; Spotify caps at 100 URIs).
-      await spotifyApiPut(
-        `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
-        { uris: source.uris }
-      );
+      // Spotify renamed playlist /tracks to /items in 2026.
+      await replacePlaylistItems(playlistId, source.uris);
       try {
         await spotifyApiPut(
           `https://api.spotify.com/v1/playlists/${playlistId}`,
@@ -604,6 +627,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
       } catch (saveErr) {
         console.warn('Saving playlist id failed (non-fatal):', saveErr);
       }
+      setPlaylistSynced(true);
     } catch (err) {
       console.error('Playlist creation failed:', err);
       setPlaylistError(true);
@@ -612,14 +636,41 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
     }
   }
 
-  function handleShare() {
+  async function replacePlaylistItems(playlistId: string, uris: string[]) {
+    await spotifyApiPut(
+      `https://api.spotify.com/v1/playlists/${playlistId}/items`,
+      { uris: uris.slice(0, 100) }
+    );
+  }
+
+  async function handleShare() {
     // Copy the /share/:id URL so social platforms (Twitter/Discord/iMessage)
     // hit the OG-tagged HTML and render a per-user preview. Humans get
     // redirected to /:id transparently.
     const url = `${window.location.origin}/vibe/share/${userId}`;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${vibeData?.display_name || 'My'} music vibe`,
+          text: 'You get to know someone through their music taste.',
+          url,
+        });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) {
+        console.warn('Profile share failed:', err);
+      }
+    }
+  }
+
+  async function handlePublishFromStory() {
+    if (!vibeData || !currentUser) throw new Error('Not signed in');
+    await updatePrivacy(currentUser.id, currentUser.display_name, true);
+    setVibeData({ ...vibeData, is_public: true });
   }
 
   async function handleTogglePrivacy() {
@@ -752,16 +803,16 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   // Genre breakdown, statsforspotify-style: ranked by how many of the
   // window's top artists carry each tag. Recomputed per time-range tab from
   // the artists we already fetched — no extra API call — so switching
-  // between 4 Weeks / 6 Months / All Time shows genres for THAT window,
+  // between 4 Weeks / 6 Months / 1 Year shows genres for THAT window,
   // not just the one aggregate saved at generation time.
-  const rangeGenres = useMemo(() => {
+  const rangeGenres = (() => {
     if (!topArtists.length) return [];
     const counts = new Map<string, number>();
     for (const artist of topArtists as any[]) {
       for (const g of artist.genres || []) counts.set(g, (counts.get(g) || 0) + 1);
     }
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([g]) => g);
-  }, [topArtists]);
+  })();
   const topGenres = rangeGenres.length ? rangeGenres : vibeData.top_genres || [];
 
   // Meters reflect the v2.16 vibe model (mainstream / modernity / diversity / activity).
@@ -857,7 +908,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
             className={`text-[10px] uppercase tracking-[0.25em] ${haloClass}`}
             style={{ color: subtleColor }}
           >
-            vibecheck.style
+            strummer.fun/vibe
           </p>
         </motion.div>
 
@@ -897,6 +948,30 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
             </motion.div>
           )}
         </motion.div>
+
+        {isOwner && isPrivate && (
+          <motion.div
+            variants={fadeUp}
+            className="mb-10 flex flex-col gap-3 rounded-md border px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+            style={{ background: `${textColor}0d`, borderColor: `${textColor}28` }}
+          >
+            <div>
+              <p className="text-sm font-semibold" style={{ color: textColor }}>Private draft</p>
+              <p className="mt-1 text-xs leading-relaxed" style={{ color: subtleColor }}>
+                Only you can open this page. Publish it when you want friends to check your vibe.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleTogglePrivacy}
+              disabled={savingPrivacy}
+              className="min-h-10 shrink-0 rounded-md px-4 text-sm font-semibold transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
+              style={{ background: textColor, color: gradient.includes('hsl') ? '#000' : '#fff' }}
+            >
+              {savingPrivacy ? 'Publishing...' : 'Publish profile'}
+            </button>
+          </motion.div>
+        )}
 
         {/* Compatibility (only when logged-in viewer is looking at someone else) */}
         {!isOwner && currentUser && compatibilityScore != null && (
@@ -1027,7 +1102,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                 { key: null, label: 'My Vibe' },
                 { key: 'short_term' as TimeRange, label: '4 Weeks' },
                 { key: 'medium_term' as TimeRange, label: '6 Months' },
-                { key: 'long_term' as TimeRange, label: 'All Time' },
+                { key: 'long_term' as TimeRange, label: '1 Year' },
               ]
             ).map(opt => {
               const active = timeRange === opt.key;
@@ -1082,6 +1157,19 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                       {track.artist}
                     </p>
                   </div>
+                  {/* Handoff to /tune. Passes song + artist only: chords and key
+                      are NOT sent, because Spotify does not expose them (the
+                      audio-features endpoint was revoked for new apps in Nov
+                      2024). /tune either analyses audio you own, or shows the
+                      chords already saved for that song. */}
+                  <a
+                    href={`/tune?song=${encodeURIComponent(track.name)}&artist=${encodeURIComponent(track.artist)}`}
+                    className="shrink-0 text-xs px-2 py-1 rounded border transition-opacity hover:opacity-70"
+                    style={{ color: subtleColor, borderColor: `${textColor}25` }}
+                    title={`Learn ${track.name} on guitar`}
+                  >
+                    chords
+                  </a>
                 </div>
               ))}
             </div>
@@ -1274,12 +1362,14 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
           >
             <div className="text-sm" style={{ color: textColor }}>
               <p className="font-medium">
-                {vibeData.playlist_id ? 'Your Wrapped is on Spotify' : 'Make your Wrapped — on demand'}
+                {vibeData.playlist_id ? 'Your living ult is on Spotify' : 'Build your living ult'}
               </p>
               <p className="text-xs mt-0.5" style={{ color: subtleColor }}>
                 {vibeData.playlist_id
-                  ? 'Refresh anytime to re-merge your latest listening.'
-                  : 'Merges your last 4 weeks, 6 months, and all time into one ranked playlist on your account.'}
+                  ? playlistSynced
+                    ? 'Synced with your newest taste across 4 weeks, 6 months, and 1 year.'
+                    : 'Refresh anytime to merge your newest listening.'
+                  : 'Ranks your last 4 weeks, 6 months, and 1 year into one private playlist.'}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -1303,8 +1393,8 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                 {playlistCreating
                   ? 'Merging…'
                   : vibeData.playlist_id
-                    ? 'Refresh Wrapped'
-                    : 'Make my Wrapped'}
+                    ? 'Sync now'
+                    : 'Create my ult'}
               </button>
             </div>
           </div>
@@ -1368,14 +1458,16 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         {/* Actions */}
         <div className="flex flex-col gap-3">
           <button
-            onClick={handleShare}
-            className="w-full py-3 rounded-full font-semibold text-lg transition-all duration-200"
+            type="button"
+            onClick={() => setShowStory(true)}
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md px-4 text-base font-semibold transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2"
             style={{
               background: textColor,
               color: gradient.includes('hsl') ? '#000' : '#fff',
             }}
           >
-            {copied ? 'Copied!' : 'Share Your Vibe'}
+            <Instagram className="h-5 w-5" aria-hidden="true" />
+            Make an Instagram Story
           </button>
 
           <div className="flex gap-3">
@@ -1384,18 +1476,20 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                 href={`https://open.spotify.com/playlist/${vibeData.playlist_id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 py-3 rounded-full font-medium text-center border transition-all duration-200"
+                className="flex min-h-12 flex-1 items-center justify-center rounded-md border px-3 text-center text-sm font-medium transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2"
                 style={{ borderColor: `${textColor}40`, color: textColor }}
               >
                 Open in Spotify
               </a>
             )}
             <button
-              onClick={() => setShowStory(true)}
-              className="flex-1 py-3 rounded-full font-medium border transition-all duration-200"
+              type="button"
+              onClick={handleShare}
+              className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2"
               style={{ borderColor: `${textColor}40`, color: textColor }}
             >
-              Story
+              <Link2 className="h-4 w-4" aria-hidden="true" />
+              {copied ? 'Copied' : 'Share profile'}
             </button>
           </div>
 
@@ -1509,7 +1603,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         </div>
 
         <p className="text-center mt-8 text-xs" style={{ color: `${textColor}30` }}>
-          vibecheck.style
+          strummer.fun/vibe
         </p>
 
         <Footer textColor={textColor} />
@@ -1519,13 +1613,17 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
       {showStory && (
         <StoryGenerator
           user={{ display_name: vibeData.display_name, id: vibeData.spotify_id }}
-          topTracks={topTracks.map((t: any) => ({
+          topTracks={(vibeData.top_tracks || topTracks).map((t: any) => ({
             name: t.name,
-            artists: [{ name: t.artist }],
-            album: { images: [{ url: t.albumArt }] },
+            artist: t.artist || t.artists?.map((artist: any) => artist.name).join(', ') || '',
+            albumArt: t.albumArt || t.album?.images?.[0]?.url || null,
+            url: t.url || t.external_urls?.spotify,
           }))}
           vibeLabel={vibeData.vibe_label || ''}
           gradient={gradient}
+          profileUrl={`https://strummer.fun/vibe/${encodeURIComponent(vibeData.spotify_id)}`}
+          isPublic={!isPrivate}
+          onPublish={isOwner ? handlePublishFromStory : undefined}
           onClose={() => setShowStory(false)}
         />
       )}

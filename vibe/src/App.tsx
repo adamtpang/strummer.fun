@@ -29,7 +29,7 @@ export interface User {
   playlistId?: string;
 }
 
-// vibecheck is mounted under strummer.fun/vibe. Router basename + OAuth
+// Strummer Vibe is mounted under strummer.fun/vibe. Router basename + OAuth
 // redirect + raw history writes all need this prefix.
 const BASE = '/vibe';
 const REDIRECT_URI = window.location.origin + BASE;
@@ -38,8 +38,8 @@ const REDIRECT_URI = window.location.origin + BASE;
 // non-allowlisted user gets a token but 403s on /v1/me. This message explains
 // that instead of silently bouncing them to the landing page.
 const DEV_MODE_MESSAGE =
-  "vibecheck is invite-only right now — Spotify hasn't approved general access yet. " +
-  'Ask Adam to add your Spotify email to the allowlist, then try again.';
+  "Strummer Vibe is invite-only right now because Spotify development mode allows five test accounts. " +
+  'Ask for an invite using the email on your Spotify account, then try again.';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);

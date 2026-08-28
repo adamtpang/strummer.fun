@@ -24,6 +24,19 @@
 
     <p id="error" class="error" hidden></p>
 
+    <!-- Filled from ?song=&artist=&chords=&key=&tempo= when arriving from /vibe. -->
+    <div id="learning" class="learning" hidden>
+      <div class="learning-head">
+        <span class="learning-eyebrow">now learning</span>
+        <a id="learning-back" class="learning-back" href="/vibe">back to vibe</a>
+      </div>
+      <div id="learning-title" class="learning-title"></div>
+      <div id="learning-meta" class="learning-meta mono"></div>
+      <div id="learning-chords" class="learning-chords mono"></div>
+      <div id="learning-shapes" class="shape-row"></div>
+    </div>
+
+
     <!-- Tuner -->
     <section class="panel tuner">
       <div class="readout">

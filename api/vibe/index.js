@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   const denied = await requireOwnership(req, spotify_id);
   if (denied) return res.status(denied.status).json({ error: denied.error });
 
-  // is_public is optional on insert (column default applies). On update we
+  // is_public is optional for older clients. On update we
   // only overwrite when the client explicitly sends a boolean — that way a
   // generation-flow save doesn't silently flip a user's privacy choice.
   const explicitPublic = typeof is_public === 'boolean';
@@ -52,8 +52,10 @@ export default async function handler(req, res) {
            is_public = ${is_public},
            updated_at = NOW()`;
     } else {
-      await sql`INSERT INTO users (spotify_id, display_name, avatar_url, playlist_id, vibe_label, vibe_gradient, average_features, top_tracks, top_genres, top_artists, updated_at)
-         VALUES (${spotify_id}, ${display_name}, ${avatar_url}, ${playlist_id}, ${vibe_label}, ${vibe_gradient}, ${JSON.stringify(average_features)}, ${JSON.stringify(top_tracks)}, ${JSON.stringify(top_genres)}, ${topArtistsJson}, NOW())
+      // New rows begin private; on conflict, preserve the owner's existing
+      // privacy choice rather than silently publishing during regeneration.
+      await sql`INSERT INTO users (spotify_id, display_name, avatar_url, playlist_id, vibe_label, vibe_gradient, average_features, top_tracks, top_genres, top_artists, is_public, updated_at)
+         VALUES (${spotify_id}, ${display_name}, ${avatar_url}, ${playlist_id}, ${vibe_label}, ${vibe_gradient}, ${JSON.stringify(average_features)}, ${JSON.stringify(top_tracks)}, ${JSON.stringify(top_genres)}, ${topArtistsJson}, false, NOW())
          ON CONFLICT (spotify_id) DO UPDATE SET
            display_name = ${display_name},
            avatar_url = ${avatar_url},

@@ -467,7 +467,58 @@ function playReference(freq) {
   osc.onended = () => ctx.close();
 }
 
-document.addEventListener('DOMContentLoaded', boot);
+/* ---------- /vibe handoff ----------
+   Arrive as /tune?song=X&artist=Y&chords=...&key=...&tempo=...
+   Only renders what's actually in the URL; nothing is invented here. The
+   chord SHAPES come from the tuner's own SHAPES table, so a chord with no
+   known shape is shown as a name only rather than a wrong diagram. */
+function readHandoff() {
+  const params = new URLSearchParams(location.search);
+  const song = params.get('song');
+  const artist = params.get('artist');
+  if (!song && !artist) return;
+
+  const banner = document.getElementById('learning');
+  if (!banner) return;
+  banner.hidden = false;
+
+  const title = document.getElementById('learning-title');
+  if (title) title.textContent = artist ? `${song || 'Unknown'} — ${artist}` : song;
+
+  const key = params.get('key');
+  const tempo = params.get('tempo');
+  const meta = document.getElementById('learning-meta');
+  if (meta) {
+    const bits = [];
+    if (key) bits.push(key);
+    if (tempo) bits.push(`${tempo} BPM`);
+    meta.textContent = bits.length ? bits.join(' · ') : 'no key/tempo yet — analyse audio below';
+  }
+
+  const chords = params.get('chords');
+  const chordsEl = document.getElementById('learning-chords');
+  const shapesEl = document.getElementById('learning-shapes');
+  if (chords && chordsEl) {
+    chordsEl.textContent = chords;
+    const names = chords.split(/[|,\s]+/).map((c) => c.trim()).filter(Boolean);
+    if (shapesEl && typeof SHAPES === 'object') {
+      for (const name of names) {
+        if (!Object.prototype.hasOwnProperty.call(SHAPES, name)) continue;
+        const chip = document.createElement('div');
+        chip.className = 'shape-chip';
+        chip.textContent = name;
+        shapesEl.appendChild(chip);
+      }
+    }
+  } else if (chordsEl) {
+    chordsEl.textContent = 'no chords passed — drop the audio below to analyse them';
+  }
+
+  const back = document.getElementById('learning-back');
+  if (back && document.referrer.includes('/vibe')) back.href = document.referrer;
+}
+
+document.addEventListener('DOMContentLoaded', () => { boot(); readHandoff(); });
 
 // Exposed for verification/testing in the console.
 window.__tuner = { detectPitch, freqToNote, matchChord, computeChroma, nearestString, SONGS, SHAPES };

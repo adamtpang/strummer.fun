@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Strummer Privacy</title>
+  <meta name="description" content="Read how the Strummer player and Tune tool handle browser storage, music requests, microphone access, files, cookies, and third parties." />
+  <link rel="canonical" href="https://strummer.fun/privacy" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="info-page">
+  <div class="info-shell">
+    <header class="info-nav">
+      <a class="info-brand" href="/">strummer<span>.</span></a>
+      <nav class="info-links" aria-label="Information pages">
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy" aria-current="page">Privacy</a>
+      </nav>
+    </header>
+
+    <main class="info-main">
+      <span class="info-eyebrow">Privacy</span>
+      <h1>What the public Strummer tools handle.</h1>
+      <p class="info-lead">This policy describes the Strummer player at the site root and the Strummer Tune tool. Strummer Vibe has a separate, more detailed <a href="/vibe/privacy">privacy policy</a> because it uses Spotify authorization and can store a published taste profile.</p>
+
+      <section class="info-section">
+        <h2>Player requests and storage</h2>
+        <div>
+          <p>The Strummer player requests catalog metadata, artwork, and audio streams from Audius when you browse, search, or play music. If Audius is unavailable, the player can request one of its fixed demonstration audio files from SoundHelix.</p>
+          <p>The player stores liked-track metadata, collection-preview selections, and volume preference in your browser's localStorage. Those values remain on that browser until you clear site data or remove the saved selections. The root player does not create a Strummer account.</p>
+        </div>
+      </section>
+
+      <section class="info-section">
+        <h2>Tune microphone and files</h2>
+        <div>
+          <p>Strummer Tune asks for microphone permission only after you choose to start tuning. Pitch and chord analysis happen in the browser. Audio files selected for song analysis are decoded and processed on the device and are not uploaded by the Tune code.</p>
+        </div>
+      </section>
+
+      <section class="info-section">
+        <h2>Hosting and third parties</h2>
+        <div>
+          <p>Vercel hosts Strummer. Google Fonts supplies the displayed typefaces. Audius supplies player catalog and streaming responses, and SoundHelix supplies fixed fallback audio. Each provider receives the network information normally included when your browser requests its resource and applies its own terms.</p>
+          <p>The root player does not load advertising, analytics, social-pixel, or behavioral-tracking scripts. The initial page response does not set a Strummer cookie.</p>
+        </div>
+      </section>
+
+      <section class="info-section">
+        <h2>Questions and changes</h2>
+        <div>
+          <p>This policy was last updated on <time datetime="2026-08-28">August 28, 2026</time>. Use the <a href="/contact">contact page</a> for privacy questions. Material changes to the data handled by the player or Tune should be reflected here before the changed behavior is deployed.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="info-footer">
+      <span>Strummer by Adam Pang</span>
+      <span><a href="/">Return to the player</a></span>
+    </footer>
+  </div>
+</body>
+</html>

@@ -3,15 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Strummer — own your music</title>
-  <meta name="description" content="The streaming player where artists keep what they earn. Own your library, your taste, your identity — portable across any client. A web3 music client. The future is unwritten." />
+  <title>Strummer Music Player, Vibe Cards, and Tune Tools</title>
+  <meta name="description" content="Strummer is a free Audius music player with Spotify taste cards and browser-based pitch, chord, and tuning tools for listeners and musicians." />
+  <meta name="author" content="Adam Pang" />
   <meta name="theme-color" content="#0a0908" />
+  <link rel="canonical" href="https://strummer.fun/" />
 
-  <meta property="og:title" content="Strummer — own your music" />
-  <meta property="og:description" content="The streaming player where artists keep what they earn. Read. Write. Own." />
+  <meta property="og:title" content="Strummer Music Player, Vibe Cards, and Tune Tools" />
+  <meta property="og:description" content="Play Audius music, turn Spotify taste into a shareable Vibe card, and use local browser tools to tune and practice." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://strummer.fun" />
+  <meta property="og:url" content="https://strummer.fun/" />
   <meta name="twitter:card" content="summary_large_image" />
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://strummer.fun/#website",
+          "name": "Strummer",
+          "url": "https://strummer.fun/",
+          "description": "A free Audius music player with Spotify taste cards and browser-based pitch, chord, and tuning tools.",
+          "publisher": { "@id": "https://strummer.fun/#organization" }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://strummer.fun/#organization",
+          "name": "Strummer",
+          "url": "https://strummer.fun/",
+          "founder": {
+            "@type": "Person",
+            "name": "Adam Pang",
+            "url": "https://adampang.com/"
+          },
+          "sameAs": ["https://github.com/adamtpang/strummer.fun"]
+        }
+      ]
+    }
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -23,22 +53,22 @@
   <div class="app">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="brand">
+      <button class="brand" id="brand-home" type="button" aria-label="Scroll to the top of Strummer">
         <span class="wordmark">strummer</span><span class="wordmark period">.</span>
-      </div>
+      </button>
       <nav class="nav">
-        <a class="nav-item active" data-nav="home">
+        <button class="nav-item active" type="button" data-nav="home">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1V10"/></svg>
           Home
-        </a>
-        <a class="nav-item" data-nav="Search">
+        </button>
+        <button class="nav-item" type="button" data-nav="Search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           Search
-        </a>
-        <a class="nav-item" data-nav="Radio">
+        </button>
+        <button class="nav-item" type="button" data-nav="Radio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></svg>
           Radio
-        </a>
+        </button>
         <!-- Real navigation: /vibe is a separate app, not an SPA view -->
         <a class="nav-item" href="/vibe">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3l3-8 4 16 3-8h7"/></svg>
@@ -53,6 +83,7 @@
       <div class="playlists" id="playlists"></div>
       <div class="sidebar-foot">
         <span>by <a href="https://adampang.com" target="_blank" rel="noopener">adam pang</a></span>
+        <span><a href="/about">about</a> · <a href="/contact">contact</a> · <a href="/privacy">privacy</a></span>
         <span><a href="https://github.com/adamtpang/strummer.fun" target="_blank" rel="noopener">github</a> · the future is unwritten</span>
       </div>
     </aside>
@@ -62,7 +93,8 @@
       <div class="topbar" id="topbar">
         <div class="search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input id="search-input" placeholder="Search songs, artists, albums…" autocomplete="off" />
+          <label class="sr-only" for="search-input">Search songs, artists, and albums</label>
+          <input id="search-input" type="search" placeholder="Search songs, artists, albums…" autocomplete="off" />
         </div>
         <div class="topbar-actions">
           <button class="connect-btn" id="connect-btn">
@@ -71,7 +103,51 @@
           </button>
         </div>
       </div>
-      <div class="content" id="content"></div>
+      <div class="content" id="content">
+        <section class="hero">
+          <div class="hero-eyebrow">player · vibe · tune</div>
+          <h1>Strummer is a music workspace for listening, taste, and practice.</h1>
+          <p>Strummer brings three focused music tools into one public site: an Audius player for discovery, a Spotify-connected Vibe card for understanding your taste, and private browser tools for tuning, chord practice, and audio analysis.</p>
+          <div class="hero-cta">
+            <button class="btn-primary" id="hero-play" type="button">Play trending</button>
+            <a class="btn-ghost" href="/vibe">Make your Vibe card</a>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="strummer-tools">
+          <div class="section-head"><h2 class="section-title" id="strummer-tools">Three ways to use Strummer</h2></div>
+          <div class="capability-grid">
+            <div class="capability-item">
+              <span class="capability-index">01</span>
+              <h3>Play and discover</h3>
+              <p>Strummer's player loads current tracks from Audius, supports search and playback, and keeps liked track references and volume settings in your browser. Music streams from the source network, while the player interface stays lightweight and requires no Strummer account.</p>
+            </div>
+            <div class="capability-item">
+              <span class="capability-index">02</span>
+              <h3>Understand your taste</h3>
+              <p>Strummer Vibe uses Spotify authorization to turn your top tracks and artists into a customizable visual card. Publishing is optional, profiles are private by default, and the Vibe privacy page explains exactly which profile fields can be stored.</p>
+              <a class="text-link" href="/vibe">Open Strummer Vibe</a>
+            </div>
+            <div class="capability-item">
+              <span class="capability-index">03</span>
+              <h3>Tune and practice</h3>
+              <p>Strummer Tune listens through your microphone for pitch and common chord shapes, or analyzes an audio file you choose. Microphone and file analysis run on your device, so practice audio is not uploaded to Strummer's servers.</p>
+              <a class="text-link" href="/tune">Open Strummer Tune</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="preview-note" aria-labelledby="preview-status">
+          <div>
+            <span class="preview-kicker">Public preview</span>
+            <h2 id="preview-status">Useful now, explicit about what is next</h2>
+          </div>
+          <div class="preview-copy">
+            <p>Strummer currently includes 3 public tools with different data boundaries: the player reads open music data, Vibe connects only after Spotify authorization, and Tune processes microphone or file input locally. Wallet collection and full Spotify library import remain labeled concepts rather than shipped transactions.</p>
+            <p>Strummer's public preview currently costs $0. There is no paid plan, trial, purchase, or guarantee. Start by playing a trending track, make a Vibe card if you want a taste profile, or open Tune when you want to practice.</p>
+          </div>
+        </section>
+      </div>
     </main>
 
     <!-- Player bar -->
@@ -80,15 +156,15 @@
 
       <div class="controls">
         <div class="transport">
-          <button class="t-btn" id="shuffle-btn" title="Shuffle"></button>
-          <button class="t-btn" id="prev-btn" title="Previous"></button>
-          <button class="play-btn" id="play-btn" title="Play / Pause"></button>
-          <button class="t-btn" id="next-btn" title="Next"></button>
-          <button class="t-btn" id="repeat-btn" title="Repeat"></button>
+          <button class="t-btn" id="shuffle-btn" type="button" title="Shuffle" aria-label="Toggle shuffle"></button>
+          <button class="t-btn" id="prev-btn" type="button" title="Previous" aria-label="Play previous track"></button>
+          <button class="play-btn" id="play-btn" type="button" title="Play or pause" aria-label="Play or pause"></button>
+          <button class="t-btn" id="next-btn" type="button" title="Next" aria-label="Play next track"></button>
+          <button class="t-btn" id="repeat-btn" type="button" title="Repeat" aria-label="Change repeat mode"></button>
         </div>
         <div class="scrubber">
           <span class="time" id="cur-time">0:00</span>
-          <div class="bar" id="seek">
+          <div class="bar" id="seek" role="slider" tabindex="0" aria-label="Track position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
             <div class="bar-fill" id="seek-fill"></div>
             <div class="bar-knob" id="seek-knob"></div>
           </div>
@@ -97,18 +173,18 @@
       </div>
 
       <div class="extras">
-        <button class="x-btn" id="queue-btn" title="Queue"></button>
+        <button class="x-btn" id="queue-btn" type="button" title="Queue" aria-label="Open queue"></button>
         <div class="volume">
-          <span class="x-btn" id="vol-ic"></span>
-          <div class="vol-bar" id="vol"><div class="vol-fill" id="vol-fill"></div></div>
+          <span class="x-btn" id="vol-ic" aria-hidden="true"></span>
+          <div class="vol-bar" id="vol" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80"><div class="vol-fill" id="vol-fill"></div></div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Modal + toast -->
-  <div class="modal-scrim" id="modal-scrim"><div class="modal" id="modal-body"></div></div>
-  <div class="toast" id="toast"></div>
+  <div class="modal-scrim" id="modal-scrim" aria-hidden="true"><div class="modal" id="modal-body" role="dialog" aria-modal="true"></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="app.js"></script>
 </body>

@@ -53,7 +53,7 @@ export default function Home({ user, authError }: HomeProps) {
     try {
       // crypto.subtle requires a secure context (https or localhost).
       if (!window.crypto?.subtle) {
-        throw new Error('Your browser blocked secure sign-in. Open vibecheck over https and try again.');
+        throw new Error('Your browser blocked secure sign-in. Open Strummer Vibe over https and try again.');
       }
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
@@ -75,6 +75,7 @@ export default function Home({ user, authError }: HomeProps) {
           'user-read-private',
           'user-top-read',
           'playlist-modify-private',
+          'playlist-read-private',
           'user-read-recently-played',
           'user-read-currently-playing',
           'user-read-playback-state',
@@ -212,7 +213,7 @@ export default function Home({ user, authError }: HomeProps) {
           transition={{ duration: 0.55, delay: 0.85 }}
           className="text-white/25 text-[10px] uppercase tracking-[0.25em] mt-12"
         >
-          vibecheck.style
+          strummer.fun/vibe
         </motion.p>
 
         <Footer />

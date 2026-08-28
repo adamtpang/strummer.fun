@@ -123,9 +123,12 @@ function computeMetrics(
     const safeTracks = tracks.filter(Boolean);
     const safeArtists = artists.filter(Boolean);
 
-    // 1. mainstream — average track popularity (0-100)
-    const popularities = safeTracks.map(t => t.popularity ?? 0);
-    const avgPopularity = mean(popularities);
+    // Development Mode stopped returning popularity in March 2026. Missing
+    // data is neutral instead of falsely labeling every listener underground.
+    const popularities = safeTracks
+        .map(t => t.popularity)
+        .filter((value): value is number => typeof value === 'number');
+    const avgPopularity = popularities.length ? mean(popularities) : 50;
     const mainstream = clamp01(avgPopularity / 100);
 
     // 2. modernity — average release year, normalized 1960..currentYear → 0..1

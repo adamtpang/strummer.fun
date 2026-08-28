@@ -237,7 +237,7 @@ function renderCompare(a, b, score) {
                 padding: '6px 16px',
                 borderRadius: 20,
               },
-              children: 'vibecheck.style',
+              children: 'strummer.fun/vibe',
             },
           },
         ],

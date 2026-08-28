@@ -131,7 +131,7 @@ function renderCard(user) {
                 textTransform: 'uppercase',
                 color: subtle,
               },
-              children: 'vibecheck.style',
+              children: 'strummer.fun/vibe',
             },
           },
         ].filter(Boolean),

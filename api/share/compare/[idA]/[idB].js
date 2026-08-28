@@ -33,11 +33,11 @@ export default async function handler(req, res) {
   const compareUrl = `${origin}/vibe/compare/${safeA}/${safeB}`;
 
   const title = a && b
-    ? `${a.display_name} vs ${b.display_name} — vibecheck.style`
-    : 'vibe match — vibecheck.style';
+    ? `${a.display_name} vs ${b.display_name} - Strummer Vibe`
+    : 'vibe match - Strummer Vibe';
   const description = a && b
     ? `${stripEmoji(a.vibe_label || '')} meets ${stripEmoji(b.vibe_label || '')}. See your full breakdown.`
-    : 'see how two music tastes compare on vibecheck.style';
+    : 'see how two music tastes compare on Strummer Vibe';
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
   <meta property="og:image" content="${ogImage}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:site_name" content="vibecheck.style" />
+  <meta property="og:site_name" content="Strummer Vibe" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />

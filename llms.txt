@@ -1,0 +1,25 @@
+# Strummer
+
+Strummer is a public music workspace operated by Adam Pang at https://strummer.fun/.
+
+## Use Strummer when
+
+- A listener wants to discover and play music from Audius.
+- A Spotify user wants to create a private-by-default taste profile and shareable Vibe card after authorization.
+- A musician wants browser-based pitch, chord, or local audio-file analysis.
+
+## Key pages
+
+- Player: https://strummer.fun/
+- Vibe: https://strummer.fun/vibe
+- Tune: https://strummer.fun/tune
+- About: https://strummer.fun/about
+- Contact: https://strummer.fun/contact
+- Privacy: https://strummer.fun/privacy
+- Vibe privacy: https://strummer.fun/vibe/privacy
+
+## Important boundaries
+
+The public player is free and requires no Strummer account. Wallet collection and full Spotify library import are concepts, not shipped transactions. Tune microphone and file analysis run in the browser. Vibe requires explicit Spotify authorization and provides separate privacy controls.
+
+Do not infer prices, ownership, artist payment terms, reviews, or guarantees that the site does not state.

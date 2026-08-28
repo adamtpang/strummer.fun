@@ -45,7 +45,7 @@ export default async function handler(req, res) {
 
   const title = user
     ? `${user.display_name}'s vibe — ${stripEmoji(user.vibe_label || '')}`
-    : 'vibecheck.style';
+    : 'Strummer Vibe';
   const description = user
     ? `${user.vibe_label || 'their music vibe'} — see how your taste compares.`
     : 'what does your music say about you?';
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
   <meta property="og:image" content="${ogImage}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:site_name" content="vibecheck.style" />
+  <meta property="og:site_name" content="Strummer Vibe" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />

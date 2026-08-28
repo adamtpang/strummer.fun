@@ -1,7 +1,26 @@
 {
   "buildCommand": "cd vibe && npm install && npm run build && cd .. && node build.mjs",
   "outputDirectory": "dist",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://*.scdn.co https://*.spotifycdn.com https://*.audius.co https://*.audiusindex.org https://*.monophonic.digital https://*.figment.io https://*.altego.net https://*.staked.cloud https://*.stuffisup.com https://*.theblueprint.xyz https://*.open-audio-validator.com https://*.shakespearetech.com https://*.rickyrombo.com https://*.bragi.cc; connect-src 'self' data: blob: https://accounts.spotify.com https://api.spotify.com https://*.scdn.co https://*.spotifycdn.com https://*.audius.co https://*.audiusindex.org https://*.monophonic.digital https://*.figment.io https://*.altego.net https://*.staked.cloud https://*.stuffisup.com https://*.theblueprint.xyz https://*.open-audio-validator.com https://*.shakespearetech.com https://*.rickyrombo.com https://*.bragi.cc https://www.soundhelix.com; media-src 'self' blob: https://*.audius.co https://*.audiusindex.org https://*.monophonic.digital https://*.figment.io https://*.altego.net https://*.staked.cloud https://*.stuffisup.com https://*.theblueprint.xyz https://*.open-audio-validator.com https://*.shakespearetech.com https://*.rickyrombo.com https://*.bragi.cc https://www.soundhelix.com; frame-src https://open.spotify.com; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests"
+        },
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), geolocation=(), microphone=(self), payment=()" }
+      ]
+    }
+  ],
   "rewrites": [
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/tune", "destination": "/tune.html" },
     { "source": "/vibe/share/compare/:idA/:idB", "destination": "/api/share/compare/:idA/:idB" },
     { "source": "/vibe/share/:spotifyId", "destination": "/api/share/:spotifyId" },

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-const LAST_UPDATED = 'April 30, 2026';
+const LAST_UPDATED = 'August 27, 2026';
 const CONTACT_EMAIL = 'adamtpang@gmail.com';
 
 export default function Privacy() {
@@ -11,7 +11,7 @@ export default function Privacy() {
           to="/"
           className="text-white/40 hover:text-white text-sm font-medium transition-colors inline-block mb-12"
         >
-          ← vibecheck.style
+          ← Strummer Vibe
         </Link>
 
         <h1 className="text-4xl font-bold text-white mb-3">Privacy Policy</h1>
@@ -19,7 +19,7 @@ export default function Privacy() {
 
         <Section title="The short version">
           <p>
-            vibecheck.style is a tool that turns your Spotify listening history
+            Strummer Vibe is a tool that turns your Spotify listening history
             into a sharable "vibe card." We need a small amount of data from
             Spotify to do that. We don't sell it, we don't show ads, and you can
             delete everything we've stored about you at any time from your own
@@ -32,9 +32,9 @@ export default function Privacy() {
           <ul className="list-disc pl-6 mt-3 space-y-1.5">
             <li>Your Spotify display name, user ID, and profile picture URL</li>
             <li>Your top tracks (across short, medium, and long time ranges)</li>
-            <li>The audio features (energy, valence, danceability, etc.) for those tracks</li>
-            <li>Your top genres, derived from those tracks</li>
-            <li>The Spotify playlist ID that vibecheck creates on your behalf, if you opt in</li>
+            <li>Your top artists and the genres Spotify associates with them</li>
+            <li>Your taste metrics and vibe label derived from that data</li>
+            <li>The Spotify playlist ID that Strummer Vibe creates on your behalf, if you opt in</li>
             <li>An access + refresh token from Spotify (held in your browser's localStorage, not on our servers)</li>
           </ul>
           <p className="mt-4">
@@ -58,8 +58,8 @@ export default function Privacy() {
           <p>We use your data only to:</p>
           <ul className="list-disc pl-6 mt-3 space-y-1.5">
             <li>Generate and display your vibe card</li>
-            <li>Show your card to people who visit your profile URL (unless you flip privacy off)</li>
-            <li>List you in the public /explore directory (unless you flip privacy off)</li>
+            <li>Show your card to people who visit your profile URL after you publish it</li>
+            <li>List you in the public /explore directory after you publish it</li>
             <li>Compute compatibility scores between you and other users</li>
             <li>Render the per-user OG image when someone shares your link</li>
           </ul>
@@ -72,8 +72,8 @@ export default function Privacy() {
         <Section title="Privacy controls">
           <p>You can flip a 🌍 Public / 🔒 Private toggle on your own card at any time:</p>
           <ul className="list-disc pl-6 mt-3 space-y-1.5">
-            <li><strong>Public</strong> (default): your card appears on /explore and renders rich previews when shared</li>
-            <li><strong>Private</strong>: hidden from /explore, share previews fall back to a generic vibecheck image, and visitors to your URL see a "private vibe" page instead of your card</li>
+            <li><strong>Private</strong> (default): hidden from /explore, with generic share previews and no public card</li>
+            <li><strong>Public</strong>: your card appears on /explore and renders personalized previews when shared</li>
           </ul>
         </Section>
 
@@ -85,7 +85,7 @@ export default function Privacy() {
             too. Nothing about you stays on our servers after deletion.
           </p>
           <p className="mt-4">
-            You can also revoke vibecheck.style's access to your Spotify account
+            You can also revoke Strummer Vibe's access to your Spotify account
             at any time at{' '}
             <a
               href="https://www.spotify.com/account/apps/"
@@ -107,11 +107,11 @@ export default function Privacy() {
         </Section>
 
         <Section title="Third-party services">
-          <p>vibecheck.style relies on three external providers:</p>
+          <p>Strummer Vibe relies on three external providers:</p>
           <ul className="list-disc pl-6 mt-3 space-y-1.5">
             <li>
               <strong>Spotify Web API</strong> — for OAuth login, your top tracks,
-              audio features, and to create the optional playlist on your behalf.
+              top artists, playback context, and the optional playlist you create.
               Spotify's privacy policy applies to that data flow:{' '}
               <a
                 href="https://www.spotify.com/legal/privacy-policy/"
@@ -139,7 +139,7 @@ export default function Privacy() {
 
         <Section title="Children">
           <p>
-            vibecheck.style is not directed at children under 13, and we don't
+            Strummer Vibe is not directed at children under 13, and we don't
             knowingly collect data from them. Spotify's terms already require
             users to be old enough — we inherit that gate.
           </p>
@@ -163,7 +163,7 @@ export default function Privacy() {
         </Section>
 
         <p className="text-white/30 text-xs mt-16">
-          vibecheck.style is an independent project and is not affiliated with,
+          Strummer Vibe is an independent project and is not affiliated with,
           endorsed by, or sponsored by Spotify AB. "Spotify" is a trademark of
           Spotify AB.
         </p>

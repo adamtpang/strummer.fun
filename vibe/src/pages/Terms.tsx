@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-const LAST_UPDATED = 'April 30, 2026';
+const LAST_UPDATED = 'August 27, 2026';
 const CONTACT_EMAIL = 'adamtpang@gmail.com';
 
 export default function Terms() {
@@ -11,7 +11,7 @@ export default function Terms() {
           to="/"
           className="text-white/40 hover:text-white text-sm font-medium transition-colors inline-block mb-12"
         >
-          ← vibecheck.style
+          ← Strummer Vibe
         </Link>
 
         <h1 className="text-4xl font-bold text-white mb-3">Terms of Service</h1>
@@ -19,15 +19,15 @@ export default function Terms() {
 
         <Section title="The short version">
           <p>
-            vibecheck.style is a free tool that turns your Spotify history into
+            Strummer Vibe is a free tool that turns your Spotify history into
             a vibe card. Use it kindly. Don't try to break it. We provide it
             as-is. You own your data and can delete it any time.
           </p>
         </Section>
 
-        <Section title="What vibecheck.style is">
+        <Section title="What Strummer Vibe is">
           <p>
-            vibecheck.style ("the Service") is a personal indie project that
+            Strummer Vibe ("the Service") is a personal indie project that
             lets you connect your Spotify account, generate a "vibe card" from
             your listening data, and optionally display it publicly on
             /explore. The Service is operated by Adam Pang as an individual.
@@ -57,7 +57,7 @@ export default function Terms() {
             underlying data.
           </p>
           <p className="mt-4">
-            By making your card public (the default), you grant the Service a
+            By making your private card public, you grant the Service a
             non-exclusive license to display it on /explore, in compatibility
             scoring with other users, and in the OG share preview when someone
             shares your URL. Flipping the privacy toggle to 🔒 Private revokes
@@ -68,7 +68,7 @@ export default function Terms() {
 
         <Section title="Spotify">
           <p>
-            vibecheck.style uses the Spotify Web API under Spotify's developer
+            Strummer Vibe uses the Spotify Web API under Spotify's developer
             terms. Your continued use of the Service is also subject to
             Spotify's own terms (
             <a
@@ -112,7 +112,7 @@ export default function Terms() {
 
         <Section title="Limitation of liability">
           <p>
-            vibecheck.style is offered free of charge and provided "as is."
+            Strummer Vibe is offered free of charge and provided "as is."
             Adam Pang is not liable for any indirect, incidental, or
             consequential damages arising from your use of the Service. To the
             maximum extent permitted by law, the operator's total liability is
@@ -124,7 +124,7 @@ export default function Terms() {
         <Section title="Trademarks">
           <p>
             "Spotify" and the Spotify logo are trademarks of Spotify AB.
-            vibecheck.style is an independent project and is not affiliated
+            Strummer Vibe is an independent project and is not affiliated
             with, endorsed by, or sponsored by Spotify AB.
           </p>
         </Section>

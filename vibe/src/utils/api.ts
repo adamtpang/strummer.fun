@@ -21,6 +21,7 @@ export interface VibeData {
   top_genres: string[] | null;
   top_artists?: TopArtist[] | null;
   is_public?: boolean;
+  updated_at?: string;
 }
 
 /**
@@ -77,7 +78,10 @@ export async function updatePrivacy(
 }
 
 export async function getVibe(spotifyId: string): Promise<VibeData | null> {
-  const res = await fetch(`${API_BASE}/api/vibe/${encodeURIComponent(spotifyId)}`);
+  const token = localStorage.getItem('access_token');
+  const res = await fetch(`${API_BASE}/api/vibe/${encodeURIComponent(spotifyId)}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error('Failed to fetch vibe');
   return res.json();

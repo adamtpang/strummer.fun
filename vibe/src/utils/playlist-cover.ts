@@ -7,7 +7,7 @@
 //   - Max 256 KB
 //
 // We render a 640x640 canvas with the user's vibe gradient + their
-// vibe label + a small "vibecheck.style" wordmark, then export as JPEG
+// vibe label + a small Strummer Vibe wordmark, then export as JPEG
 // at 0.85 quality. That comfortably stays under 256 KB.
 
 const SIZE = 640;
@@ -82,7 +82,7 @@ export async function generatePlaylistCover(input: CoverInput): Promise<string> 
   // 5. Wordmark at the bottom — small, uppercase, tracked
   ctx.fillStyle = input.textColor === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.55)';
   ctx.font = '500 18px Inter, system-ui, sans-serif';
-  ctx.fillText('VIBECHECK.STYLE', SIZE / 2, SIZE - 38);
+  ctx.fillText('STRUMMER.FUN/VIBE', SIZE / 2, SIZE - 38);
 
   // 6. Export — JPEG at 0.85 strikes the balance under 256 KB
   const dataUrl = canvas.toDataURL('image/jpeg', 0.85);

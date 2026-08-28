@@ -28,7 +28,7 @@ export default function Footer({ textColor }: FooterProps = {}) {
         ·
       </span>
       <a
-        href="https://github.com/adamtpang/vibecheck.style"
+        href="https://github.com/adamtpang/strummer.fun"
         target="_blank"
         rel="noopener noreferrer"
         className={linkClass}

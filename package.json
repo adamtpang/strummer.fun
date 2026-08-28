@@ -4,7 +4,10 @@
   "description": "strummer.fun — Audius web player (static, /) + vibecheck (/vibe)",
   "scripts": {
     "build": "cd vibe && npm install && npm run build && cd .. && node build.mjs",
-    "assemble": "node build.mjs"
+    "assemble": "node build.mjs",
+    "test": "node --test",
+    "typecheck": "cd vibe && npx tsc --noEmit",
+    "lint": "cd vibe && npm run lint"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

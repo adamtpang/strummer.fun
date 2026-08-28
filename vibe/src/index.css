@@ -23,6 +23,28 @@
   --vc-good:      #4ade80;
   --vc-spotify:   #1DB954;
 
+  /* shadcn semantic tokens mapped onto the existing Strummer palette. */
+  --background: 30 11.11% 3.53%;
+  --foreground: 60 4.76% 95.88%;
+  --card: 30 5.88% 6.67%;
+  --card-foreground: 60 4.76% 95.88%;
+  --popover: 30 8.33% 9.41%;
+  --popover-foreground: 60 4.76% 95.88%;
+  --primary: 0 72.22% 50.59%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 30 8.33% 9.41%;
+  --secondary-foreground: 60 4.76% 95.88%;
+  --muted: 30 10% 11.76%;
+  --muted-foreground: 32.73 7.19% 70%;
+  --accent: 33.33 9.89% 17.84%;
+  --accent-foreground: 60 4.76% 95.88%;
+  --destructive: 0 72.22% 50.59%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 30 8.57% 13.73%;
+  --input: 33.33 9.89% 17.84%;
+  --ring: 0 72.22% 50.59%;
+  --radius: 0.5rem;
+
   --font-display: 'Instrument Serif', Georgia, serif;
   --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -38,6 +60,7 @@
     font-family: var(--font-ui);
     background: var(--vc-bg);
     color: var(--vc-fg);
+    color-scheme: dark;
     font-feature-settings: 'cv11', 'ss01', 'ss03'; /* Inter alt styles for cleaner numerals */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

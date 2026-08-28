@@ -188,8 +188,8 @@ export async function spotifyApiPost(url: string, body: any): Promise<any> {
 }
 
 /**
- * PUT with JSON body. Used by /v1/playlists/{id}/tracks to REPLACE the
- * track list (POST appends, PUT replaces — exactly what we want when
+ * PUT with JSON body. Used by /v1/playlists/{id}/items to replace the
+ * item list (POST appends, PUT replaces, which is what we want when
  * regenerating the vibecheck playlist).
  */
 export async function spotifyApiPut(url: string, body: any): Promise<any> {
