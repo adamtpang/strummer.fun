@@ -165,11 +165,48 @@ The risk is not moving slowly. It is losing the catalogue.
 ## Costs
 
 | Item | Cost |
-| --- | --- |
-| Suno Premier, 17 months | ~$460 |
-| DistroKid Musician, 2 years | ~$46 |
-| Splice, optional, 17 months | ~$220 |
-| **Floor to reach 1,000** | **~$505** |
+| Line | Rate | 17 months |
+| --- | --- | --- |
+| Suno Premier | $288/yr annual, then $30/mo | $438 |
+| DistroKid Musician | $24.99/yr | $50 |
+| **Required total** | | **$488** ($0.49/song) |
+
+Not paid up front. **Month one is $55**: DistroKid's $25 for the year plus one
+month of Suno at $30. Taking Suno's annual discount instead is $313 up front and
+saves $72 over the run. Given the cash position, monthly until week 1 proves the
+recording chain works is the safer order.
+
+### The add-on trap, priced per release
+
+DistroKid's base plan is genuinely unlimited. Its add-ons are per release, and
+the upload flow shows them as checkboxes on every single upload. At 1,000
+releases:
+
+| Add-on | Per release | At 1,000 |
+| --- | --- | --- |
+| Store Maximizer | $7.95/yr | **$7,950/yr** |
+| YouTube Content ID | $4.95/yr | **$4,950/yr**, plus DistroKid keeps 20% of Content ID revenue |
+| Leave a Legacy | $29 once | **$29,000** |
+| Cover Song Licensing | $12/yr | only if a release is a cover |
+
+Ticking one box out of habit on every upload costs 16x the entire plan. **Base
+plan only, every upload, no exceptions.** Revisit per song only if one gets real
+traction.
+
+### Cut Splice
+
+Suno generates the full bed. Paying Splice ~$221 over the run to build beds while
+paying Suno to build beds is two tools doing one job. Add it back only against a
+specific gap Suno cannot fill.
+
+### Already owned, $0
+
+Ableton Live 11 Intro, the mic, the interface, Claude and Codex.
+
+### Not money, but real
+
+1,000 releases need 1,000 distinct cover images at 1400x1400 minimum. Free to
+generate, but they have to exist. Batch them, do not do one at a time.
 
 Against an income deadline around Thanksgiving 2026, three months at this cap is
 180 songs, not 1,000. 1,000 lands early 2028. That is the honest schedule at the
