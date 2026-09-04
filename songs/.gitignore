@@ -13,3 +13,10 @@ stems/
 # LMMS renders: the .mmp project is the source and is committed, the .wav
 # is derived and regenerable via tools/lmms-mint.py --render
 lmms-projects/*.wav
+
+# Ableton projects: local working files only, not tracked, samples/audio
+# make these too large for git history
+ableton-projects/
+
+# Astro dev-server logs from local DJ sessions
+.astro-dj.*.log

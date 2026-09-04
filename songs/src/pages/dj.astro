@@ -1,0 +1,878 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/suno-dj.css';
+
+const TRAITS = ['hook', 'groove', 'harmony', 'vocal', 'lyrics', 'texture', 'surprise'];
+const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?? '';
+---
+
+<Base
+  title="Suno DJ · Strummer"
+  description="A taste-steered station for turning Suno candidates into original Pacifica songs."
+  bodyClass="suno-dj-page"
+>
+  <div class="dj-app" data-dj-root data-generation-endpoint={generationEndpoint}>
+    <div class="dj-topline">
+      <div>
+        <div class="dj-kicker">Strummer / Pacifica</div>
+        <h1>Suno DJ</h1>
+        <p class="dj-thesis">Original music, tuned by your decisions.</p>
+      </div>
+      <div class="dj-top-actions">
+        <button class="icon-button" type="button" data-install-app title="Install Strummer DJ" hidden>
+          <span aria-hidden="true">↓</span>
+          <span class="sr-only">Install Strummer DJ</span>
+        </button>
+        <button class="icon-button" type="button" data-add-open title="Add Suno candidate">
+          <span aria-hidden="true">+</span>
+          <span class="sr-only">Add Suno candidate</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="dj-stats" aria-label="Station statistics">
+      <div class="dj-stat"><strong data-stat-queue>0</strong><span>in rotation</span></div>
+      <div class="dj-stat"><strong data-stat-heard>0</strong><span>heard</span></div>
+      <div class="dj-stat"><strong data-stat-kept>0</strong><span>kept</span></div>
+      <div class="dj-stat"><strong data-stat-bangers>0</strong><span>bangers</span></div>
+    </div>
+    <p class="auto-fill-status" data-auto-fill-status hidden aria-live="polite"></p>
+
+    <div class="dj-grid">
+      <section class="dj-station" data-dj-station aria-label="Now playing">
+        <div class="dj-empty" data-empty-state>
+          <div class="dj-empty-mark" aria-hidden="true">◉</div>
+          <h2>Station is quiet</h2>
+          <p>Add a full Suno song-page URL to start the rotation.</p>
+          <button class="primary-button" type="button" data-add-open>
+            <span aria-hidden="true">+</span> Add first candidate
+          </button>
+        </div>
+
+        <div data-current-view hidden>
+          <div class="candidate-top">
+            <div>
+              <div class="candidate-position" data-candidate-position>In rotation</div>
+              <h2 data-current-title></h2>
+            </div>
+            <a
+              class="candidate-link"
+              data-current-link
+              href="https://suno.com"
+              target="_blank"
+              rel="noreferrer"
+            >Open in Suno</a>
+          </div>
+
+          <iframe
+            class="suno-frame"
+            data-current-frame
+            src="about:blank"
+            title="Current Suno candidate"
+            allow="autoplay; encrypted-media"
+          ></iframe>
+
+          <div class="swipe-handle" data-swipe-surface title="Swipe left to skip or right to keep">
+            <span></span>
+          </div>
+
+          <p class="source-prompt" data-source-prompt></p>
+
+          <div class="feedback-grid">
+            <fieldset class="feedback-fieldset">
+              <legend>What hit</legend>
+              <div class="trait-options">
+                {TRAITS.map((trait) => (
+                  <button
+                    class="trait-chip"
+                    type="button"
+                    data-kind="liked"
+                    data-trait={trait}
+                    aria-pressed="false"
+                  >{trait}</button>
+                ))}
+              </div>
+              <label class="sr-only" for="liked-custom">Other qualities that hit</label>
+              <input
+                class="feedback-custom"
+                id="liked-custom"
+                data-liked-custom
+                type="text"
+                placeholder="other wins, comma separated"
+                autocomplete="off"
+              />
+            </fieldset>
+
+            <fieldset class="feedback-fieldset">
+              <legend>What missed</legend>
+              <div class="trait-options">
+                {TRAITS.map((trait) => (
+                  <button
+                    class="trait-chip"
+                    type="button"
+                    data-kind="disliked"
+                    data-trait={trait}
+                    aria-pressed="false"
+                  >{trait}</button>
+                ))}
+              </div>
+              <label class="sr-only" for="disliked-custom">Other qualities that missed</label>
+              <input
+                class="feedback-custom"
+                id="disliked-custom"
+                data-disliked-custom
+                type="text"
+                placeholder="other misses, comma separated"
+                autocomplete="off"
+              />
+            </fieldset>
+          </div>
+
+          <div class="direction-wrap">
+            <label class="direction-label" for="direction">More like this, except</label>
+            <textarea
+              class="direction-input"
+              id="direction"
+              data-direction
+              placeholder="one change for the next version"
+            ></textarea>
+          </div>
+
+          <div class="decision-bar">
+            <button class="decision-button" type="button" data-action="skip" title="Skip candidate">
+              <span class="decision-icon" aria-hidden="true">×</span>
+              <span>Skip</span>
+            </button>
+            <button class="decision-button" type="button" data-action="replay" title="Replay candidate">
+              <span class="decision-icon" aria-hidden="true">↻</span>
+              <span>Replay</span>
+            </button>
+            <button class="decision-button" type="button" data-action="iterate" title="Create steering prompt">
+              <span class="decision-icon" aria-hidden="true">↑</span>
+              <span>Iterate</span>
+            </button>
+            <button class="decision-button" type="button" data-action="keep" title="Keep candidate">
+              <span class="decision-icon" aria-hidden="true">✓</span>
+              <span>Keep</span>
+            </button>
+          </div>
+        </div>
+
+        <section class="iteration-output" data-iteration-output hidden aria-live="polite">
+          <h3>Next Suno prompt</h3>
+          <p class="iteration-prompt" data-iteration-prompt></p>
+          <div class="iteration-actions">
+            <button class="primary-button" type="button" data-copy-prompt>Copy prompt</button>
+            <a
+              class="secondary-button"
+              href="https://suno.com/create"
+              target="_blank"
+              rel="noreferrer"
+            >Open Suno Create</a>
+          </div>
+        </section>
+      </section>
+
+      <aside class="dj-side">
+        <div class="dj-tabs" role="tablist" aria-label="DJ library">
+          <button
+            class="dj-tab"
+            type="button"
+            role="tab"
+            id="taste-tab"
+            aria-controls="taste-panel"
+            aria-selected="true"
+            data-tab="taste"
+          >Taste DNA</button>
+          <button
+            class="dj-tab"
+            type="button"
+            role="tab"
+            id="vault-tab"
+            aria-controls="vault-panel"
+            aria-selected="false"
+            data-tab="vault"
+          >Banger vault</button>
+        </div>
+
+        <div
+          class="dj-tab-panel"
+          id="taste-panel"
+          role="tabpanel"
+          aria-labelledby="taste-tab"
+          data-panel="taste"
+        >
+          <h2>Your signal</h2>
+          <div class="taste-profile-actions">
+            <button class="secondary-button" type="button" data-download-taste>
+              <span aria-hidden="true">↓</span> Download taste.md
+            </button>
+          </div>
+          <section class="taste-section imported-brief" data-imported-brief hidden>
+            <div class="imported-brief-head">
+              <h3>Creative compass</h3>
+              <button class="clear-brief-button" type="button" data-clear-brief>Clear</button>
+            </div>
+            <p class="imported-brief-meta" data-imported-brief-meta></p>
+            <ul class="taste-list" data-imported-brief-list></ul>
+          </section>
+          <section class="taste-section">
+            <h3>Pull closer</h3>
+            <ul class="taste-list" data-positive-taste></ul>
+          </section>
+          <section class="taste-section">
+            <h3>Push away</h3>
+            <ul class="taste-list" data-negative-taste></ul>
+          </section>
+          <section class="queue-section">
+            <h3>Rotation</h3>
+            <ul class="queue-list" data-queue-list></ul>
+          </section>
+        </div>
+
+        <div
+          class="dj-tab-panel"
+          id="vault-panel"
+          role="tabpanel"
+          aria-labelledby="vault-tab"
+          data-panel="vault"
+          hidden
+        >
+          <h2>Kept songs</h2>
+          <ul class="vault-list" data-vault-list></ul>
+        </div>
+      </aside>
+    </div>
+
+    <p class="sr-only" data-announcer aria-live="polite"></p>
+
+    <dialog class="dj-dialog" data-add-dialog>
+      <div class="dialog-head">
+        <h2>Add candidate</h2>
+        <button class="dialog-close" type="button" data-add-close aria-label="Close">×</button>
+      </div>
+      <form data-add-form>
+        <label>
+          <span class="field-label">Suno song URL</span>
+          <input
+            type="url"
+            name="url"
+            placeholder="https://suno.com/song/..."
+            inputmode="url"
+            required
+          />
+        </label>
+        <label>
+          <span class="field-label">Working title</span>
+          <input type="text" name="title" autocomplete="off" />
+        </label>
+        <label>
+          <span class="field-label">Source prompt</span>
+          <textarea name="prompt" placeholder="the prompt that produced this version"></textarea>
+        </label>
+        <p class="form-error" data-add-error role="alert" hidden></p>
+        <div class="dialog-actions">
+          <button class="primary-button" type="submit">Add to rotation</button>
+        </div>
+      </form>
+    </dialog>
+  </div>
+</Base>
+
+<script>
+  import {
+    applyDecision,
+    buildTasteMarkdown,
+    buildSteeringPrompt,
+    createInitialState,
+    isSunoDJState,
+    mergeGeneratedCandidates,
+    normalizeGeneratedCandidates,
+    parseSunoSongUrl,
+    parseCreativeBriefPayload,
+    recordReplay,
+    shouldRefillQueue,
+    summarizeTaste,
+    type DecisionAction,
+    type SunoCandidate,
+    type SunoDJState,
+  } from '../lib/suno-dj';
+
+  const STORAGE_KEY = 'strummer-suno-dj-v1';
+  const CREATIVE_BRIEF_KEY = 'strummer-suno-creative-brief-v1';
+  const SWIPE_THRESHOLD = 72;
+  const root = document.querySelector<HTMLElement>('[data-dj-root]');
+
+  if (!root) throw new Error('Suno DJ root was not rendered.');
+
+  const station = root.querySelector<HTMLElement>('[data-dj-station]')!;
+  const emptyState = root.querySelector<HTMLElement>('[data-empty-state]')!;
+  const currentView = root.querySelector<HTMLElement>('[data-current-view]')!;
+  const currentTitle = root.querySelector<HTMLElement>('[data-current-title]')!;
+  const currentPosition = root.querySelector<HTMLElement>('[data-candidate-position]')!;
+  const currentLink = root.querySelector<HTMLAnchorElement>('[data-current-link]')!;
+  const currentFrame = root.querySelector<HTMLIFrameElement>('[data-current-frame]')!;
+  const sourcePrompt = root.querySelector<HTMLElement>('[data-source-prompt]')!;
+  const likedCustom = root.querySelector<HTMLInputElement>('[data-liked-custom]')!;
+  const dislikedCustom = root.querySelector<HTMLInputElement>('[data-disliked-custom]')!;
+  const directionInput = root.querySelector<HTMLTextAreaElement>('[data-direction]')!;
+  const positiveTaste = root.querySelector<HTMLUListElement>('[data-positive-taste]')!;
+  const negativeTaste = root.querySelector<HTMLUListElement>('[data-negative-taste]')!;
+  const queueList = root.querySelector<HTMLUListElement>('[data-queue-list]')!;
+  const vaultList = root.querySelector<HTMLUListElement>('[data-vault-list]')!;
+  const iterationOutput = root.querySelector<HTMLElement>('[data-iteration-output]')!;
+  const iterationPrompt = root.querySelector<HTMLElement>('[data-iteration-prompt]')!;
+  const announcer = root.querySelector<HTMLElement>('[data-announcer]')!;
+  const addDialog = root.querySelector<HTMLDialogElement>('[data-add-dialog]')!;
+  const addForm = root.querySelector<HTMLFormElement>('[data-add-form]')!;
+  const addError = root.querySelector<HTMLElement>('[data-add-error]')!;
+  const importedBrief = root.querySelector<HTMLElement>('[data-imported-brief]')!;
+  const importedBriefMeta = root.querySelector<HTMLElement>('[data-imported-brief-meta]')!;
+  const importedBriefList = root.querySelector<HTMLUListElement>('[data-imported-brief-list]')!;
+  const autoFillStatus = root.querySelector<HTMLElement>('[data-auto-fill-status]')!;
+  const selectedLiked = new Set<string>();
+  const selectedDisliked = new Set<string>();
+
+  const loadState = (): SunoDJState => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return createInitialState();
+      const parsed: unknown = JSON.parse(stored);
+      if (!isSunoDJState(parsed)) return createInitialState();
+
+      return {
+        ...parsed,
+        candidates: parsed.candidates.map((candidate) => ({
+          ...candidate,
+          replays: Number.isFinite(candidate.replays) ? candidate.replays : 0,
+        })),
+      };
+    } catch {
+      return createInitialState();
+    }
+  };
+
+  let state = loadState();
+
+  const loadCreativeBrief = () => {
+    const url = new URL(window.location.href);
+    const incomingPayload = url.searchParams.get('brief');
+    const storedPayload = localStorage.getItem(CREATIVE_BRIEF_KEY);
+    const incomingBrief = incomingPayload ? parseCreativeBriefPayload(incomingPayload) : null;
+    const storedBrief = storedPayload ? parseCreativeBriefPayload(storedPayload) : null;
+    const brief = incomingBrief ?? storedBrief;
+
+    if (incomingPayload) {
+      if (incomingBrief) localStorage.setItem(CREATIVE_BRIEF_KEY, incomingPayload);
+      url.searchParams.delete('brief');
+      window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+    }
+
+    return brief;
+  };
+
+  let creativeBrief = loadCreativeBrief();
+
+  const saveState = () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  };
+
+  const generationEndpoint = (() => {
+    const configured = root.dataset.generationEndpoint?.trim();
+    if (!configured) return null;
+    const endpoint = new URL(configured, window.location.origin);
+    return endpoint.origin === window.location.origin ? endpoint.toString() : null;
+  })();
+  let refillPending = false;
+
+  const refillQueue = async (prompt: string) => {
+    if (!generationEndpoint || refillPending || !shouldRefillQueue(state)) return;
+    refillPending = true;
+    autoFillStatus.textContent = 'Generating the next original songs…';
+    autoFillStatus.hidden = false;
+    try {
+      const response = await fetch(generationEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId: crypto.randomUUID(),
+          prompt,
+        }),
+      });
+      if (!response.ok) throw new Error(`Generation provider returned ${response.status}.`);
+      const candidates = normalizeGeneratedCandidates(await response.json());
+      if (!candidates.length) throw new Error('Generation provider returned no playable songs.');
+      state = mergeGeneratedCandidates(state, candidates);
+      saveState();
+      render();
+      autoFillStatus.textContent = `${candidates.length} new song${candidates.length === 1 ? '' : 's'} added.`;
+      announce(autoFillStatus.textContent);
+    } catch (error) {
+      autoFillStatus.textContent = error instanceof Error ? error.message : 'Generation paused.';
+    } finally {
+      refillPending = false;
+    }
+  };
+
+  const announce = (message: string) => {
+    announcer.textContent = message;
+  };
+
+  const getCurrent = () =>
+    state.candidates.find((candidate) => candidate.id === state.currentId) ?? null;
+
+  const splitTraits = (value: string) =>
+    value
+      .split(',')
+      .map((trait) => trait.trim())
+      .filter(Boolean);
+
+  const collectLiked = () => [...selectedLiked, ...splitTraits(likedCustom.value)];
+  const collectDisliked = () => [
+    ...selectedDisliked,
+    ...splitTraits(dislikedCustom.value),
+  ];
+
+  const clearFeedback = () => {
+    selectedLiked.clear();
+    selectedDisliked.clear();
+    likedCustom.value = '';
+    dislikedCustom.value = '';
+    directionInput.value = '';
+    root.querySelectorAll<HTMLButtonElement>('[data-trait]').forEach((button) => {
+      button.setAttribute('aria-pressed', 'false');
+    });
+  };
+
+  const makeEmptyItem = (copy: string) => {
+    const item = document.createElement('li');
+    item.className = 'empty-copy';
+    item.textContent = copy;
+    return item;
+  };
+
+  const renderTaste = () => {
+    const traits = summarizeTaste(state.decisions);
+    const positive = traits.filter((trait) => trait.score > 0).slice(0, 8);
+    const negative = traits.filter((trait) => trait.score < 0).slice(0, 8);
+
+    const renderTrait = (trait: (typeof traits)[number]) => {
+      const item = document.createElement('li');
+      const label = document.createElement('span');
+      const score = document.createElement('span');
+      label.textContent = trait.label;
+      score.className = 'taste-score';
+      score.textContent = trait.score > 0 ? `+${trait.score}` : String(trait.score);
+      item.append(label, score);
+      return item;
+    };
+
+    positiveTaste.replaceChildren(
+      ...(positive.length ? positive.map(renderTrait) : [makeEmptyItem('No signal yet.')]),
+    );
+    negativeTaste.replaceChildren(
+      ...(negative.length ? negative.map(renderTrait) : [makeEmptyItem('No signal yet.')]),
+    );
+  };
+
+  const renderCreativeBrief = () => {
+    importedBrief.hidden = !creativeBrief;
+    if (!creativeBrief) {
+      importedBriefList.replaceChildren();
+      importedBriefMeta.textContent = '';
+      return;
+    }
+
+    importedBriefMeta.textContent = `${creativeBrief.evidenceCount} tagged song${creativeBrief.evidenceCount === 1 ? '' : 's'} shaped this brief.`;
+    const traits = creativeBrief.positiveTraits.slice(0, 8).map((trait) => {
+      const item = document.createElement('li');
+      const label = document.createElement('span');
+      const count = document.createElement('span');
+      label.textContent = trait.label;
+      count.className = 'taste-score';
+      count.textContent = String(trait.count);
+      item.append(label, count);
+      return item;
+    });
+    importedBriefList.replaceChildren(
+      ...(traits.length ? traits : [makeEmptyItem('Personal notes imported.')]),
+    );
+  };
+
+  const renderQueue = () => {
+    const queued = state.candidates.filter((candidate) => candidate.status === 'queued');
+    const items = queued.map((candidate, index) => {
+      const item = document.createElement('li');
+      const button = document.createElement('button');
+      const meta = document.createElement('p');
+      button.className = 'queue-pick';
+      button.type = 'button';
+      button.textContent = candidate.title;
+      button.setAttribute('aria-label', `Play ${candidate.title}`);
+      button.addEventListener('click', () => {
+        state = { ...state, currentId: candidate.id };
+        saveState();
+        clearFeedback();
+        render();
+      });
+      meta.className = 'queue-meta';
+      meta.textContent = candidate.id === state.currentId ? 'now playing' : `up ${index + 1}`;
+      item.append(button, meta);
+      return item;
+    });
+
+    queueList.replaceChildren(
+      ...(items.length ? items : [makeEmptyItem('Rotation is empty.')]),
+    );
+  };
+
+  const certifyCandidate = (candidate: SunoCandidate) => {
+    const priorDecision = [...state.decisions]
+      .reverse()
+      .find((decision) => decision.candidateId === candidate.id);
+    state = applyDecision(state, {
+      action: 'certify',
+      candidateId: candidate.id,
+      liked: priorDecision?.liked ?? [],
+      disliked: [],
+      direction: '',
+      decidedAt: new Date().toISOString(),
+    });
+    saveState();
+    render();
+    announce(`${candidate.title} certified as a banger.`);
+  };
+
+  const renderVault = () => {
+    const kept = state.candidates.filter((candidate) =>
+      ['kept', 'certified'].includes(candidate.status),
+    );
+
+    const items = kept.map((candidate) => {
+      const item = document.createElement('li');
+      const row = document.createElement('div');
+      const title = document.createElement('a');
+      const meta = document.createElement('p');
+      row.className = 'vault-row';
+      title.className = 'vault-title';
+      title.href = candidate.url;
+      title.target = '_blank';
+      title.rel = 'noreferrer';
+      title.textContent = candidate.title;
+      row.append(title);
+
+      if (candidate.status === 'certified') {
+        const mark = document.createElement('span');
+        mark.className = 'banger-mark';
+        mark.textContent = '★ banger';
+        row.append(mark);
+      } else {
+        const certify = document.createElement('button');
+        certify.className = 'certify-button';
+        certify.type = 'button';
+        certify.textContent = '★ Certify';
+        certify.addEventListener('click', () => certifyCandidate(candidate));
+        row.append(certify);
+      }
+
+      meta.className = 'vault-meta';
+      meta.textContent = `${candidate.replays} intentional replay${candidate.replays === 1 ? '' : 's'}`;
+      item.append(row, meta);
+      return item;
+    });
+
+    vaultList.replaceChildren(
+      ...(items.length ? items : [makeEmptyItem('Keep a song to start the vault.')]),
+    );
+  };
+
+  const renderIteration = () => {
+    const decision = [...state.decisions]
+      .reverse()
+      .find((candidateDecision) => candidateDecision.action === 'iterate');
+    if (!decision) {
+      iterationOutput.hidden = true;
+      return;
+    }
+
+    const source = state.candidates.find(
+      (candidate) => candidate.id === decision.candidateId,
+    );
+    iterationPrompt.textContent = buildSteeringPrompt({
+      basePrompt: source?.prompt ?? '',
+      liked: decision.liked,
+      disliked: decision.disliked,
+      direction: decision.direction,
+      creativeBrief,
+    });
+    iterationOutput.hidden = false;
+  };
+
+  const renderStats = () => {
+    const heard = state.decisions.filter((decision) => decision.action !== 'certify').length;
+    const queued = state.candidates.filter((candidate) => candidate.status === 'queued').length;
+    const kept = state.candidates.filter((candidate) =>
+      ['kept', 'certified'].includes(candidate.status),
+    ).length;
+    const bangers = state.candidates.filter(
+      (candidate) => candidate.status === 'certified',
+    ).length;
+
+    root.querySelector<HTMLElement>('[data-stat-queue]')!.textContent = String(queued);
+    root.querySelector<HTMLElement>('[data-stat-heard]')!.textContent = String(heard);
+    root.querySelector<HTMLElement>('[data-stat-kept]')!.textContent = String(kept);
+    root.querySelector<HTMLElement>('[data-stat-bangers]')!.textContent = String(bangers);
+  };
+
+  const render = () => {
+    const current = getCurrent();
+    emptyState.hidden = Boolean(current);
+    currentView.hidden = !current;
+    station.style.transform = '';
+    delete station.dataset.swipeDirection;
+
+    if (current) {
+      const queued = state.candidates.filter((candidate) => candidate.status === 'queued');
+      const queuePosition = queued.findIndex((candidate) => candidate.id === current.id) + 1;
+      currentTitle.textContent = current.title;
+      currentPosition.textContent = `${queuePosition} of ${queued.length} in rotation`;
+      currentLink.href = current.url;
+      currentFrame.title = `${current.title} on Suno`;
+      if (currentFrame.src !== current.embedUrl) currentFrame.src = current.embedUrl;
+      sourcePrompt.replaceChildren();
+      const label = document.createElement('strong');
+      label.textContent = 'Source prompt: ';
+      sourcePrompt.append(label, current.prompt || 'Not recorded.');
+    } else if (currentFrame.src !== 'about:blank') {
+      currentFrame.src = 'about:blank';
+    }
+
+    renderStats();
+    renderTaste();
+    renderCreativeBrief();
+    renderQueue();
+    renderVault();
+    renderIteration();
+  };
+
+  const decide = (action: Exclude<DecisionAction, 'certify'>) => {
+    const current = getCurrent();
+    if (!current) return;
+
+    const liked = collectLiked();
+    const disliked = collectDisliked();
+    const direction = directionInput.value;
+    const nextPrompt = buildSteeringPrompt({
+      basePrompt: current.prompt,
+      liked,
+      disliked,
+      direction,
+      creativeBrief,
+    });
+
+    state = applyDecision(state, {
+      action,
+      candidateId: current.id,
+      liked,
+      disliked,
+      direction,
+      decidedAt: new Date().toISOString(),
+    });
+    saveState();
+    clearFeedback();
+    render();
+    announce(`${current.title} ${action === 'keep' ? 'kept' : action === 'skip' ? 'skipped' : 'sent to iteration'}.`);
+    void refillQueue(nextPrompt);
+  };
+
+  root.querySelectorAll<HTMLButtonElement>('[data-trait]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const trait = button.dataset.trait;
+      const kind = button.dataset.kind;
+      if (!trait || !kind) return;
+      const collection = kind === 'liked' ? selectedLiked : selectedDisliked;
+      collection.has(trait) ? collection.delete(trait) : collection.add(trait);
+      button.setAttribute('aria-pressed', String(collection.has(trait)));
+    });
+  });
+
+  root.querySelectorAll<HTMLButtonElement>('[data-action]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.dataset.action;
+      if (action === 'replay') {
+        const current = getCurrent();
+        if (!current) return;
+        state = recordReplay(state, current.id);
+        saveState();
+        currentFrame.src = current.embedUrl;
+        renderStats();
+        renderVault();
+        announce(`${current.title} replayed.`);
+        return;
+      }
+      if (action === 'skip' || action === 'keep' || action === 'iterate') decide(action);
+    });
+  });
+
+  root.querySelectorAll<HTMLButtonElement>('[data-add-open]').forEach((button) => {
+    button.addEventListener('click', () => {
+      addError.hidden = true;
+      addDialog.showModal();
+      addForm.elements.namedItem('url') instanceof HTMLInputElement &&
+        addForm.elements.namedItem('url').focus();
+    });
+  });
+
+  root.querySelector<HTMLButtonElement>('[data-add-close]')!.addEventListener('click', () => {
+    addDialog.close();
+  });
+
+  addForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const formData = new FormData(addForm);
+    const parsed = parseSunoSongUrl(String(formData.get('url') ?? ''));
+    if (!parsed) {
+      addError.textContent = 'Paste a full https://suno.com/song/... URL.';
+      addError.hidden = false;
+      return;
+    }
+
+    if (state.candidates.some((candidate) => candidate.songId === parsed.songId)) {
+      addError.textContent = 'That song is already in this station.';
+      addError.hidden = false;
+      return;
+    }
+
+    const title = String(formData.get('title') ?? '').trim();
+    const candidate: SunoCandidate = {
+      id: parsed.songId,
+      songId: parsed.songId,
+      title: title || `Candidate ${state.candidates.length + 1}`,
+      url: parsed.canonicalUrl,
+      embedUrl: parsed.embedUrl,
+      prompt: String(formData.get('prompt') ?? '').trim(),
+      createdAt: new Date().toISOString(),
+      replays: 0,
+      status: 'queued',
+    };
+
+    state = {
+      ...state,
+      candidates: [...state.candidates, candidate],
+      currentId: state.currentId ?? candidate.id,
+    };
+    saveState();
+    addForm.reset();
+    addDialog.close();
+    render();
+    announce(`${candidate.title} added to the rotation.`);
+  });
+
+  root.querySelector<HTMLButtonElement>('[data-copy-prompt]')!.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(iterationPrompt.textContent ?? '');
+    announce('Steering prompt copied.');
+  });
+
+  root.querySelector<HTMLButtonElement>('[data-download-taste]')!.addEventListener('click', () => {
+    const markdown = buildTasteMarkdown({ state, creativeBrief });
+    const href = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown;charset=utf-8' }));
+    const download = document.createElement('a');
+    download.href = href;
+    download.download = 'taste.md';
+    download.click();
+    URL.revokeObjectURL(href);
+    announce('taste.md downloaded.');
+  });
+
+  type InstallPromptEvent = Event & {
+    prompt: () => Promise<void>;
+    userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  };
+
+  const installButton = root.querySelector<HTMLButtonElement>('[data-install-app]')!;
+  let installPrompt: InstallPromptEvent | null = null;
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    installPrompt = event as InstallPromptEvent;
+    installButton.hidden = false;
+  });
+
+  installButton.addEventListener('click', async () => {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === 'accepted') announce('Strummer DJ installed.');
+    installPrompt = null;
+    installButton.hidden = true;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installPrompt = null;
+    installButton.hidden = true;
+    announce('Strummer DJ installed.');
+  });
+
+  root.querySelector<HTMLButtonElement>('[data-clear-brief]')!.addEventListener('click', () => {
+    localStorage.removeItem(CREATIVE_BRIEF_KEY);
+    creativeBrief = null;
+    renderCreativeBrief();
+    renderIteration();
+    announce('Creative compass cleared.');
+  });
+
+  root.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+      root.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((candidateTab) => {
+        candidateTab.setAttribute(
+          'aria-selected',
+          String(candidateTab.dataset.tab === target),
+        );
+      });
+      root.querySelectorAll<HTMLElement>('[data-panel]').forEach((panel) => {
+        panel.hidden = panel.dataset.panel !== target;
+      });
+    });
+  });
+
+  const swipeSurface = root.querySelector<HTMLElement>('[data-swipe-surface]')!;
+  let activePointer: number | null = null;
+  let startX = 0;
+  let swipeX = 0;
+
+  const endSwipe = () => {
+    if (Math.abs(swipeX) >= SWIPE_THRESHOLD) decide(swipeX > 0 ? 'keep' : 'skip');
+    station.style.transform = '';
+    delete station.dataset.swipeDirection;
+    activePointer = null;
+    swipeX = 0;
+  };
+
+  swipeSurface.addEventListener('pointerdown', (event) => {
+    activePointer = event.pointerId;
+    startX = event.clientX;
+    swipeX = 0;
+    swipeSurface.setPointerCapture(event.pointerId);
+  });
+
+  swipeSurface.addEventListener('pointermove', (event) => {
+    if (event.pointerId !== activePointer) return;
+    swipeX = Math.max(-140, Math.min(140, event.clientX - startX));
+    station.style.transform = `translateX(${swipeX}px) rotate(${swipeX / 55}deg)`;
+    station.dataset.swipeDirection = swipeX >= 0 ? 'keep' : 'skip';
+  });
+
+  swipeSurface.addEventListener('pointerup', endSwipe);
+  swipeSurface.addEventListener('pointercancel', endSwipe);
+
+  document.addEventListener('keydown', (event) => {
+    const target = event.target as HTMLElement | null;
+    if (addDialog.open || ['INPUT', 'TEXTAREA'].includes(target?.tagName ?? '')) return;
+    if (event.key === 'ArrowLeft') decide('skip');
+    if (event.key === 'ArrowRight') decide('keep');
+    if (event.key === 'ArrowUp') decide('iterate');
+  });
+
+  render();
+</script>

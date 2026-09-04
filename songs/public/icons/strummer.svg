@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Strummer DJ">
+  <rect width="512" height="512" rx="72" fill="#0c0c0a"/>
+  <circle cx="256" cy="256" r="170" fill="#f1dd54"/>
+  <circle cx="256" cy="256" r="54" fill="#0c0c0a"/>
+  <path d="M256 86v116M426 256H310M256 426V310M86 256h116" stroke="#0c0c0a" stroke-width="24" stroke-linecap="round"/>
+</svg>

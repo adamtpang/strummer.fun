@@ -1,0 +1,32 @@
+{
+  "id": "/dj/",
+  "name": "Strummer DJ",
+  "short_name": "Strummer DJ",
+  "description": "A listener-steered station for shaping original songs.",
+  "start_url": "/dj/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0c0c0a",
+  "theme_color": "#0c0c0a",
+  "categories": ["music", "entertainment"],
+  "icons": [
+    {
+      "src": "/icons/strummer.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Open Strummer DJ",
+      "short_name": "DJ",
+      "url": "/dj/"
+    },
+    {
+      "name": "Browse songs",
+      "short_name": "Songs",
+      "url": "/songs/"
+    }
+  ]
+}
