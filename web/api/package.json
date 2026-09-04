@@ -1,0 +1,9 @@
+{
+  "name": "vibecheck-api",
+  "version": "2.0.0",
+  "type": "module",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "@vercel/og": "^0.6.5"
+  }
+}

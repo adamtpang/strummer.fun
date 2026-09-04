@@ -1,0 +1,18 @@
+# repos.yaml v0 — see github.com/adamtpang/repo-connect
+repo: strummer.fun
+is: The live web product at strummer.fun and www.strummer.fun (a static SPA, not the Tauri desktop player). Home to the landing page, /vibe (vibecheck, Spotify listening-history analysis and on-demand Wrapped), and /tune (mic-based guitar tuner, chord ear, bring-your-own-audio chord analyzer). Deployed via the Vercel project "strummer.fun" (prj_Ym97xlAIIQl0q8FobBjWdIZPJncH), connected to this repo's main branch via `vercel git connect` on 2026-08-11.
+url: https://strummer.fun
+
+provides:
+  - id: vibe
+    what: Spotify listening-history analysis (top tracks/artists/genres across time ranges) and an on-demand Wrapped playlist generator
+    at: vibe/
+  - id: tune
+    what: Mic-based guitar tuner, chord ear trainer, and a bring-your-own-audio chord analyzer (chromagram + Viterbi chord decoding)
+    at: tune.html
+
+stack: [vite, react, vanilla-js, vercel-serverless]
+
+kin:
+  - repo: strummer.fun-songs
+    why: Same product name, different concern — that repo (now retired, folded into a different codebase) was the 1000-songs creative-practice pipeline; this repo is the actual shipped listening/tuning product. They share a brand, not a codebase.
