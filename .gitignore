@@ -17,3 +17,4 @@ flatpak/.flatpak-cargo-generator.py
 
 # Generated agent handoffs may contain private conversation and account data.
 *_CONTINUE_FROM_*.md
+HANDOFF_*.md
