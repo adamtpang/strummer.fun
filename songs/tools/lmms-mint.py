@@ -10,6 +10,13 @@ key/tempo/chords, no GUI required to create it or hear it.
     python tools/lmms-mint.py --count 5  # mint 5
     python tools/lmms-mint.py --render   # also render each to a wav via the LMMS CLI
 
+    python tools/lmms-mint.py --song ipop-53 --render
+
+--song bypasses the queue and mints straight from one song file's own key,
+tempo, and chords, which is the path for a song that already exists and just
+needs a bed to sing over. It ignores the already-minted check, so re-running it
+overwrites that song's project.
+
 This is the batchable half only (facts: key, tempo, chords, structure).
 It does not and should not try to write a "hook" - see SONG-SPEC.md.
 Every generated project is a chassis, not a finished idea.
@@ -73,6 +80,42 @@ def chord_to_midi(token, octave=4):
         bass_note = 12 * octave + bass_pc
         notes = [bass_note] + notes
     return notes
+
+
+CHORD_TOKEN = re.compile(r"^[A-G](#|b)?[A-Za-z0-9]*$")
+
+
+def read_song(song_id):
+    path = SONGS_DIR / f"{song_id}.md"
+    if not path.exists():
+        raise ValueError(f"no song file at {path}")
+    text = path.read_text(encoding="utf-8-sig")
+
+    def field(name):
+        m = re.search(rf"^{name}:\s*(.+)$", text, re.M)
+        return m.group(1).strip().strip("'\"") if m else ""
+
+    tempo, chords = field("tempo"), field("chords")
+    if not tempo or not chords:
+        raise ValueError(f"{song_id} needs both tempo and chords to mint a bed")
+
+    tokens = [t.strip() for t in chords.split("|")]
+    kept = [t for t in tokens if CHORD_TOKEN.match(t)]
+    dropped = [t for t in tokens if t and not CHORD_TOKEN.match(t)]
+    if not kept:
+        raise ValueError(f"{song_id} has no parseable chord tokens in {chords!r}")
+    if dropped:
+        print(f"  ignoring non-chord text: {', '.join(repr(d) for d in dropped)}")
+
+    return {
+        "num": int(field("number") or 0),
+        "template": "-",
+        "key": field("key"),
+        "tempo": int(tempo),
+        "chords": "| " + " | ".join(kept) + " |",
+        "move": "",
+        "song_id": song_id,
+    }
 
 
 def read_queue():
@@ -168,13 +211,38 @@ def build_project(row):
     return PROJECT_TEMPLATE.format(bpm=row["tempo"], track=track_xml)
 
 
+def render(project_path, wav_path):
+    result = subprocess.run(
+        [LMMS_EXE, "--render", str(project_path), "-o", str(wav_path), "-f", "wav"],
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+    if result.returncode == 0 and wav_path.exists():
+        print(f"  rendered -> {wav_path} ({wav_path.stat().st_size} bytes)")
+        return True
+    print(f"  RENDER FAILED: {result.stderr[-500:]}", file=sys.stderr)
+    return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--count", type=int, default=1)
     ap.add_argument("--render", action="store_true", help="also render each to wav via LMMS CLI")
+    ap.add_argument("--song", help="mint one named song file instead of the queue")
     args = ap.parse_args()
 
     LMMS_DIR.mkdir(exist_ok=True)
+
+    if args.song:
+        row = read_song(args.song)
+        xml = build_project(row)
+        path = LMMS_DIR / f"{args.song}.mmp"
+        path.write_text(xml, encoding="utf-8")
+        print(f"wrote {path}  (key {row['key']}, {row['tempo']}bpm, {row['chords']})")
+        if args.render:
+            render(path, LMMS_DIR / f"{args.song}.wav")
+        return
     rows = read_queue()
     taken = taken_numbers()
     minted = 0
@@ -195,17 +263,7 @@ def main():
         print(f"wrote {path}  (key {row['key']}, {row['tempo']}bpm, {row['chords']})")
 
         if args.render:
-            wav_path = LMMS_DIR / f"no-{row['num']:03d}.wav"
-            result = subprocess.run(
-                [LMMS_EXE, "render", str(path), "-f", "wav", "-o", str(wav_path)],
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-            if result.returncode == 0 and wav_path.exists():
-                print(f"  rendered -> {wav_path} ({wav_path.stat().st_size} bytes)")
-            else:
-                print(f"  RENDER FAILED: {result.stderr[-500:]}", file=sys.stderr)
+            render(path, LMMS_DIR / f"no-{row['num']:03d}.wav")
 
         minted += 1
 
