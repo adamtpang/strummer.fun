@@ -12,6 +12,7 @@ export type DecisionAction = 'keep' | 'skip' | 'iterate' | 'certify';
 export type SunoCandidate = {
   id: string;
   songId: string;
+  source?: CandidateSource;
   title: string;
   url: string;
   embedUrl: string;
@@ -50,6 +51,25 @@ export type ParsedSunoSongUrl = {
   songId: string;
 };
 
+// Where a candidate came from. 'suno' is a generated candidate the listener
+// pasted in. 'catalog' is one of Adam's own released songs, played from its
+// public SoundCloud page. The station scores both the same way.
+export type CandidateSource = 'suno' | 'catalog';
+
+export type ParsedCandidateUrl = ParsedSunoSongUrl & {
+  source: CandidateSource;
+};
+
+// One released song out of src/content/songs, as the DJ page hands it over.
+export type CatalogSongInput = {
+  title?: unknown;
+  soundcloud?: unknown;
+  key?: unknown;
+  tempo?: unknown;
+  hook?: unknown;
+  date?: unknown;
+};
+
 export type SunoCreativeBrief = {
   version: 1;
   kind: 'user-authored-musical-observations';
@@ -74,6 +94,16 @@ type TasteMarkdownInput = {
 };
 
 const SUNO_HOSTS = new Set(['suno.com', 'www.suno.com']);
+const SOUNDCLOUD_HOSTS = new Set([
+  'soundcloud.com',
+  'www.soundcloud.com',
+  'm.soundcloud.com',
+]);
+// A SoundCloud track is exactly /<user>/<slug>. Two segments, nothing deeper:
+// /<user>/sets/<slug> is a playlist and /<user> alone is a profile.
+const SOUNDCLOUD_TRACK_PATH =
+  /^\/([a-z0-9][a-z0-9_-]{2,})\/([a-z0-9][a-z0-9_-]*)$/i;
+const SOUNDCLOUD_RESERVED = new Set(['sets', 'tracks', 'albums', 'reposts']);
 const SONG_PATH =
   /^\/(?:song|embed)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\/|$)/i;
 const MAX_CREATIVE_BRIEF_LENGTH = 24_000;
@@ -275,6 +305,113 @@ export const parseSunoSongUrl = (input: string): ParsedSunoSongUrl | null => {
   }
 };
 
+// A public SoundCloud track, played through SoundCloud's own widget player.
+// No API key and no scraping: the widget takes the track URL as a query param
+// and is the embed path SoundCloud publishes for exactly this.
+export const parseCatalogSongUrl = (
+  input: string,
+): ParsedSunoSongUrl | null => {
+  try {
+    const url = new URL(input.trim());
+    if (
+      url.protocol !== 'https:' ||
+      !SOUNDCLOUD_HOSTS.has(url.hostname.toLocaleLowerCase())
+    ) {
+      return null;
+    }
+
+    const match = url.pathname.match(SOUNDCLOUD_TRACK_PATH);
+    if (!match || SOUNDCLOUD_RESERVED.has(match[2].toLocaleLowerCase())) {
+      return null;
+    }
+
+    const user = match[1].toLocaleLowerCase();
+    const slug = match[2].toLocaleLowerCase();
+    const canonicalUrl = `https://soundcloud.com/${user}/${slug}`;
+    const widget = new URL('https://w.soundcloud.com/player/');
+    widget.searchParams.set('url', canonicalUrl);
+    widget.searchParams.set('auto_play', 'false');
+    widget.searchParams.set('hide_related', 'true');
+    widget.searchParams.set('show_comments', 'false');
+    widget.searchParams.set('visual', 'false');
+
+    return {
+      canonicalUrl,
+      embedUrl: widget.toString(),
+      songId: `soundcloud:${user}/${slug}`,
+    };
+  } catch {
+    return null;
+  }
+};
+
+// Accept either source from one entry point, so the add-candidate field and
+// the refill path do not each need to know the host list.
+export const parseCandidateUrl = (input: string): ParsedCandidateUrl | null => {
+  const suno = parseSunoSongUrl(input);
+  if (suno) {
+    return { ...suno, source: 'suno' };
+  }
+  const catalog = parseCatalogSongUrl(input);
+  if (catalog) {
+    return { ...catalog, source: 'catalog' };
+  }
+  return null;
+};
+
+// Turn released songs into station candidates. The prompt field carries what
+// the song is actually made of (key, tempo, hook) so a keep or a skip teaches
+// the taste profile something concrete instead of just a title.
+export const catalogCandidates = (songs: unknown): SunoCandidate[] => {
+  if (!Array.isArray(songs)) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  return songs.flatMap((entry) => {
+    if (!entry || typeof entry !== 'object') {
+      return [];
+    }
+    const song = entry as CatalogSongInput;
+    const parsed = parseCatalogSongUrl(
+      typeof song.soundcloud === 'string' ? song.soundcloud : '',
+    );
+    if (!parsed || seen.has(parsed.songId)) {
+      return [];
+    }
+    seen.add(parsed.songId);
+
+    const facts = [
+      typeof song.key === 'string' && song.key ? `key ${song.key}` : '',
+      typeof song.tempo === 'number' && Number.isFinite(song.tempo)
+        ? `${song.tempo} bpm`
+        : '',
+      typeof song.hook === 'string' && song.hook ? `hook: ${song.hook}` : '',
+    ].filter(Boolean);
+
+    return [
+      {
+        id: parsed.songId,
+        songId: parsed.songId,
+        source: 'catalog' as const,
+        title:
+          typeof song.title === 'string' && song.title.trim()
+            ? song.title.trim()
+            : parsed.songId,
+        url: parsed.canonicalUrl,
+        embedUrl: parsed.embedUrl,
+        prompt: facts.length ? facts.join(', ') : 'Released Strummer original.',
+        createdAt:
+          typeof song.date === 'string' && song.date
+            ? song.date
+            : new Date(0).toISOString(),
+        replays: 0,
+        status: 'queued' as CandidateStatus,
+      },
+    ];
+  });
+};
+
 export const normalizeGeneratedCandidates = (
   value: unknown,
 ): SunoCandidate[] => {
@@ -292,7 +429,7 @@ export const normalizeGeneratedCandidates = (
       return [];
     }
     const candidate = entry as GeneratedCandidateInput;
-    const parsed = parseSunoSongUrl(
+    const parsed = parseCandidateUrl(
       typeof candidate.url === 'string' ? candidate.url : '',
     );
     if (!parsed || seen.has(parsed.songId)) {

@@ -1,21 +1,39 @@
 ---
+import { getCollection } from 'astro:content';
+
 import Base from '../layouts/Base.astro';
 import '../styles/suno-dj.css';
 
 const TRAITS = ['hook', 'groove', 'harmony', 'vocal', 'lyrics', 'texture', 'surprise'];
 const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?? '';
+
+// The station's own catalog: released songs that have somewhere to play from.
+// Suno has no public API, so pasted candidates cannot refill on their own.
+// These can, and they are the songs we actually control.
+const released = await getCollection('songs');
+const catalog = released
+  .filter((song) => song.data.stage === 'released' && song.data.soundcloud)
+  .sort((a, b) => (a.data.number ?? 0) - (b.data.number ?? 0))
+  .map((song) => ({
+    title: song.data.title,
+    soundcloud: song.data.soundcloud,
+    key: song.data.key,
+    tempo: song.data.tempo,
+    hook: song.data.hook,
+    date: song.data.date.toISOString(),
+  }));
 ---
 
 <Base
-  title="Suno DJ · Strummer"
-  description="A taste-steered station for turning Suno candidates into original Pacifica songs."
+  title="Strummer DJ"
+  description="A taste-steered station for original songs: your own released catalog, plus any candidate you add."
   bodyClass="suno-dj-page"
 >
   <div class="dj-app" data-dj-root data-generation-endpoint={generationEndpoint}>
     <div class="dj-topline">
       <div>
         <div class="dj-kicker">Strummer / Pacifica</div>
-        <h1>Suno DJ</h1>
+        <h1>Strummer DJ</h1>
         <p class="dj-thesis">Original music, tuned by your decisions.</p>
       </div>
       <div class="dj-top-actions">
@@ -23,7 +41,16 @@ const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?
           <span aria-hidden="true">↓</span>
           <span class="sr-only">Install Strummer DJ</span>
         </button>
-        <button class="icon-button" type="button" data-add-open title="Add Suno candidate">
+        <button
+          class="icon-button"
+          type="button"
+          data-load-catalog
+          title="Queue my released catalog"
+        >
+          <span aria-hidden="true">♪</span>
+          <span class="sr-only">Queue my released catalog</span>
+        </button>
+        <button class="icon-button" type="button" data-add-open title="Add a candidate">
           <span aria-hidden="true">+</span>
           <span class="sr-only">Add Suno candidate</span>
         </button>
@@ -43,9 +70,15 @@ const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?
         <div class="dj-empty" data-empty-state>
           <div class="dj-empty-mark" aria-hidden="true">◉</div>
           <h2>Station is quiet</h2>
-          <p>Add a full Suno song-page URL to start the rotation.</p>
-          <button class="primary-button" type="button" data-add-open>
-            <span aria-hidden="true">+</span> Add first candidate
+          <p>
+            Start with your own released songs, or add any Suno or SoundCloud
+            song URL.
+          </p>
+          <button class="primary-button" type="button" data-load-catalog>
+            <span aria-hidden="true">▶</span> Play my catalog ({catalog.length})
+          </button>
+          <button class="secondary-button" type="button" data-add-open>
+            <span aria-hidden="true">+</span> Add a candidate
           </button>
         </div>
 
@@ -244,6 +277,12 @@ const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?
       </aside>
     </div>
 
+    <script
+      type="application/json"
+      data-catalog
+      set:html={JSON.stringify(catalog)}
+    ></script>
+
     <p class="sr-only" data-announcer aria-live="polite"></p>
 
     <dialog class="dj-dialog" data-add-dialog>
@@ -253,11 +292,11 @@ const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?
       </div>
       <form data-add-form>
         <label>
-          <span class="field-label">Suno song URL</span>
+          <span class="field-label">Song URL</span>
           <input
             type="url"
             name="url"
-            placeholder="https://suno.com/song/..."
+            placeholder="https://suno.com/song/... or https://soundcloud.com/..."
             inputmode="url"
             required
           />
@@ -283,12 +322,13 @@ const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?
   import {
     applyDecision,
     buildTasteMarkdown,
+    catalogCandidates,
     buildSteeringPrompt,
     createInitialState,
     isSunoDJState,
     mergeGeneratedCandidates,
     normalizeGeneratedCandidates,
-    parseSunoSongUrl,
+    parseCandidateUrl,
     parseCreativeBriefPayload,
     recordReplay,
     shouldRefillQueue,
@@ -332,6 +372,19 @@ const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?
   const autoFillStatus = root.querySelector<HTMLElement>('[data-auto-fill-status]')!;
   const selectedLiked = new Set<string>();
   const selectedDisliked = new Set<string>();
+
+  // Rendered into the page by Astro from src/content/songs. Parsing is guarded
+  // because a malformed collection should quiet the catalog button, not break
+  // the whole station.
+  const ownCatalog = (() => {
+    const node = root.querySelector<HTMLScriptElement>('[data-catalog]');
+    if (!node?.textContent) return [];
+    try {
+      return catalogCandidates(JSON.parse(node.textContent));
+    } catch {
+      return [];
+    }
+  })();
 
   const loadState = (): SunoDJState => {
     try {
@@ -636,8 +689,10 @@ const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?
       const queuePosition = queued.findIndex((candidate) => candidate.id === current.id) + 1;
       currentTitle.textContent = current.title;
       currentPosition.textContent = `${queuePosition} of ${queued.length} in rotation`;
+      const sourceName = current.source === 'catalog' ? 'SoundCloud' : 'Suno';
       currentLink.href = current.url;
-      currentFrame.title = `${current.title} on Suno`;
+      currentLink.textContent = `Open on ${sourceName}`;
+      currentFrame.title = `${current.title} on ${sourceName}`;
       if (currentFrame.src !== current.embedUrl) currentFrame.src = current.embedUrl;
       sourcePrompt.replaceChildren();
       const label = document.createElement('strong');
@@ -714,6 +769,24 @@ const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?
     });
   });
 
+  root.querySelectorAll<HTMLButtonElement>('[data-load-catalog]').forEach((button) => {
+    button.hidden = ownCatalog.length === 0;
+    button.addEventListener('click', () => {
+      const before = state.candidates.length;
+      state = mergeGeneratedCandidates(state, ownCatalog);
+      const added = state.candidates.length - before;
+      if (!added) {
+        announce('Your catalog is already in the rotation.');
+        return;
+      }
+      saveState();
+      render();
+      announce(
+        `${added} song${added === 1 ? '' : 's'} from your catalog added to the rotation.`,
+      );
+    });
+  });
+
   root.querySelectorAll<HTMLButtonElement>('[data-add-open]').forEach((button) => {
     button.addEventListener('click', () => {
       addError.hidden = true;
@@ -730,9 +803,10 @@ const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?
   addForm.addEventListener('submit', (event) => {
     event.preventDefault();
     const formData = new FormData(addForm);
-    const parsed = parseSunoSongUrl(String(formData.get('url') ?? ''));
+    const parsed = parseCandidateUrl(String(formData.get('url') ?? ''));
     if (!parsed) {
-      addError.textContent = 'Paste a full https://suno.com/song/... URL.';
+      addError.textContent =
+        'Paste a full suno.com/song/... or soundcloud.com/<user>/<track> URL.';
       addError.hidden = false;
       return;
     }
@@ -747,6 +821,7 @@ const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?
     const candidate: SunoCandidate = {
       id: parsed.songId,
       songId: parsed.songId,
+      source: parsed.source,
       title: title || `Candidate ${state.candidates.length + 1}`,
       url: parsed.canonicalUrl,
       embedUrl: parsed.embedUrl,

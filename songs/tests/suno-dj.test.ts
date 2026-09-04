@@ -4,9 +4,12 @@ import {
   applyDecision,
   buildSteeringPrompt,
   buildTasteMarkdown,
+  catalogCandidates,
   createInitialState,
   mergeGeneratedCandidates,
   normalizeGeneratedCandidates,
+  parseCandidateUrl,
+  parseCatalogSongUrl,
   parseCreativeBriefPayload,
   parseSunoSongUrl,
   recordReplay,
@@ -242,5 +245,92 @@ describe('generation provider boundary', () => {
     expect(merged.candidates).toHaveLength(2);
     expect(merged.currentId).toBe(FIRST_ID);
     expect(shouldRefillQueue(merged, 2)).toBe(false);
+  });
+});
+
+describe('catalog sources', () => {
+  it('accepts a public SoundCloud track and builds a widget embed', () => {
+    const parsed = parseCatalogSongUrl(
+      'https://soundcloud.com/adamtpang/girlbossa',
+    );
+
+    expect(parsed).not.toBeNull();
+    expect(parsed!.canonicalUrl).toBe(
+      'https://soundcloud.com/adamtpang/girlbossa',
+    );
+    expect(parsed!.songId).toBe('soundcloud:adamtpang/girlbossa');
+    expect(parsed!.embedUrl).toContain('w.soundcloud.com/player/');
+    expect(parsed!.embedUrl).toContain(
+      encodeURIComponent('https://soundcloud.com/adamtpang/girlbossa'),
+    );
+    expect(parsed!.embedUrl).toContain('auto_play=false');
+  });
+
+  it('rejects playlists, profiles, and non-https SoundCloud URLs', () => {
+    expect(parseCatalogSongUrl('https://soundcloud.com/adamtpang')).toBeNull();
+    expect(
+      parseCatalogSongUrl('https://soundcloud.com/adamtpang/sets/pacifica'),
+    ).toBeNull();
+    expect(
+      parseCatalogSongUrl('https://soundcloud.com/adamtpang/tracks'),
+    ).toBeNull();
+    expect(
+      parseCatalogSongUrl('http://soundcloud.com/adamtpang/girlbossa'),
+    ).toBeNull();
+  });
+
+  it('tags each source through the shared entry point', () => {
+    expect(
+      parseCandidateUrl(
+        'https://suno.com/song/2b3f4d5e-6a7b-4c8d-9e0f-1a2b3c4d5e6f',
+      )?.source,
+    ).toBe('suno');
+    expect(
+      parseCandidateUrl('https://soundcloud.com/adamtpang/girlbossa')?.source,
+    ).toBe('catalog');
+    expect(parseCandidateUrl('https://example.com/song/1')).toBeNull();
+  });
+
+  it('turns released songs into queued candidates carrying their musical facts', () => {
+    const candidates = catalogCandidates([
+      {
+        title: 'girl bossa',
+        soundcloud: 'https://soundcloud.com/adamtpang/girlbossa',
+        key: 'A minor',
+        tempo: 96,
+        hook: 'descending bossa turnaround',
+        date: '2021-06-25',
+      },
+      {
+        title: 'adventure time',
+        soundcloud: 'https://soundcloud.com/adamtpang/adventure-time',
+      },
+    ]);
+
+    expect(candidates).toHaveLength(2);
+    expect(candidates[0].source).toBe('catalog');
+    expect(candidates[0].status).toBe('queued');
+    expect(candidates[0].prompt).toBe(
+      'key A minor, 96 bpm, hook: descending bossa turnaround',
+    );
+    expect(candidates[1].prompt).toBe('Released Strummer original.');
+  });
+
+  it('drops songs with no playable link and dedupes repeats', () => {
+    const candidates = catalogCandidates([
+      { title: 'no link yet' },
+      { title: 'draft', soundcloud: 'https://soundcloud.com/adamtpang' },
+      {
+        title: 'girl bossa',
+        soundcloud: 'https://soundcloud.com/adamtpang/girlbossa',
+      },
+      {
+        title: 'girl bossa again',
+        soundcloud: 'https://soundcloud.com/adamtpang/girlbossa',
+      },
+    ]);
+
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0].title).toBe('girl bossa');
   });
 });
