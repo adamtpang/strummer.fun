@@ -7,15 +7,19 @@ import '../styles/suno-dj.css';
 const TRAITS = ['hook', 'groove', 'harmony', 'vocal', 'lyrics', 'texture', 'surprise'];
 const generationEndpoint = import.meta.env.PUBLIC_STRUMMER_GENERATION_ENDPOINT ?? '';
 
-// The station's own catalog: released songs that have somewhere to play from.
-// Suno has no public API, so pasted candidates cannot refill on their own.
-// These can, and they are the songs we actually control.
-const released = await getCollection('songs');
-const catalog = released
-  .filter((song) => song.data.stage === 'released' && song.data.soundcloud)
+// The station's own catalog: every song in the guide that has somewhere to
+// play from, at any stage. Released SoundCloud tracks and Suno candidates sit
+// in the same rotation on purpose: the station exists to find out which of
+// Adam's own songs he plays on repeat, and a candidate has to earn that the
+// same way a release does.
+const everySong = await getCollection('songs');
+const catalog = everySong
+  .filter((song) => song.data.suno || song.data.soundcloud)
   .sort((a, b) => (a.data.number ?? 0) - (b.data.number ?? 0))
   .map((song) => ({
     title: song.data.title,
+    stage: song.data.stage,
+    suno: song.data.suno,
     soundcloud: song.data.soundcloud,
     key: song.data.key,
     tempo: song.data.tempo,

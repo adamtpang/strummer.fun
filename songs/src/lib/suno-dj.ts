@@ -63,6 +63,8 @@ export type ParsedCandidateUrl = ParsedSunoSongUrl & {
 // One released song out of src/content/songs, as the DJ page hands it over.
 export type CatalogSongInput = {
   title?: unknown;
+  stage?: unknown;
+  suno?: unknown;
   soundcloud?: unknown;
   key?: unknown;
   tempo?: unknown;
@@ -373,15 +375,21 @@ export const catalogCandidates = (songs: unknown): SunoCandidate[] => {
       return [];
     }
     const song = entry as CatalogSongInput;
-    const parsed = parseCatalogSongUrl(
-      typeof song.soundcloud === 'string' ? song.soundcloud : '',
-    );
+    // A Suno page wins over a SoundCloud page when a song has both, because the
+    // Suno version is the newer candidate and the point of the rotation is to
+    // judge candidates. The old release is still reachable by pasting its URL.
+    const parsed =
+      parseCandidateUrl(typeof song.suno === 'string' ? song.suno : '') ??
+      parseCandidateUrl(
+        typeof song.soundcloud === 'string' ? song.soundcloud : '',
+      );
     if (!parsed || seen.has(parsed.songId)) {
       return [];
     }
     seen.add(parsed.songId);
 
     const facts = [
+      typeof song.stage === 'string' && song.stage ? song.stage : '',
       typeof song.key === 'string' && song.key ? `key ${song.key}` : '',
       typeof song.tempo === 'number' && Number.isFinite(song.tempo)
         ? `${song.tempo} bpm`
@@ -393,7 +401,7 @@ export const catalogCandidates = (songs: unknown): SunoCandidate[] => {
       {
         id: parsed.songId,
         songId: parsed.songId,
-        source: 'catalog' as const,
+        source: parsed.source,
         title:
           typeof song.title === 'string' && song.title.trim()
             ? song.title.trim()

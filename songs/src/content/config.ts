@@ -25,6 +25,8 @@ const songs = defineCollection({
 
     spotify: z.string().optional(),
     soundcloud: z.string().optional(),
+    suno: z.string().optional(), // a suno.com/song/<id> page; Strummer DJ can play it
+
     youtube: z.string().optional(),
     blurb: z.string().optional(),
     cover: z.string().optional(),

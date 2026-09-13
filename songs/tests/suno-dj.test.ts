@@ -316,6 +316,31 @@ describe('catalog sources', () => {
     expect(candidates[1].prompt).toBe('Released Strummer original.');
   });
 
+  it('queues a Suno-linked guide entry as a suno candidate, preferring it over SoundCloud', () => {
+    const candidates = catalogCandidates([
+      {
+        title: 'Behind Closed Cups',
+        stage: 'sketch',
+        suno: 'https://suno.com/song/77093ceb-1cd1-4f82-817d-2f1bf0c3eaa2',
+      },
+      {
+        title: 'girl bossa',
+        stage: 'released',
+        soundcloud: 'https://soundcloud.com/adamtpang/girlbossa',
+        suno: 'https://suno.com/song/22728b05-d0e8-4213-ade3-56b4b2e0a8bf',
+      },
+    ]);
+
+    expect(candidates).toHaveLength(2);
+    expect(candidates[0].source).toBe('suno');
+    expect(candidates[0].embedUrl).toBe(
+      'https://suno.com/embed/77093ceb-1cd1-4f82-817d-2f1bf0c3eaa2',
+    );
+    expect(candidates[0].prompt).toBe('sketch');
+    expect(candidates[1].source).toBe('suno');
+    expect(candidates[1].songId).toBe('22728b05-d0e8-4213-ade3-56b4b2e0a8bf');
+  });
+
   it('drops songs with no playable link and dedupes repeats', () => {
     const candidates = catalogCandidates([
       { title: 'no link yet' },
