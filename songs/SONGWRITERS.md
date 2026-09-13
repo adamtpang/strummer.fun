@@ -87,6 +87,40 @@ and reportedly reconfigures the whole setup between projects. The lesson:
 technical limitation is a feature, not a blocker. A smaller toolkit forces
 different decisions than an infinite plugin folder does.
 
+His actual sound-manipulation techniques, verified via DJ Mag/Splice/
+Wikipedia (2026-08-14, not vibes): **break-chopping** (a drum break sliced
+and reassembled via reverse/gate/stretch/pitch/reorder/stutter, past
+recognition), **LFO-mapped sample-bank cycling** (~15 kick/snare/hi-hat
+variants each loaded into separate sampler slots, an LFO mapped to "which
+sample plays," cycling synced to a master rate knob instead of manually
+programmed hit-by-hit), **layering multiple drum machines** (808 + 909
+rather than one), and **iterative re-sampling** (re-sampling his own
+results and processing them again, not working toward a fixed structure).
+Feeds `arrange-song` directly for anything wanting non-standard drum
+programming, and `create-song-hook` for the LFO-cycling idea specifically
+(a hook that's a *behavior*, not a fixed phrase).
+
+**The Beatles / Lennon-McCartney**, per Songmeaning.io, Far Out Magazine,
+and Abbey Road's own account (2026-08-14): the songwriting split was real
+and complementary, not a myth — McCartney usually supplied melodic
+structure and polished, complete-sounding demos, Lennon supplied raw
+ideas, lyrical bite, and provocative images, and each routinely rewrote
+the other's lines rather than staying in a lane. Two incomplete songs were
+sometimes literally spliced into one finished one. Studio-side, three
+named, reproducible techniques: **Artificial Double Tracking** (invented
+at Abbey Road in 1966 specifically because Lennon hated re-singing a part
+twice — a tape signal routed through a second machine with its speed
+nudged by an oscillator, faking a doubled vocal with one take, used on
+nearly every *Revolver* track), **backwards recording** (reversed vocals
+on "Rain," the first pop song to do it), and **tape loops / musique
+concrète** (the sped-up loops on "Tomorrow Never Knows"). The lesson two
+lessons, not one: a real co-writer who pushes back beats a solo pass, and
+a genuine studio limitation (Lennon's impatience) produced a real
+technique (ADT) still in use 60 years later. Feeds `arrange-song` for ADT
+and tape-manipulation ideas, and is the concrete case for why
+`write-philosophical-lyrics`/`create-song-hook` sessions benefit from a
+second real voice pushing back on a draft, not just one writer alone.
+
 **Rick Rubin** doesn't use a DAW at all, records straight to tape, and by
 his own account has no technical training in music. He calls his role
 "reducer" rather than producer, strips arrangements down instead of adding
@@ -188,9 +222,23 @@ toward the 1,000.**
    steal? Not "it is good." Something like "the chorus lands on the minor iv
    and that is the whole ache."
 5. **Fork it.** Same tempo, same changes, your melody. Ship it as a sketch.
+6. **Vary, then choose.** Added 2026-09-13, after four Suno demos in a week
+   made this the real loop. Sing the fork into a voice memo, placeholder words
+   allowed (McCartney sang "scrambled eggs" over the Yesterday melody for
+   months before the real words came). Upload it to Suno and take three or
+   four variations, not one. Put them in Strummer DJ with a `suno:` link on
+   the song file. Whichever you replay wins; that is the curation, and it is
+   the only step in this protocol that costs nothing to repeat. Rewrite the
+   winner's words. Then finish it, or leave it as a demo and move on. Both
+   count.
 
 Rule: never study without forking in the same session. A study you did not
 fork is consumption wearing a lab coat.
+
+Second rule, from the same week: the round is ten demos, then a listen. Below
+ten, make the next one. At ten, pick the one to three that you keep replaying
+and carry one lesson forward. Private demos count in full. Publishing is a
+separate decision made later, not a condition of making.
 
 ## The queue
 
@@ -209,7 +257,13 @@ Ordered so that the earliest studies feed the templates you already have.
 8. **Billie Eilish, BIRDS OF A FEATHER** · Finneas voicings under a plain top line
 
 ### Run 3 · Groove traditions (feeds Template D)
-9. **Bob Marley, any** · one drop, and how much space a groove can hold
+9. **Bob Marley, any** · one drop, and how much space a groove can hold.
+   The exercise, added 2026-09-13: the kick and snare land together on beat
+   three only, beats one and two are empty, and the guitar skank fills the
+   offbeats. Fork it by taking a song you already have (2 afternoons or
+   girl bossa) and moving its kick off beat one. If the song survives the
+   space, the groove was carrying it. If it collapses, the melody was, and you
+   have learned which of your own songs are which.
 10. **Gipsy Kings, Ciento** · rumba, palmas, no drum kit
 11. **Laufey, From The Start** · bossa comping, ii-V motion
 12. **Vampire Weekend, any** · interlocking guitar lines

@@ -32,6 +32,19 @@ Nothing here is skippable forever, songs still need to ship. It's skippable
 and none of the optional ones is a complete, real, countable unit of
 practice. Don't wait on melody or lyrics to start.
 
+## Production mode
+
+When the goal is to arrange and record rather than stop at a sketch, use the
+existing pieces as one connected system:
+
+- `ULT-TASTE-DNA.md` identifies the musical mechanisms worth reusing.
+- `PRODUCTION-BRIEF.md` plans form, rhyme, Splice searches, Serum, Ableton,
+  and vocals without bloating the content schema.
+- `AI-PRODUCER.md` defines the live Ableton and human-performance loop.
+
+The brief belongs inside the active song file once decisions are made. These
+documents are scaffolds, not a second catalog.
+
 ## The acceptance test for automation
 
 Before wiring this project into an agent swarm, fleet runs, or Suno (or any
