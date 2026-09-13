@@ -31,6 +31,23 @@ master.
 The SoundCloud playback copy has been recovered locally for listening. It is a
 128 kbps MP3, so it cannot serve as the Pacifica release master.
 
+### Suno demo, 2026-09-07
+
+A new full-length demo, 2:48, made through Suno's web app and pinned on the
+Pacifica profile as "girl bossa (demo)", model V4.5-ALL, 26 plays at
+registration. Downloaded copy at `Downloads\Girl Bossa.mp3`, tagged with the
+pre-rename display name adampang. Linked above in the `suno` field, so Strummer
+DJ plays this version in rotation ahead of the 2021 SoundCloud release.
+
+Adam on 2026-09-13: of the four demos made this week (girl bossa, 2 afternoons,
+slip away, eden), this and 2 afternoons are the two he likes most. That is the
+first explicit taste signal on a Pacifica candidate, recorded here until the
+station has enough replays to say it on its own.
+
+This does not close "Record the master" below. Whose voice is on the Suno demo
+is not yet confirmed, and the factory does not count generated audio as a human
+performance either way.
+
 ### Five gates to ship
 
 - [ ] **Finish the song:** capture the exact chords, riff, key, tempo, existing
