@@ -1,5 +1,11 @@
 # Batch 01: month one of the Pacifica release run
 
+> **Superseded 2026-09-14** by the plan at the top of `SONGS-1000.md`. Kept for its
+> research: Suno and DistroKid pricing, the per-release add-on trap, and the
+> artist-name quarantine list. Its 60-a-month schedule assumed the bottleneck was
+> distribution. It was making.
+
+
 Written 2026-09-04. The first 60-song month toward 1,000 Pacifica songs on
 Spotify. Suno makes the bed, Adam makes the part that keeps it up.
 

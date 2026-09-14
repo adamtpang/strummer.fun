@@ -1,5 +1,60 @@
 # The 1,000 songs
 
+## The plan (2026-09-14, supersedes BATCH-01 and PLAN-2026-08-30)
+
+Built from what actually happened, not from what was planned. In five years of
+plans the demo counter never moved. In the week of 2026-09-07 Adam made four
+demos in Suno's web app (girl bossa, 2 afternoons, slip away, eden) with no plan
+at all. This plan is that week, repeated.
+
+### The goal
+
+1,000 songs Adam wants to hear again. Not 1,000 uploads. A song counts at any
+stage; a song he replays is the one worth finishing.
+
+### The arithmetic
+
+| Pace | Weekly | 1,000 lands |
+| --- | --- | --- |
+| This week, measured | 4 | ~4.8 years |
+| One demo a day | 7 | ~2.7 years |
+| Two a day | 14 | ~1.4 years |
+
+1,000 is a horizon, not a deadline. The only number to manage is this week's.
+
+### The loop
+
+1. **Make.** One demo, one sitting, in Suno's web app. Start from a voice memo
+   when there is one, placeholder words allowed. Take three or four variations.
+2. **Log.** One song file with a `suno:` link. Thirty seconds. This is what makes
+   it visible to Strummer DJ.
+3. **Listen.** Play it in Strummer DJ between other things. Replay or skip.
+4. **Round.** Every ten demos, one listen through the ten. Pick the one to three
+   you keep replaying. Carry one lesson into the next ten. Keep the rest.
+5. **Finish the keepers.** Your own vocal on it, real words, then decide whether
+   it goes public. Making, keeping, and publishing are three separate decisions.
+
+### The teachers
+
+One study per round, from `SONGWRITERS.md`, forked into a demo the same day. The
+Beatles for melody before words, Aphex Twin for sound as the hook, Bob Marley for
+how much space a groove can hold. A study that is not forked does not count.
+
+### What is deliberately not in this plan
+
+- **No release schedule.** Spotify, DistroKid, and the Pacifica launch wait until
+  there are keepers worth releasing. BATCH-01's 60-a-month upload math assumed
+  the bottleneck was distribution. It was making.
+- **No new tools.** Suno, voice memos, Strummer DJ, and Claude are enough. Lyria,
+  the LMMS beds, and the Ableton MCP exist if a song asks for them.
+- **No catching up.** A missed day is not a debt.
+
+### Where it stands
+
+Round 1: **4 of 10.** Keepers so far by Adam's word: girl bossa, 2 afternoons.
+
+Next demo: extend 2 afternoons, which Suno labels a fragment.
+
 ## The lego model (all five pillars share one shape)
 
 Every piece of work is a STACK, not a single artifact. The reason 1,000 feels
