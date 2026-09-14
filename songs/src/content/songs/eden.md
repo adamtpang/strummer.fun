@@ -9,9 +9,8 @@ draft: true
 
 Registered 2026-09-13. Adam reported a finished demo in chat: "i made demos for
 girl bossa, 2 afternoons, slip away, eden. i like these." Stage is `demo` on
-his word. Retitled "eden's hazard" by Adam on 2026-09-14. girl bossa's
-third verse ("The garden of Eden is where I go") may be where this song came
-from; not confirmed.
+his word. Retitled "eden's hazard" by Adam on 2026-09-14. A separate song from
+girl bossa, whose third verse also mentions Eden (Adam, 2026-09-14).
 
 Not on the public Pacifica Suno profile and not found on this machine, so it is
 private on Suno or on a phone. It needs a `suno:` link or an `audio:` file
