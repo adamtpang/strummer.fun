@@ -12,6 +12,10 @@ const STRUMMER_STATIC = [
 
 if (existsSync(OUT)) rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
+mkdirSync(`${OUT}/chords`, { recursive: true });
+for (const file of ['index.html', 'style.css', 'studio.css', 'tokens.css', 'app.mjs', 'engine.mjs', 'guitar.mjs']) {
+  cpSync(`chords/${file}`, `${OUT}/chords/${file}`);
+}
 
 for (const file of STRUMMER_STATIC) {
   cpSync(file, `${OUT}/${file}`);

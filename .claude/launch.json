@@ -2,22 +2,48 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "chords",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "web/chords/preview-server.mjs"
+      ],
+      "cwd": "C:\\Users\\adamp\\Aether\\strummer.fun",
+      "port": 4387
+    },
+    {
       "name": "songs-dj",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["astro", "dev", "--port", "4325"],
+      "runtimeArgs": [
+        "astro",
+        "dev",
+        "--port",
+        "4325"
+      ],
       "cwd": "C:\\Users\\adamp\\Aether\\strummer.fun\\songs",
       "port": 4325
     },
     {
       "name": "strummer-web",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["-y", "serve", "C:\\Users\\adamp\\Aether\\strummer.fun\\web", "-l", "4321"],
+      "runtimeArgs": [
+        "-y",
+        "serve",
+        "C:\\Users\\adamp\\Aether\\strummer.fun\\web",
+        "-l",
+        "4321"
+      ],
       "port": 4321
     },
     {
       "name": "icon-render",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["-y", "serve", "C:\\Users\\adamp\\AppData\\Local\\Temp\\claude\\C--Users-adamp-Aether-strummer-fun\\bcbd7123-9dfc-422a-bda1-244ddb0efe13\\scratchpad", "-l", "4322"],
+      "runtimeArgs": [
+        "-y",
+        "serve",
+        "C:\\Users\\adamp\\AppData\\Local\\Temp\\claude\\C--Users-adamp-Aether-strummer-fun\\bcbd7123-9dfc-422a-bda1-244ddb0efe13\\scratchpad",
+        "-l",
+        "4322"
+      ],
       "port": 4322
     },
     {

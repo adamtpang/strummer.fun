@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Chord progressions | Strummer</title>
+  <meta name="description" content="The greatest chord progressions of all time, with guitar chord shapes and capo positions for any key. Loop them, change key, and save your favorites locally.">
+  <link rel="canonical" href="https://strummer.fun/chords/">
+  <link rel="stylesheet" href="/chords/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/chords/studio.css">
+  <script type="module" src="/chords/app.mjs"></script>
+</head>
+<body>
+  <header><a class="brand" href="/">strummer<span>.</span></a><nav aria-label="Main"><a href="/vibe">Vibe</a><a href="/tune">Tune</a><a href="/chords/" aria-current="page">Chords</a></nav></header>
+  <main>
+    <div class="heading"><div><p class="eyebrow">SONG STARTERS</p><h1>Chord progressions</h1></div><button id="generate" class="primary">Generate progression</button></div>
+    <div class="settings">
+      <label>Color<select id="style"><option value="greatest" selected>Greatest of all time</option><option value="pop">Pop / open</option><option value="soul">Soul / warm</option><option value="bossa">Bossa / floating</option><option value="minor">Minor / wistful</option><option value="personal">Your maj7 loop</option></select></label>
+      <label>Tonic<select id="key"></select></label>
+      <label>Tempo <span><input id="tempo" type="number" min="40" max="200" value="90"> BPM</span></label>
+      <label>Bars per chord<select id="bars"><option value="1">1 bar</option><option value="2">2 bars</option></select></label>
+    </div>
+    <section id="greatest" class="greatest" aria-labelledby="greatest-name">
+      <label>Progression<select id="progression"></select></label>
+      <div>
+        <p id="greatest-formula" class="formula"></p>
+        <p id="greatest-name" class="feel"></p>
+        <p class="eyebrow">HEARD IN</p>
+        <ul id="greatest-songs"></ul>
+      </div>
+    </section>
+    <p id="capo" class="capo" role="note"></p>
+    <section aria-label="Progression"><div id="chords" class="chords"></div></section>
+    <div class="transport"><button id="play" class="primary" aria-pressed="false">Play loop</button><label class="volume">Volume <input id="volume" type="range" min="0" max="100" value="50"></label><button id="copy">Copy chords</button><button id="save">Save progression</button><button id="export">Export WAV</button></div>
+    <p id="status" role="status" aria-live="polite"></p>
+    <section class="saved"><h2>Saved progressions</h2><p id="empty">No saved progressions.</p><ul id="saved"></ul></section>
+    <noscript>This generator needs JavaScript for playback and local saves.</noscript>
+  </main>
+  <footer><a href="/privacy">Privacy</a><span>4/4 · Local saves on this browser</span></footer>
+</body>
+</html>
