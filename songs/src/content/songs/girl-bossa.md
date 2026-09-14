@@ -51,7 +51,8 @@ performance either way.
 ### Five gates to ship
 
 - [ ] **Finish the song:** capture the exact chords, riff, key, tempo, existing
-  lyric fragments, and write the missing lyric sections and bridge.
+  lyric fragments, and write the missing lyric sections and bridge. Lyrics done
+  2026-09-14 (see Lyrics below); chords, riff, key, and tempo still open.
 - [ ] **Record the master:** lock the arrangement, record the human performance,
   mix it, and approve a lossless WAV or FLAC master.
 - [ ] **Build the world:** choose the song's color palette and approve square
@@ -68,3 +69,64 @@ Audition the recovered vocal and accompaniment stems, then write down the exact
 key, tempo, chords, riff, melody, lyric fragments, and section order. If the
 original source no longer exists, rebuild from those recovered decisions while
 using the SoundCloud audio only as an arrangement reference.
+
+## Lyrics
+
+Approved by Adam on 2026-09-14. Verses 1 to 3 and the chorus are Adam's, taken
+from the 2026-09-07 Suno demo. That demo repeated verse 3 word for word as a
+placeholder fourth verse. The new verse 4 and the outro replace it, drafted with
+Claude.
+
+The arc: alone with his own thoughts, hiding in the garden, found there by
+someone, and at peace with the world turning. "Let her stay" is the first time
+the song names who girl bossa is.
+
+### Verse 1
+
+> Why does the world keep turning for me
+> It keeps going round my head
+> It keeps going round my head
+
+### Verse 2
+
+> I never try to make sense
+> Of all the things that go through my head
+> No I try
+> But I can't
+> Get by
+> On my own
+> (But I try to make sense)
+
+### Chorus
+
+> Why does the world
+> Keep turning for me
+> It keeps going round my head
+> It keeps going round my head
+
+### Verse 3
+
+> The garden of Eden is where I go
+> Where no one knows
+> Where and how to find me
+> Seraphim hide me, oh
+
+### Verse 4
+
+> But you came walking through the gate
+> Like you knew the way
+> Like you'd been there before me
+> Seraphim, let her stay
+
+### Outro
+
+> And the world keeps turning
+> And I let it turn
+
+## The stack
+
+- [ ] key + tempo
+- [ ] melody
+- [x] lyrics
+- [x] demo recording (a phone voice memo counts)
+- [ ] produced
