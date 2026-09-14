@@ -170,7 +170,6 @@ The risk is not moving slowly. It is losing the catalogue.
 
 ## Costs
 
-| Item | Cost |
 | Line | Rate | 17 months |
 | --- | --- | --- |
 | Suno Premier | $288/yr annual, then $30/mo | $438 |
