@@ -64,3 +64,42 @@ ceiling, not the number to expect on Faith or a Chili Peppers record.**
 
 Nothing here needs a scraper. Every one of these is a change to the
 analysis code.
+
+## Second pass, 2026-09-16
+
+Harness rebuilt at `web/test/analyze-harness.mjs` (the old one lived in a
+scratchpad and is gone). Test set widened to six sketches, 24 chords, and
+scored strictly: a chord must match exactly to count, not just its root.
+
+Changes to `analyze.js`:
+
+- **Seventh templates added** (maj7, m7, 7). Sevenths could never be returned
+  before; now `Gm7 Cm7 C7 Am7` in no-063 and no-064 come back correctly.
+- **Third weighted up, fifth weighted down** in every template. The third is
+  the only note that separates major from minor; the fifth is shared.
+- **Key detection uses the decoded chords.** Time spent on the tonic chord,
+  and starting or ending on it, now count alongside the pitch profile. That
+  is what was missing when G major read as E minor.
+- **Seventh evidence check.** A seventh only survives if its pitch class
+  carries at least 45% of the triad tones' energy in that segment.
+
+| | Before | After |
+|---|---|---|
+| Roots correct | 12/24 | **17/24** |
+| Exact chord | 6/24 | **8/24** |
+| Key | 0/6 | **2/6** |
+
+Remaining failures, honestly:
+
+- **Plain triads on these renders read as maj7** (no-066: `G F C G` returns
+  `Gmaj7 Am7 Cmaj7 Gmaj7`). The LMMS synth has a loud seventh partial, so the
+  evidence check does not fire. Real guitar has a weaker seventh harmonic;
+  this needs a guitar recording in the test set before it can be tuned.
+- **Key still misses on the jazz-leaning sketches** (no-063 and no-064 are
+  ii-V material with no plain tonic, so the tonic-share bonus has nothing to
+  bite on).
+- **no-065's frontmatter is wrong**, not the analyzer: its chords are
+  `D A Bm G`, which is D major, but the file says C major. Left alone here.
+
+Next lever, in order: a real guitar test recording; then a sus4 template
+(ipop-53's `Gsus4` is unreachable today).

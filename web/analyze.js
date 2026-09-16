@@ -46,27 +46,32 @@ function fftRadix2(re, im) {
 }
 
 /* ---------- chord vocabulary ---------- */
-// Major and minor over all 12 roots. Deliberately NOT including every
-// extension: on guitar, extra 7ths/9ths mostly confuse a beginner and
-// hurt accuracy more than they help.
+// Major, minor, and the three common sevenths over all 12 roots. The 2026-08-22
+// accuracy test showed the old triad-only set could never return a seventh, so
+// every maj7 and m7 in Adam's own sketches collapsed to a triad.
+// Interval weights: the third is what separates major from minor, so it is
+// weighted up; the fifth is shared by both and weighted down.
+const INTERVAL_WEIGHT = { 0: 1.15, 3: 1.1, 4: 1.1, 7: 0.8, 10: 0.9, 11: 0.9 };
 function buildChordTemplates() {
   const shapes = [
     { suffix: '', intervals: [0, 4, 7] },
     { suffix: 'm', intervals: [0, 3, 7] },
+    { suffix: 'maj7', intervals: [0, 4, 7, 11] },
+    { suffix: 'm7', intervals: [0, 3, 7, 10] },
+    { suffix: '7', intervals: [0, 4, 7, 10] },
   ];
   const templates = [];
   for (const shape of shapes) {
     for (let root = 0; root < 12; root++) {
       const vec = new Array(12).fill(0);
-      // Weight the root a little heavier — it anchors the chord's identity.
-      shape.intervals.forEach((iv, idx) => {
-        vec[(root + iv) % 12] = idx === 0 ? 1.15 : 1.0;
+      shape.intervals.forEach((iv) => {
+        vec[(root + iv) % 12] = INTERVAL_WEIGHT[iv];
       });
       const norm = Math.hypot(...vec);
       templates.push({
         name: PC_NAMES[root] + shape.suffix,
         root,
-        isMinor: shape.suffix === 'm',
+        isMinor: shape.suffix === 'm' || shape.suffix === 'm7',
         vec: vec.map((v) => v / norm),
         pcs: shape.intervals.map((iv) => (root + iv) % 12),
       });
@@ -259,21 +264,81 @@ function segment(path, times, hopTime, minDuration = 0.45) {
   return out.filter((s) => s.end - s.start >= 0.2);
 }
 
+/* ---------- seventh check ---------- */
+/**
+ * A seventh template can beat its triad on harmonic leakage alone. Keep the
+ * seventh only when that pitch class actually carries energy in the segment,
+ * measured against the chord's own triad tones. Otherwise name the triad.
+ */
+const SEVENTH_RATIO = Number(globalThis.__SEVENTH_RATIO ?? 0.45);
+function refineSevenths(segments, chroma, times) {
+  const byName = new Map(TEMPLATES.map((t) => [t.name, t]));
+  return segments.map((seg) => {
+    const t = byName.get(seg.chord);
+    if (!t || t.pcs.length !== 4) return seg;
+    const avg = new Array(12).fill(0);
+    let n = 0;
+    for (let i = 0; i < times.length; i++) {
+      if (times[i] < seg.start || times[i] >= seg.end) continue;
+      for (let pc = 0; pc < 12; pc++) avg[pc] += chroma[i][pc];
+      n++;
+    }
+    if (!n) return seg;
+    const triad = (avg[t.pcs[0]] + avg[t.pcs[1]] + avg[t.pcs[2]]) / 3;
+    const seventh = avg[t.pcs[3]];
+    if (seventh >= SEVENTH_RATIO * triad) return seg;
+    const base = t.name.endsWith('m7') ? t.name.slice(0, -1) : t.name.replace(/(maj7|7)$/, '');
+    return { ...seg, chord: base };
+  });
+}
+
+function mergeRepeats(segments) {
+  const out = [];
+  for (const s of segments) {
+    if (out.length && out[out.length - 1].chord === s.chord) out[out.length - 1].end = s.end;
+    else out.push({ ...s });
+  }
+  return out;
+}
+
 /* ---------- key detection (Krumhansl-Schmuckler) ---------- */
 const KS_MAJOR = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88];
 const KS_MINOR = [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17];
 
-function detectKey(chroma) {
+// The profile alone is biased to the relative minor, because a major key and
+// its relative minor share every note. The decoded chords break the tie: time
+// spent on the tonic chord, and whether the song starts or ends on it, is
+// evidence the profile cannot see.
+function detectKey(chroma, segments = []) {
   const avg = new Array(12).fill(0);
   for (const frame of chroma) for (let pc = 0; pc < 12; pc++) avg[pc] += frame[pc];
   const total = avg.reduce((a, b) => a + b, 0) || 1;
   const norm = avg.map((v) => v / total);
+
+  const span = segments.length ? segments[segments.length - 1].end - segments[0].start : 0;
+  const tonicShare = (root, isMinor) => {
+    if (!span) return 0;
+    let time = 0;
+    for (const s of segments) {
+      const m = s.chord.match(/^([A-G]#?)(.*)$/);
+      if (!m || PC_NAMES.indexOf(m[1]) !== root) continue;
+      if ((m[2] === 'm' || m[2] === 'm7') === isMinor) time += s.end - s.start;
+    }
+    return time / span;
+  };
+  const isTonic = (seg, root, isMinor) => {
+    const m = seg?.chord.match(/^([A-G]#?)(.*)$/);
+    return !!m && PC_NAMES.indexOf(m[1]) === root && ((m[2] === 'm' || m[2] === 'm7') === isMinor);
+  };
 
   let best = null, bestScore = -Infinity;
   for (let root = 0; root < 12; root++) {
     for (const [profile, isMinor] of [[KS_MAJOR, false], [KS_MINOR, true]]) {
       let score = 0;
       for (let pc = 0; pc < 12; pc++) score += norm[(root + pc) % 12] * profile[pc];
+      score += 1.2 * tonicShare(root, isMinor);
+      if (isTonic(segments[0], root, isMinor)) score += 0.25;
+      if (isTonic(segments[segments.length - 1], root, isMinor)) score += 0.35;
       if (score > bestScore) {
         bestScore = score;
         best = { root, isMinor, name: PC_NAMES[root] + (isMinor ? 'm' : '') };
@@ -285,11 +350,11 @@ function detectKey(chroma) {
 
 /* ---------- capo suggestion (the guitar-specific bit) ---------- */
 // Chords a beginner can play open. Anything else needs a barre.
-const OPEN_CHORDS = new Set(['C', 'A', 'G', 'E', 'D', 'Am', 'Em', 'Dm']);
-const EASY_ISH = new Set(['F', 'Bm', 'A7', 'E7', 'D7', 'G7', 'C7', 'B7']);
+const OPEN_CHORDS = new Set(['C', 'A', 'G', 'E', 'D', 'Am', 'Em', 'Dm', 'Cmaj7', 'Am7', 'Em7', 'Dm7', 'A7', 'E7', 'D7', 'G7']);
+const EASY_ISH = new Set(['F', 'Bm', 'C7', 'B7', 'Fmaj7', 'Gmaj7', 'Dmaj7', 'Amaj7', 'Bm7']);
 
 function transposeChord(name, semitones) {
-  const match = name.match(/^([A-G]#?)(m?)$/);
+  const match = name.match(/^([A-G]#?)(.*)$/);
   if (!match) return name;
   const pc = PC_NAMES.indexOf(match[1]);
   if (pc < 0) return name;
@@ -330,9 +395,9 @@ export async function analyzeAudio(arrayBuffer, onProgress) {
 
   onProgress?.('working out the progression…', 0.88);
   const path = decodeChords(smoothed);
-  const segments = segment(path, times, hopTime);
+  const segments = mergeRepeats(refineSevenths(segment(path, times, hopTime), smoothed, times));
 
-  const key = detectKey(smoothed);
+  const key = detectKey(smoothed, segments);
   const chordNames = segments.map((s) => s.chord);
   const capo = suggestCapo(chordNames);
 
@@ -350,5 +415,5 @@ export async function analyzeAudio(arrayBuffer, onProgress) {
 }
 
 export const __testing = {
-  buildChordTemplates, chromagram, decodeChords, segment, detectKey, transposeChord, fftRadix2, TEMPLATES,
+  buildChordTemplates, chromagram, decodeChords, segment, detectKey, transposeChord, fftRadix2, TEMPLATES, refineSevenths, mergeRepeats,
 };
