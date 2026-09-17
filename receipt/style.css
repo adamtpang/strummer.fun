@@ -52,3 +52,8 @@ footer{display:flex;justify-content:space-between;gap:16px;color:var(--studio-mu
 .pair input{flex:1;min-width:160px;font:16px var(--studio-ui);padding:12px 14px;border:1px solid var(--studio-border);border-radius:var(--studio-radius);background:var(--studio-surface);color:var(--studio-text)}
 .pair select{font:14px var(--studio-ui);padding:12px;border:1px solid var(--studio-border);border-radius:var(--studio-radius);background:var(--studio-surface);color:var(--studio-text);color-scheme:dark}
 @media(max-width:640px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pair button{width:100%}}
+.handoff{display:flex;align-items:center;gap:16px;width:100%;max-width:520px;background:var(--studio-surface);border:1px solid var(--studio-border);border-radius:var(--studio-radius);padding:14px}
+.handoff[hidden]{display:none}
+.handoff canvas{flex:none;width:112px;height:112px;background:#fff;border-radius:4px}
+.handoff p{margin:0;font-size:14px;color:var(--studio-muted)}
+.handoff strong{color:var(--studio-text);font-weight:500}

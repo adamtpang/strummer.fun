@@ -58,6 +58,8 @@ export function topAlbumsReceipt(user, period, albums, now = new Date()) {
     auth: String(hash % 1000000).padStart(6, '0'),
     best: -1,
     listens: true,
+    user,
+    period,
   };
 }
 const MIN_ALBUM_TRACKS = 5;
