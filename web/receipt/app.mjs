@@ -1,3 +1,4 @@
+import qrcode from './qrcode.mjs';
 import { searchUrl, artistSearchUrl, discographyUrl, artistNamedIn, lookupUrl, rankAlbums, buildReceipt, receiptLines, barcode, bestTrackUrl, matchTrack, CTA, LINK, STAR, ALL_TIME, topAlbumsReceipt } from './receipt.mjs';
 
 const find = (id) => document.getElementById(id);
@@ -12,6 +13,9 @@ const STORY_W = 1080;
 const STORY_H = 1920;
 const STORY_BG = '#111213';
 const STORY_ACCENT = '#c8323e';
+const POST_W = 1080;
+const POST_H = 1350;
+const TITLE_FONT = '"Instrument Serif", Georgia, serif';
 let current = null;
 let openToken = 0;
 let searchToken = 0;
@@ -196,16 +200,33 @@ async function findBestTrack(receipt, token) {
   }
 }
 
-async function draw(receipt) {
+function wrapTitle(context, text, maxWidth) {
+  const words = String(text).split(/\s+/);
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (line && context.measureText(next).width > maxWidth) { lines.push(line); line = word; } else line = next;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+// Draw a receipt onto any canvas. On screen the top block is the greyscale
+// artwork. For the feed post the artwork is already the background, so the
+// top block becomes the album title set large, the way printed receipt posts
+// put a wordmark there.
+async function renderReceipt(receipt, canvas, { title = false } = {}) {
   await document.fonts.load(`${FONT_SIZE}px "JetBrains Mono"`);
   await document.fonts.load(`700 ${FONT_SIZE}px "JetBrains Mono"`);
-  const canvas = find('receipt');
+  if (title) await document.fonts.load(`italic 96px ${TITLE_FONT}`);
   const context = canvas.getContext('2d');
   context.font = `${FONT_SIZE}px "JetBrains Mono", ui-monospace, monospace`;
   const cols = Math.floor((WIDTH - PAD * 2) / context.measureText('M').width);
   const lines = receiptLines(receipt, cols);
-  const art = await loadImage(receipt.artwork);
-  const top = PAD + (art ? ART + 48 : 0);
+  const art = title ? null : await loadImage(receipt.artwork);
+  const heading = title && receipt.album && !receipt.listens;
+  const top = PAD + (art || heading ? ART + 48 : 0);
   const bars = 120;
   const height = top + lines.length * LINE + 40 + bars + 36 + LINE * 2 + PAD;
 
@@ -223,6 +244,23 @@ async function draw(receipt) {
     context.save();
     context.filter = 'grayscale(1) contrast(1.15)';
     context.drawImage(art, x, PAD, ART, ART);
+    context.restore();
+  }
+  if (heading) {
+    context.save();
+    context.fillStyle = INK;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    let size = 132;
+    let lines;
+    do {
+      context.font = `italic ${size}px ${TITLE_FONT}`;
+      lines = wrapTitle(context, receipt.album, WIDTH - PAD * 2);
+      size -= 8;
+    } while ((lines.length * size * 1.05 > ART || lines.length > 3) && size > 48);
+    const lineHeight = (size + 8) * 1.02;
+    const startY = PAD + ART / 2 - ((lines.length - 1) * lineHeight) / 2;
+    lines.forEach((line, index) => context.fillText(line, WIDTH / 2, startY + index * lineHeight));
     context.restore();
   }
 
@@ -274,6 +312,92 @@ async function draw(receipt) {
     }
   }
   context.restore();
+}
+
+function draw(receipt) {
+  return renderReceipt(receipt, find('receipt'));
+}
+
+// A 4:5 feed post: the album artwork full-bleed, the receipt in front of it
+// running off the bottom edge, and a small handle in the corner.
+async function postCanvas() {
+  const post = document.createElement('canvas');
+  post.width = POST_W;
+  post.height = POST_H;
+  const context = post.getContext('2d');
+  const background = await loadImage(current.artwork ? current.artwork.replace('/600x600bb.', '/1200x1200bb.') : '');
+  if (background) {
+    const scale = Math.max(POST_W / background.width, POST_H / background.height);
+    const w = background.width * scale;
+    const h = background.height * scale;
+    context.drawImage(background, (POST_W - w) / 2, (POST_H - h) / 2, w, h);
+    context.fillStyle = 'rgba(0,0,0,0.12)';
+    context.fillRect(0, 0, POST_W, POST_H);
+  } else {
+    context.fillStyle = STORY_BG;
+    context.fillRect(0, 0, POST_W, POST_H);
+  }
+  const paper = document.createElement('canvas');
+  await renderReceipt(current, paper, { title: true });
+  const width = 820;
+  const height = paper.height * (width / paper.width);
+  context.save();
+  context.shadowColor = 'rgba(0,0,0,0.45)';
+  context.shadowBlur = 36;
+  context.shadowOffsetY = 14;
+  context.drawImage(paper, (POST_W - width) / 2, 118, width, height);
+  context.restore();
+  context.font = '700 26px "JetBrains Mono", ui-monospace, monospace';
+  context.textAlign = 'right';
+  context.textBaseline = 'top';
+  context.fillStyle = 'rgba(0,0,0,0.45)';
+  context.fillText(LINK.toUpperCase(), POST_W - 38, 42);
+  context.fillStyle = '#ffffff';
+  context.fillText(LINK.toUpperCase(), POST_W - 40, 40);
+  return post;
+}
+
+function toPng(canvas) {
+  return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+}
+
+function saveFile(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = name; link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+// The link a phone should open to reach this exact receipt.
+function shareableUrl() {
+  const url = new URL('/receipt/', location.origin);
+  if (current.listens) {
+    url.searchParams.set('lastfm', current.user);
+    url.searchParams.set('period', current.period);
+  } else {
+    url.searchParams.set('id', current.id);
+  }
+  return url.toString();
+}
+
+function drawQr(text) {
+  const qr = qrcode(0, 'M');
+  qr.addData(text);
+  qr.make();
+  const canvas = find('qr');
+  const context = canvas.getContext('2d');
+  const count = qr.getModuleCount();
+  const quiet = 2;
+  const cellSize = Math.floor(canvas.width / (count + quiet * 2));
+  const offset = Math.floor((canvas.width - cellSize * count) / 2);
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = '#000000';
+  for (let row = 0; row < count; row++) {
+    for (let col = 0; col < count; col++) {
+      if (qr.isDark(row, col)) context.fillRect(offset + col * cellSize, offset + row * cellSize, cellSize, cellSize);
+    }
+  }
 }
 
 function blob() {
@@ -360,9 +484,10 @@ async function copy(text, done) {
 find('story').onclick = async () => {
   if (!current) return;
   const best = current.best >= 0 ? current.items[current.best].title : '';
-  const png = await new Promise((resolve) => storyCanvas().toBlob(resolve, 'image/png'));
+  const png = await toPng(storyCanvas());
   const name = fileName().replace(/\.png$/, '-story.png');
   showHints();
+  find('handoff').hidden = true;
   if (best) navigator.clipboard?.writeText(best).catch(() => {});
   if (canShareFiles()) {
     try {
@@ -373,11 +498,43 @@ find('story').onclick = async () => {
       if (error.name === 'AbortError') return;
     }
   }
-  const url = URL.createObjectURL(png);
-  const link = document.createElement('a');
-  link.href = url; link.download = name; link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
-  status('Story image downloaded. Post it from your phone and add the two stickers below.');
+  saveFile(png, name);
+  drawQr(shareableUrl());
+  find('handoff').hidden = false;
+  status('Story image downloaded. Scan the code to finish on your phone.');
+};
+
+// Feed posts can be made on instagram.com, so on a laptop the tab opens first
+// (inside the click, so it is not blocked as a popup) and the image downloads
+// for the Create dialog. On a phone the share sheet goes straight to the app.
+find('post').onclick = async () => {
+  if (!current) return;
+  const phone = canShareFiles();
+  const tab = phone ? null : window.open('about:blank', '_blank');
+  if (tab) { tab.opener = null; tab.location.href = 'https://www.instagram.com/'; }
+  find('handoff').hidden = true;
+  find('hints').hidden = true;
+  status('Making your post…');
+  const png = await toPng(await postCanvas());
+  const name = fileName().replace(/\.png$/, '-post.png');
+  const caption = current.listens
+    ? `my top albums, ${current.year.toLowerCase()}. make yours free at strummer.fun/receipt`
+    : `"${current.album}" by ${current.artist}. make yours free at strummer.fun/receipt`;
+  navigator.clipboard?.writeText(caption).catch(() => {});
+  if (phone) {
+    try {
+      await navigator.share({ files: [new File([png], name, { type: 'image/png' })] });
+      status('Pick Instagram, then Post. The caption is copied.');
+    } catch (error) {
+      if (error.name !== 'AbortError') status('Sharing did not work here. The image will download instead.');
+      if (error.name !== 'AbortError') saveFile(png, name);
+    }
+    return;
+  }
+  saveFile(png, name);
+  status(tab
+    ? 'Instagram opened in a new tab. Click Create, then choose the image that just downloaded. The caption is copied.'
+    : 'Post image downloaded. Open instagram.com, click Create, and choose it. The caption is copied.');
 };
 
 find('copy-song').onclick = () => {
@@ -398,5 +555,10 @@ try { find('lfm-user').value = localStorage.getItem('strummer.lastfm.user') || '
 loadShelves();
 
 const params = new URLSearchParams(location.search);
-if (/^\d+$/.test(params.get('id') || '')) open(params.get('id'));
+if (params.get('lastfm')) {
+  find('lfm-user').value = params.get('lastfm');
+  if (params.get('period')) find('lfm-period').value = params.get('period');
+  pairLastfm(params.get('lastfm'), find('lfm-period').value);
+}
+if (!params.get('lastfm') && /^\d+$/.test(params.get('id') || '')) open(params.get('id'));
 else if (params.get('q')) { find('term').value = params.get('q'); search(params.get('q')); }

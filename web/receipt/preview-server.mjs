@@ -21,7 +21,7 @@ import { readFile } from 'node:fs/promises';
 const types = { '.html': 'text/html', '.css': 'text/css', '.mjs': 'text/javascript' };
 const allowed = new Map([
   ['/receipt/', 'receipt/index.html'], ['/receipt/style.css', 'receipt/style.css'],
-  ['/receipt/app.mjs', 'receipt/app.mjs'], ['/receipt/receipt.mjs', 'receipt/receipt.mjs'],
+  ['/receipt/app.mjs', 'receipt/app.mjs'], ['/receipt/receipt.mjs', 'receipt/receipt.mjs'], ['/receipt/qrcode.mjs', 'receipt/qrcode.mjs'],
   ['/chords/tokens.css', 'chords/tokens.css'],
 ]);
 createServer(async (request, response) => {

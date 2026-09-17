@@ -55,9 +55,14 @@
       <canvas id="receipt" role="img"></canvas>
       <div class="actions">
         <button id="story" class="primary" type="button">Share to Story</button>
+        <button id="post" type="button">Post to Instagram</button>
         <button id="download" type="button">Download receipt</button>
         <button id="copy" type="button">Copy link</button>
         <a id="listen" href="#" target="_blank" rel="noopener">Listen on Apple Music</a>
+      </div>
+      <div id="handoff" class="handoff" hidden>
+        <canvas id="qr" width="164" height="164" role="img" aria-label="QR code that opens this receipt on your phone"></canvas>
+        <p><strong>Stories post from the Instagram app.</strong> Scan this with your phone to open the same receipt there, then tap Share to Story. The story image also downloaded here.</p>
       </div>
       <ol id="hints" class="hints" hidden aria-live="polite">
         <li id="hint-music"><span>Add a <strong>music</strong> sticker: <em id="best-name"></em></span><button id="copy-song" type="button">Copy song</button></li>
