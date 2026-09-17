@@ -24,6 +24,33 @@
     </form>
     <p id="status" role="status" aria-live="polite"></p>
     <ul id="results" class="results" aria-label="Albums"></ul>
+    <section id="mine" class="shelf" hidden aria-labelledby="mine-title">
+      <h2 id="mine-title">Your top albums</h2>
+      <p class="shelf-note">Pair your Last.fm to print a receipt of what you actually play. Spotify and Apple Music can both scrobble to Last.fm.</p>
+      <form id="lastfm" class="pair">
+        <label for="lfm-user" class="sr-only">Last.fm username</label>
+        <input id="lfm-user" name="user" placeholder="Last.fm username" autocomplete="username" required pattern="[A-Za-z][A-Za-z0-9_\-]{1,14}">
+        <label for="lfm-period" class="sr-only">Time range</label>
+        <select id="lfm-period" name="period">
+          <option value="7day">Last 7 days</option>
+          <option value="1month" selected>Last month</option>
+          <option value="12month">Last year</option>
+          <option value="overall">All time</option>
+        </select>
+        <button class="primary" type="submit">Print my receipt</button>
+      </form>
+      <ul id="mine-list" class="tiles" aria-label="Your top albums"></ul>
+    </section>
+    <section class="shelf" aria-labelledby="trending-title">
+      <h2 id="trending-title">Trending now</h2>
+      <p class="shelf-note">Apple Music top albums, US, today.</p>
+      <ul id="trending" class="tiles" aria-label="Trending albums"></ul>
+    </section>
+    <section class="shelf" aria-labelledby="alltime-title">
+      <h2 id="alltime-title">The greatest of all time</h2>
+      <p class="shelf-note">Apple Music's 100 Best Albums, top 10.</p>
+      <ul id="alltime" class="tiles" aria-label="Greatest albums of all time"></ul>
+    </section>
     <section id="output" class="output" hidden aria-label="Your receipt">
       <canvas id="receipt" role="img"></canvas>
       <div class="actions">

@@ -1,4 +1,21 @@
 import bestTrack from '../api/receipt/best-track.js';
+import charts from '../api/receipt/charts.js';
+import { topAlbums } from '../api/receipt/lastfm.js';
+
+// Local preview only, never deployed: Last.fm is answered with sample albums so
+// the pairing flow can be exercised without a real API key.
+const SAMPLE_TOP = { topalbums: { album: [
+  { name: 'The Art of Loving', playcount: '84', artist: { name: 'Olivia Dean' } },
+  { name: 'Selected Ambient Works 85-92', playcount: '51', artist: { name: 'Aphex Twin' } },
+  { name: 'Blonde', playcount: '37', artist: { name: 'Frank Ocean' } },
+  { name: 'Kokomo, TX', playcount: '22', artist: { name: 'Hotel Fiction' } },
+] } };
+const sampleLastfm = async () => new Response(JSON.stringify(SAMPLE_TOP));
+const apis = {
+  '/api/receipt/best-track': (req) => bestTrack(req),
+  '/api/receipt/charts': (req) => charts(req),
+  '/api/receipt/lastfm': (req) => topAlbums(req, 'preview-sample', sampleLastfm),
+};
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 const types = { '.html': 'text/html', '.css': 'text/css', '.mjs': 'text/javascript' };
@@ -9,8 +26,8 @@ const allowed = new Map([
 ]);
 createServer(async (request, response) => {
   const url = new URL(request.url, 'http://127.0.0.1');
-  if (url.pathname === '/api/receipt/best-track') {
-    const result = await bestTrack(new Request(url));
+  if (apis[url.pathname]) {
+    const result = await apis[url.pathname](new Request(url));
     response.writeHead(result.status, { 'Content-Type': 'application/json' });
     response.end(await result.text());
     return;
