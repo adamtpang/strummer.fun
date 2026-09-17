@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Album receipts | Strummer</title>
+  <meta name="description" content="Turn any album into a printed receipt: tracklist, run time, and a barcode. Free, no login.">
+  <link rel="canonical" href="https://strummer.fun/receipt/">
+  <meta property="og:title" content="Album receipts | Strummer">
+  <meta property="og:description" content="Any album as a printed receipt. Free, no login.">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/receipt/style.css">
+  <script type="module" src="/receipt/app.mjs"></script>
+</head>
+<body>
+  <header><a class="brand" href="/">strummer<span>.</span></a><nav aria-label="Main"><a href="/vibe">Vibe</a><a href="/tune">Tune</a><a href="/chords/">Chords</a><a href="/receipt/" aria-current="page">Receipts</a></nav></header>
+  <main>
+    <p class="eyebrow">FREE · NO LOGIN</p>
+    <h1>Album receipts</h1>
+    <p class="lede">Search any album. Get its tracklist as a receipt you can post.</p>
+    <form id="search" role="search">
+      <label for="term" class="sr-only">Album or artist</label>
+      <input id="term" name="term" type="search" placeholder="Blonde, Frank Ocean" autocomplete="off" required minlength="2">
+      <button class="primary" type="submit">Search</button>
+    </form>
+    <p id="status" role="status" aria-live="polite"></p>
+    <ul id="results" class="results" aria-label="Albums"></ul>
+    <section id="output" class="output" hidden aria-label="Your receipt">
+      <canvas id="receipt" role="img"></canvas>
+      <div class="actions">
+        <button id="download" class="primary" type="button">Download image</button>
+        <button id="share" type="button" hidden>Share</button>
+        <button id="copy" type="button">Copy link</button>
+        <a id="listen" href="#" target="_blank" rel="noopener">Listen on Apple Music</a>
+      </div>
+    </section>
+    <noscript>Receipts need JavaScript to search and draw.</noscript>
+  </main>
+  <footer><a href="/privacy">Privacy</a><span>Album data from Apple Music. Nothing you search is stored.</span></footer>
+</body>
+</html>

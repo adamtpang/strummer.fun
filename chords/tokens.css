@@ -1,0 +1,16 @@
+:root {
+  color-scheme: dark;
+  --studio-bg: #111213;
+  --studio-surface: #191b1c;
+  --studio-raised: #242729;
+  --studio-text: #f0f0ea;
+  --studio-muted: #a1a8a9;
+  --studio-border: #363a3c;
+  --studio-accent: #c8323e;
+  --studio-playing: #8adbb3;
+  --studio-focus: #f29a9f;
+  --studio-display: 'Instrument Serif', Georgia, serif;
+  --studio-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --studio-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --studio-radius: 6px;
+}
