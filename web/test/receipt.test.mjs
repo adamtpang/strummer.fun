@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   formatDuration, rankAlbums, buildReceipt, receiptRow, pairRow, centered, barcode, receiptLines, searchUrl, lookupUrl, CTA,
-  artistNamedIn, artistSearchUrl, discographyUrl, normalize,
+  artistNamedIn, artistSearchUrl, discographyUrl, normalize, labelFrom,
 } from '../receipt/receipt.mjs';
 
 const blonde = JSON.parse(readFileSync(new URL('./fixtures/itunes-lookup-blonde.json', import.meta.url), 'utf8')).results;
@@ -126,4 +126,17 @@ test('discovery URLs ask for artists and full discographies', () => {
 test('an artist can be found from album hits when artist search comes back empty', () => {
   const albumHits = [{ wrapperType: 'collection', collectionId: 2, collectionName: 'Moon River - Single', artistId: 442122051, artistName: 'Frank Ocean' }];
   assert.equal(artistNamedIn([...[], ...albumHits], 'frank ocean blonde').artistId, 442122051);
+});
+
+test("label names come out clean from both of Apple's copyright shapes", () => {
+  assert.equal(labelFrom("℗ 2016 Boys Don't Cry"), "Boys Don't Cry");
+  assert.equal(labelFrom('A Capitol Records UK / Polydor Label Group release; ℗ 2025 Olivia Dean'), 'Capitol Records UK / Polydor Label Group');
+  assert.equal(labelFrom('An Interscope Records Release; © 2022 Top Dawg'), 'Interscope Records');
+  assert.equal(labelFrom(undefined), '');
+});
+
+test('a value that overflows its row still keeps a space after the label', () => {
+  const row = pairRow('LABEL:', 'CAPITOL RECORDS UK / POLYDOR LABEL GROUP AND FRIENDS', 30);
+  assert.equal([...row].length, 30);
+  assert.match(row, /^LABEL: \S/);
 });

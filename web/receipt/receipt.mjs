@@ -89,6 +89,16 @@ export function rankAlbums(results, query = '') {
   return kept.map(({ item }) => item);
 }
 
+// Apple's copyright field is either "℗ 2016 Boys Don't Cry" or a sentence
+// like "A Capitol Records UK / Polydor Label Group release; ℗ 2025 ...".
+// Keep just the label name.
+export function labelFrom(copyright) {
+  const text = String(copyright || '').split(';')[0].trim();
+  const sentence = text.match(/^an?\s+(.+?)\s+(release|recording)\b/i);
+  if (sentence) return sentence[1].trim();
+  return text.replace(/^[℗©]\s*(\d{4}\s+)?/, '').trim();
+}
+
 function hashOf(text) {
   let hash = 2166136261;
   for (const char of String(text)) hash = Math.imul(hash ^ char.codePointAt(0), 16777619) >>> 0;
@@ -113,7 +123,7 @@ export function buildReceipt(lookupResults, now = new Date()) {
     artist: album.artistName,
     year,
     genre: album.primaryGenreName || '',
-    label: (album.copyright || '').replace(/^[℗©]\s*(\d{4}\s+)?/, '').trim(),
+    label: labelFrom(album.copyright),
     artwork: album.artworkUrl100 ? album.artworkUrl100.replace(/\/\d+x\d+bb\./, '/600x600bb.') : '',
     link: album.collectionViewUrl || '',
     order: String(album.collectionId).slice(-4).padStart(4, '0'),
@@ -143,10 +153,10 @@ export function receiptRow(number, title, time, cols) {
 }
 
 export function pairRow(label, value, cols) {
-  const room = Math.max(1, cols - label.length);
+  const room = Math.max(1, cols - label.length - 1);
   const chars = [...String(value)];
   const fitted = chars.length > room ? chars.slice(0, room - 1).join('') + '…' : chars.join('');
-  return label + fitted.padStart(room + (fitted.length - [...fitted].length));
+  return label + ' ' + fitted.padStart(room + (fitted.length - [...fitted].length));
 }
 
 export function centered(text, cols) {
