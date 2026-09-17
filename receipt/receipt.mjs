@@ -6,6 +6,8 @@
 export const SEARCH_URL = 'https://itunes.apple.com/search';
 export const LOOKUP_URL = 'https://itunes.apple.com/lookup';
 export const CTA = 'MAKE YOURS FREE AT STRUMMER.FUN/RECEIPT';
+export const LINK = 'strummer.fun/receipt';
+export const STAR = '★';
 const MIN_ALBUM_TRACKS = 5;
 
 export function searchUrl(term) {
@@ -36,6 +38,24 @@ export function normalize(text) {
 export function artistNamedIn(artists, query) {
   const q = ` ${normalize(query)} `;
   return (artists || []).find((artist) => artist && artist.artistId && normalize(artist.artistName) && q.includes(` ${normalize(artist.artistName)} `)) || null;
+}
+
+export function bestTrackUrl(artist, album) {
+  return `/api/receipt/best-track?${new URLSearchParams({ artist, album })}`;
+}
+
+const bareTitle = (title) => normalize(String(title || '').replace(/[([](feat|ft|with)\b.*?[)\]]/gi, ''));
+
+// Index of the receipt item whose title matches the best track Deezer named,
+// or -1. Exact match first, then one title starting with the other, so
+// "Nights" still finds "Nights" and a remaster suffix does not break it.
+export function matchTrack(items, title) {
+  const want = bareTitle(title);
+  if (!want) return -1;
+  const names = (items || []).map((item) => bareTitle(item.title));
+  const exact = names.indexOf(want);
+  if (exact >= 0) return exact;
+  return names.findIndex((name) => name && (name.startsWith(want) || want.startsWith(name)));
 }
 
 export function lookupUrl(id) {
@@ -137,6 +157,7 @@ export function buildReceipt(lookupResults, now = new Date()) {
     total: formatDuration(totalMs),
     card: `**** **** **** ${year || '0000'}`,
     auth: String(hash % 1000000).padStart(6, '0'),
+    best: -1,
   };
 }
 
@@ -192,10 +213,12 @@ export function receiptLines(receipt, cols) {
     rule,
     receiptRow('NO', 'ITEM', 'TIME', cols),
     rule,
-    ...receipt.items.map((item) => receiptRow(item.number, item.title.toUpperCase(), item.time, cols)),
+    ...receipt.items.map((item, index) =>
+      receiptRow(item.number, (index === receipt.best ? `${STAR} ` : '') + item.title.toUpperCase(), item.time, cols)),
     rule,
     pairRow('ITEM COUNT:', String(receipt.count), cols),
     pairRow('TOTAL:', receipt.total, cols),
+    ...(receipt.best >= 0 ? [pairRow(`${STAR} BEST TRACK:`, receipt.items[receipt.best].title.toUpperCase(), cols)] : []),
     '',
     pairRow('CARD #:', receipt.card, cols),
     pairRow('AUTH CODE:', receipt.auth, cols),

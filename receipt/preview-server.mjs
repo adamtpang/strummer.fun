@@ -1,3 +1,4 @@
+import bestTrack from '../api/receipt/best-track.js';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 const types = { '.html': 'text/html', '.css': 'text/css', '.mjs': 'text/javascript' };
@@ -7,7 +8,14 @@ const allowed = new Map([
   ['/chords/tokens.css', 'chords/tokens.css'],
 ]);
 createServer(async (request, response) => {
-  const file = allowed.get(new URL(request.url, 'http://127.0.0.1').pathname);
+  const url = new URL(request.url, 'http://127.0.0.1');
+  if (url.pathname === '/api/receipt/best-track') {
+    const result = await bestTrack(new Request(url));
+    response.writeHead(result.status, { 'Content-Type': 'application/json' });
+    response.end(await result.text());
+    return;
+  }
+  const file = allowed.get(url.pathname);
   if (!file) { response.writeHead(404); response.end(); return; }
   try {
     const body = await readFile(new URL(`../${file}`, import.meta.url));
