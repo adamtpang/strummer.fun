@@ -27,11 +27,15 @@
     <section id="output" class="output" hidden aria-label="Your receipt">
       <canvas id="receipt" role="img"></canvas>
       <div class="actions">
-        <button id="download" class="primary" type="button">Download image</button>
-        <button id="share" type="button" hidden>Share</button>
+        <button id="story" class="primary" type="button">Share to Story</button>
+        <button id="download" type="button">Download receipt</button>
         <button id="copy" type="button">Copy link</button>
         <a id="listen" href="#" target="_blank" rel="noopener">Listen on Apple Music</a>
       </div>
+      <ol id="hints" class="hints" hidden aria-live="polite">
+        <li id="hint-music"><span>Add a <strong>music</strong> sticker: <em id="best-name"></em></span><button id="copy-song" type="button">Copy song</button></li>
+        <li><span>Add a <strong>link</strong> sticker: <em>strummer.fun/receipt</em></span><button id="copy-cta" type="button">Copy link</button></li>
+      </ol>
     </section>
     <noscript>Receipts need JavaScript to search and draw.</noscript>
   </main>
