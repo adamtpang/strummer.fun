@@ -2,6 +2,15 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "receipt",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "web/receipt/preview-server.mjs"
+      ],
+      "cwd": "C:\\Users\\adamp\\Aether\\strummer.fun",
+      "port": 4390
+    },
+    {
       "name": "chords",
       "runtimeExecutable": "node",
       "runtimeArgs": [
