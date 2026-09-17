@@ -1,4 +1,4 @@
-import { searchUrl, artistSearchUrl, discographyUrl, artistNamedIn, lookupUrl, rankAlbums, buildReceipt, receiptLines, barcode, bestTrackUrl, matchTrack, CTA, LINK, STAR } from './receipt.mjs';
+import { searchUrl, artistSearchUrl, discographyUrl, artistNamedIn, lookupUrl, rankAlbums, buildReceipt, receiptLines, barcode, bestTrackUrl, matchTrack, CTA, LINK, STAR, ALL_TIME, topAlbumsReceipt } from './receipt.mjs';
 
 const find = (id) => document.getElementById(id);
 const WIDTH = 1080;
@@ -73,23 +73,107 @@ async function search(term) {
   }
 }
 
+async function present(receipt, token) {
+  current = receipt;
+  await draw(current);
+  find('output').hidden = false;
+  find('listen').href = current.link || 'https://music.apple.com';
+  find('listen').textContent = current.listens ? 'Open on Last.fm' : 'Listen on Apple Music';
+  find('listen').hidden = !current.link;
+  if (!current.listens) findBestTrack(current, token);
+  find('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function tile(item, onPick, index) {
+  const li = document.createElement('li');
+  const button = document.createElement('button');
+  button.type = 'button';
+  let art;
+  if (item.artwork) {
+    art = document.createElement('img');
+    art.src = item.artwork.replace(/\/\d+x\d+bb\./, '/300x300bb.');
+    art.alt = ''; art.loading = 'lazy'; art.width = 150; art.height = 150;
+  } else {
+    art = document.createElement('span');
+    art.className = 'rank';
+    art.textContent = String(index + 1);
+  }
+  const name = document.createElement('strong'); name.textContent = item.name;
+  const artist = document.createElement('small'); artist.textContent = item.plays ? `${item.artist} \u00b7 ${item.plays} plays` : item.artist;
+  button.append(art, name, artist);
+  button.setAttribute('aria-label', `${item.name} by ${item.artist}`);
+  button.onclick = () => onPick(item);
+  li.append(button);
+  return li;
+}
+
+// Albums from Last.fm carry names, not Apple ids, so find the Apple release
+// the same way a typed search would.
+async function openByName(name, artist) {
+  status(`Finding ${name}…`);
+  const term = `${artist} ${name}`;
+  try {
+    const [hits, artists] = await Promise.all([
+      getJson(searchUrl(term)).then((data) => data.results).catch(() => []),
+      getJson(artistSearchUrl(artist)).then((data) => data.results).catch(() => []),
+    ]);
+    const named = artistNamedIn([...artists, ...hits], term);
+    const disc = named ? await getJson(discographyUrl(named.artistId)).then((data) => data.results).catch(() => []) : [];
+    const best = rankAlbums([...hits, ...disc], term)[0];
+    if (!best) { status(`Apple Music has no match for ${name}.`); return; }
+    open(best.collectionId);
+  } catch (error) {
+    status(error.message);
+  }
+}
+
+async function loadShelves() {
+  const pickApple = (item) => open(item.id);
+  find('alltime').replaceChildren(...ALL_TIME.map((album, index) => tile(album, pickApple, index)));
+  const allTime = getJson(lookupUrl(ALL_TIME.map((album) => album.id).join(',')).split('&')[0])
+    .then((data) => {
+      const art = new Map(data.results.map((item) => [String(item.collectionId), item.artworkUrl100]));
+      find('alltime').replaceChildren(...ALL_TIME.map((album, index) => tile({ ...album, artwork: art.get(album.id) || '' }, pickApple, index)));
+    })
+    .catch(() => { /* numbered tiles are a fine fallback */ });
+  const trending = getJson('/api/receipt/charts')
+    .then(({ albums }) => find('trending').replaceChildren(...albums.map((album, index) => tile(album, pickApple, index))))
+    .catch(() => { find('trending').closest('.shelf').hidden = true; });
+  const pairing = fetch('/api/receipt/lastfm?probe=1')
+    .then((response) => { find('mine').hidden = !response.ok; })
+    .catch(() => { find('mine').hidden = true; });
+  await Promise.all([allTime, trending, pairing]);
+}
+
+async function pairLastfm(user, period) {
+  const token = ++openToken;
+  status('Reading your Last.fm…');
+  find('mine-list').replaceChildren();
+  const response = await fetch(`/api/receipt/lastfm?${new URLSearchParams({ user, period })}`);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) { status(body.error || 'Last.fm did not answer. Try again.'); return; }
+  if (token !== openToken) return;
+  try {
+    await present(topAlbumsReceipt(user, period, body.albums), token);
+    status(`Your top ${Math.min(10, body.albums.length)} albums, ${find('lfm-period').selectedOptions[0].textContent.toLowerCase()}. Tap one below for its own receipt.`);
+    find('mine-list').replaceChildren(...body.albums.map((album, index) => tile(album, (item) => openByName(item.name, item.artist), index)));
+    try { localStorage.setItem('strummer.lastfm.user', user); } catch { /* optional */ }
+  } catch (error) {
+    status(error.message);
+  }
+}
+
 async function open(id) {
   const token = ++openToken;
   status('Printing your receipt…');
   find('hints').hidden = true;
   try {
-    current = buildReceipt((await getJson(lookupUrl(id))).results);
-    await draw(current);
-    findBestTrack(current, token);
-    find('output').hidden = false;
-    find('listen').href = current.link || 'https://music.apple.com';
-    find('listen').hidden = !current.link;
+    await present(buildReceipt((await getJson(lookupUrl(id))).results), token);
     const url = new URL(location.href);
     url.searchParams.set('id', current.id);
     url.searchParams.delete('q');
     history.replaceState(null, '', url);
     status(`${current.album} by ${current.artist}. ${current.count} items, ${current.total}.`);
-    find('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (error) {
     status(error.message);
   }
@@ -304,6 +388,14 @@ find('copy-cta').onclick = () => copy('https://strummer.fun/receipt', 'Link copi
 find('copy').onclick = async () => {
   try { await navigator.clipboard.writeText(location.href); status('Link copied.'); } catch { status(location.href); }
 };
+
+find('lastfm').onsubmit = (event) => {
+  event.preventDefault();
+  const user = find('lfm-user').value.trim();
+  if (user) pairLastfm(user, find('lfm-period').value);
+};
+try { find('lfm-user').value = localStorage.getItem('strummer.lastfm.user') || ''; } catch { /* optional */ }
+loadShelves();
 
 const params = new URLSearchParams(location.search);
 if (/^\d+$/.test(params.get('id') || '')) open(params.get('id'));

@@ -8,6 +8,58 @@ export const LOOKUP_URL = 'https://itunes.apple.com/lookup';
 export const CTA = 'MAKE YOURS FREE AT STRUMMER.FUN/RECEIPT';
 export const LINK = 'strummer.fun/receipt';
 export const STAR = '★';
+
+// Apple Music's 100 Best Albums, top 10, as announced 2024-05-22
+// (apple.com/newsroom). IDs resolved against Apple's catalogue 2026-09-17 so
+// the shelf never depends on search luck.
+export const ALL_TIME = [
+  { id: '1276760743', name: 'The Miseducation of Lauryn Hill', artist: 'Lauryn Hill' },
+  { id: '269572838', name: 'Thriller', artist: 'Michael Jackson' },
+  { id: '1474815798', name: 'Abbey Road', artist: 'The Beatles' },
+  { id: '1746833068', name: 'Purple Rain', artist: 'Prince & The Revolution' },
+  { id: '1146195596', name: 'Blonde', artist: 'Frank Ocean' },
+  { id: '1440788438', name: 'Songs in the Key of Life', artist: 'Stevie Wonder' },
+  { id: '1471263898', name: 'good kid, m.A.A.d city', artist: 'Kendrick Lamar' },
+  { id: '1422677780', name: 'Back to Black', artist: 'Amy Winehouse' },
+  { id: '1440783617', name: 'Nevermind', artist: 'Nirvana' },
+  { id: '1460430561', name: 'Lemonade', artist: 'Beyonc\u00e9' },
+];
+
+export const PERIOD_LABELS = { '7day': 'LAST 7 DAYS', '1month': 'LAST MONTH', '12month': 'LAST YEAR', overall: 'ALL TIME' };
+
+// A Receiptify-style receipt of one listener's top albums. It reuses the
+// album receipt's shape, so drawing, the story export, and sharing all work
+// unchanged; the right-hand column holds plays instead of run time.
+export function topAlbumsReceipt(user, period, albums, now = new Date()) {
+  const list = (albums || []).filter((album) => album && album.name && album.artist).slice(0, 10);
+  if (!list.length) throw new Error('No albums to print yet. Scrobble a few and try again.');
+  const plays = list.reduce((sum, album) => sum + (Number(album.plays) || 0), 0);
+  const hash = hashOf(`${user}|${period}`);
+  return {
+    id: hash,
+    album: 'TOP ALBUMS',
+    artist: `@${user}`,
+    year: PERIOD_LABELS[period] || '',
+    genre: 'LAST.FM',
+    label: '',
+    artwork: '',
+    link: `https://www.last.fm/user/${encodeURIComponent(user)}`,
+    order: String(hash % 10000).padStart(4, '0'),
+    date: now.toISOString().slice(0, 10),
+    column: 'PLAYS',
+    items: list.map((album, index) => ({
+      number: String(index + 1).padStart(2, '0'),
+      title: `${album.name} - ${album.artist}`,
+      time: String(Number(album.plays) || 0),
+    })),
+    count: list.length,
+    total: String(plays),
+    card: `**** **** **** ${now.getUTCFullYear()}`,
+    auth: String(hash % 1000000).padStart(6, '0'),
+    best: -1,
+    listens: true,
+  };
+}
 const MIN_ALBUM_TRACKS = 5;
 
 export function searchUrl(term) {
@@ -202,7 +254,7 @@ export function receiptLines(receipt, cols) {
   const rule = '-'.repeat(cols);
   return [
     centered('STRUMMER RECORD SHOP', cols),
-    centered('ALBUM RECEIPT', cols),
+    centered(receipt.listens ? 'LISTENING RECEIPT' : 'ALBUM RECEIPT', cols),
     '',
     pairRow('ORDER #', receipt.order, cols),
     pairRow('DATE', receipt.date, cols),
@@ -211,13 +263,13 @@ export function receiptLines(receipt, cols) {
     centered(receipt.album.toUpperCase(), cols),
     centered([receipt.year, receipt.genre].filter(Boolean).join(' · '), cols),
     rule,
-    receiptRow('NO', 'ITEM', 'TIME', cols),
+    receiptRow('NO', 'ITEM', receipt.column || 'TIME', cols),
     rule,
     ...receipt.items.map((item, index) =>
       receiptRow(item.number, (index === receipt.best ? `${STAR} ` : '') + item.title.toUpperCase(), item.time, cols)),
     rule,
     pairRow('ITEM COUNT:', String(receipt.count), cols),
-    pairRow('TOTAL:', receipt.total, cols),
+    pairRow(receipt.listens ? 'TOTAL PLAYS:' : 'TOTAL:', receipt.total, cols),
     ...(receipt.best >= 0 ? [pairRow(`${STAR} BEST TRACK:`, receipt.items[receipt.best].title.toUpperCase(), cols)] : []),
     '',
     pairRow('CARD #:', receipt.card, cols),
