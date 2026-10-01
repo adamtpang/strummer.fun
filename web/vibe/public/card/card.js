@@ -30,10 +30,8 @@ if (!playlist) {
 if (playlist) {
   button.addEventListener('click', () => {
     const frame = document.createElement('iframe');
-    // theme=0 forces Spotify's dark player. Without it Spotify colors the player
-    // from the cover art, which sits better on a light card.
-    const dark = !matchMedia('(prefers-color-scheme: light)').matches;
-    frame.src = `https://open.spotify.com/embed/playlist/${playlist}${dark ? '?theme=0' : ''}`;
+    // theme=0 forces Spotify's dark player, in light mode too.
+    frame.src = `https://open.spotify.com/embed/playlist/${playlist}?theme=0`;
     frame.title = 'spotify player';
     frame.allow = 'autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture';
     stage.classList.add('open');
