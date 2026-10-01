@@ -58,6 +58,15 @@
     {
       "name": "strummer-daw-studio",
       "url": "https://localhost:8080"
+    },
+    {
+      "name": "vibe-card",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "web/vibe/card-preview-server.mjs"
+      ],
+      "cwd": "C:\\Users\\adamp\\Aether\\strummer.fun",
+      "port": 4391
     }
   ]
 }
