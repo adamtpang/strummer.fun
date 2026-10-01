@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>make a playlist card</title>
+<meta name="description" content="turn any public spotify playlist into a small player card you can share or embed. no login.">
+<link rel="stylesheet" href="/vibe/card/card.css">
+<script type="module" src="/vibe/card/make.js"></script>
+</head>
+<body>
+<main class="maker">
+  <h1>make your own</h1>
+  <p class="lede">paste a public spotify playlist link. no login.</p>
+  <form id="form">
+    <input id="link" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://open.spotify.com/playlist/..." aria-label="spotify playlist link" required>
+    <button type="submit">make card</button>
+  </form>
+  <p class="status" id="status" role="status"></p>
+  <section id="out" hidden>
+    <iframe id="preview" title="your card" height="200"></iframe>
+    <label class="field" for="name">title</label>
+    <input id="name" type="text" maxlength="60" autocomplete="off">
+    <label class="field" for="share">link</label>
+    <div class="row"><input id="share" type="text" readonly><button type="button" data-copy="share">copy</button></div>
+    <label class="field" for="embed">embed code</label>
+    <div class="row"><textarea id="embed" rows="4" readonly></textarea><button type="button" data-copy="embed">copy</button></div>
+  </section>
+</main>
+</body>
+</html>

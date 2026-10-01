@@ -10,7 +10,11 @@ const rule = JSON.parse(readFileSync(here('../vercel.json'), 'utf8')).headers.fi
 const FILES = {
   '/vibe/card/adam': ['public/card/adam.html', 'text/html'],
   '/vibe/card/card.css': ['public/card/card.css', 'text/css'],
+  '/vibe/card/p': ['public/card/p.html', 'text/html'],
+  '/vibe/card/make': ['public/card/make.html', 'text/html'],
   '/vibe/card/card.js': ['public/card/card.js', 'text/javascript'],
+  '/vibe/card/make.js': ['public/card/make.js', 'text/javascript'],
+  '/vibe/card/lib.mjs': ['public/card/lib.mjs', 'text/javascript'],
 };
 const HOST = `<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1"><title>host page</title>
 <body style="margin:0;padding:24px;background:#0a0a0a;color:#fff;font:16px system-ui"><p>what i listen to, <a href="#" style="color:#60a5fa">all of it</a></p>

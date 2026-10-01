@@ -36,7 +36,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors *; script-src 'self'; style-src 'self'; frame-src https://open.spotify.com; upgrade-insecure-requests"
+          "value": "default-src 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; frame-ancestors *; script-src 'self'; style-src 'self'; connect-src https://open.spotify.com; frame-src 'self' https://open.spotify.com; upgrade-insecure-requests"
         },
         {
           "key": "Strict-Transport-Security",
@@ -89,6 +89,14 @@
     {
       "source": "/vibe/card/adam",
       "destination": "/vibe/card/adam.html"
+    },
+    {
+      "source": "/vibe/card/p",
+      "destination": "/vibe/card/p.html"
+    },
+    {
+      "source": "/vibe/card/make",
+      "destination": "/vibe/card/make.html"
     },
     {
       "source": "/vibe",
