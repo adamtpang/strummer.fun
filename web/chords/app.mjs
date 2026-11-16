@@ -81,6 +81,8 @@ function renderGreatest() {
   find('greatest-formula').textContent = progression.formula;
   find('greatest-name').textContent = progression.feel;
   find('greatest-songs').replaceChildren(...progression.songs.map(song => { const item = document.createElement('li'); item.textContent = song; return item; }));
+  find('source').hidden = !progression.source;
+  if (progression.source) find('source').href = progression.source;
 }
 function renderCapo(fit, key) {
   const line = find('capo');

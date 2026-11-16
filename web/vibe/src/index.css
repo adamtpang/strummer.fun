@@ -1,250 +1,215 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import '../../chords/tokens.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* strummer.fun's design system, verbatim — vibecheck is the /vibe surface of
-     the same music suite. Warm near-black chrome; the user's dynamic gradient
-     is the only saturated thing. Red is the accent; Spotify green is reserved
-     strictly for the Connect-Spotify action. */
-  --vc-bg:        #0a0908;
-  --vc-panel:     #121110;
-  --vc-panel-2:   #1a1816;
-  --vc-elevated:  #211e1b;
-  --vc-fg:        #f5f5f4;
-  --vc-muted:     #8a857f;
-  --vc-muted-2:   #b8b3ad;
-  --vc-accent:    #dc2626;
-  --vc-accent-dim:#7f1d1d;
-  --vc-rule:      #262320;
-  --vc-rule-2:    #322e29;
-  --vc-good:      #4ade80;
-  --vc-spotify:   #1DB954;
-
-  /* shadcn semantic tokens mapped onto the existing Strummer palette. */
-  --background: 30 11.11% 3.53%;
-  --foreground: 60 4.76% 95.88%;
-  --card: 30 5.88% 6.67%;
-  --card-foreground: 60 4.76% 95.88%;
-  --popover: 30 8.33% 9.41%;
-  --popover-foreground: 60 4.76% 95.88%;
-  --primary: 0 72.22% 50.59%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 30 8.33% 9.41%;
-  --secondary-foreground: 60 4.76% 95.88%;
-  --muted: 30 10% 11.76%;
-  --muted-foreground: 32.73 7.19% 70%;
-  --accent: 33.33 9.89% 17.84%;
-  --accent-foreground: 60 4.76% 95.88%;
-  --destructive: 0 72.22% 50.59%;
+  --vc-bg: var(--studio-bg);
+  --vc-panel: var(--studio-surface);
+  --vc-panel-2: var(--studio-raised);
+  --vc-elevated: var(--studio-elevated);
+  --vc-fg: var(--studio-text);
+  --vc-muted: var(--studio-muted);
+  --vc-muted-2: var(--studio-text-soft);
+  --vc-accent: var(--studio-accent);
+  --vc-accent-dim: var(--studio-accent-dim);
+  --vc-rule: var(--studio-border);
+  --vc-rule-2: var(--studio-border-strong);
+  --vc-good: var(--studio-playing);
+  --vc-spotify: var(--studio-spotify);
+  --background: 0 0% 4%;
+  --foreground: 60 17% 93%;
+  --card: 200 6% 10%;
+  --card-foreground: 60 17% 93%;
+  --popover: 204 6% 15%;
+  --popover-foreground: 60 17% 93%;
+  --primary: 72 100% 62%;
+  --primary-foreground: 0 0% 4%;
+  --secondary: 204 6% 15%;
+  --secondary-foreground: 60 17% 93%;
+  --muted: 204 6% 15%;
+  --muted-foreground: 188 5% 65%;
+  --accent: 204 6% 20%;
+  --accent-foreground: 60 17% 93%;
+  --destructive: 355 60% 49%;
   --destructive-foreground: 0 0% 100%;
-  --border: 30 8.57% 13.73%;
-  --input: 33.33 9.89% 17.84%;
-  --ring: 0 72.22% 50.59%;
-  --radius: 0.5rem;
-
-  --font-display: 'Instrument Serif', Georgia, serif;
-  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --border: 200 5% 22%;
+  --input: 200 5% 30%;
+  --ring: 334 100% 81%;
+  --radius: 0.375rem;
+  --font-display: var(--studio-display);
+  --font-ui: var(--studio-ui);
+  --font-mono: var(--studio-mono);
 }
 
 @layer base {
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  body {
-    font-family: var(--font-ui);
-    background: var(--vc-bg);
-    color: var(--vc-fg);
-    color-scheme: dark;
-    font-feature-settings: 'cv11', 'ss01', 'ss03'; /* Inter alt styles for cleaner numerals */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  ::selection { background: var(--vc-accent); color: #fff; }
-  /* Numbers everywhere should be tabular by default — keeps stat columns aligned */
-  h1, h2, h3, .stat, .num {
-    font-variant-numeric: tabular-nums;
-  }
+  * { box-sizing: border-box; letter-spacing: 0 !important; }
+  body { margin: 0; font-family: var(--font-ui); background: var(--vc-bg); color: var(--vc-fg); color-scheme: dark; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, p { overflow-wrap: anywhere; }
+  h1, h2, h3, .stat, .num { font-variant-numeric: tabular-nums; }
+  button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+  :focus-visible { outline: 2px solid var(--studio-focus) !important; outline-offset: 4px; }
+  ::selection { background: var(--vc-accent); color: var(--studio-on-accent); }
 }
-
-/* Mono for stats/meta — matches strummer's JetBrains Mono numerals + eyebrows */
-.font-mono-stat {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+.font-mono-stat, .eyebrow { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-size: 0.6875rem; text-transform: uppercase; color: var(--vc-muted); }
+.font-serif-accent { font-family: var(--font-display); font-weight: 400; }
+.wordmark-dot { color: var(--vc-accent); }
+.vibe-app { min-height: 100dvh; display: flex; flex-direction: column; }
+#vibe-content { flex: 1; outline: none; }
+.vibe-header { position: sticky; top: 0; z-index: 30; background: rgb(11 11 11 / 94%); backdrop-filter: blur(20px); }
+.vibe-header-inner { max-width: 1120px; margin: auto; min-height: 76px; padding: 12px 32px; display: flex; align-items: center; gap: 32px; }
+.vibe-brand { display: flex; align-items: center; gap: 16px; color: var(--vc-fg); text-decoration: none; font-weight: 500; min-height: 44px; }
+.vibe-brand-parent { font: italic 28px/1 var(--font-display); }
+.vibe-brand-divider { height: 20px; border-left: 1px solid var(--vc-rule); }
+.vibe-nav { display: flex; align-items: center; gap: 4px; margin: 0 auto; }
+.vibe-nav a, .studio-link { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 6px; color: var(--vc-muted); font-size: 13px; font-weight: 500; text-decoration: none; transition: background 120ms, color 120ms; }
+.vibe-nav a:hover, .studio-link:hover { background: var(--vc-panel); color: var(--vc-fg); }
+.vibe-nav a[aria-current=page] { color: var(--vc-fg); background: var(--vc-panel-2); }
+.vibe-nav a[aria-current=page] svg { color: var(--studio-playing); }
+.studio-link { padding-right: 0; }
+.skip-link { position: fixed; top: -100px; left: 16px; z-index: 100; padding: 12px 18px; background: var(--vc-fg); color: var(--vc-bg); }
+.skip-link:focus { top: 12px; }
+.vibe-page { max-width: 1060px; margin: auto; padding: 40px 32px 64px; }
+.vibe-page-heading { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 32px; }
+.vibe-page-heading h1, .vibe-legal h1 { font: 400 40px/1.1 var(--font-display); margin: 0 0 12px; }
+.vibe-page-heading p { font-size: 14px; color: var(--vc-muted); }
+.vibe-footer { max-width: 1060px; width: calc(100% - 64px); margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; border-top: 1px solid var(--vc-rule); padding: 20px 0; color: var(--vc-muted); font-size: 12px; }
+.vibe-footer nav { display: flex; gap: 24px; }
+.vibe-footer a { display: inline-flex; align-items: center; min-height: 44px; color: inherit; }
+.vibe-footer a:hover { color: var(--vc-fg); }
+.vibe-welcome { max-width: 688px; padding-top: 36px; }
+.welcome-heading { text-align: center; }
+.welcome-heading h1 { font: 400 56px/1 var(--font-display); text-transform: uppercase; margin: 14px 0 16px; }
+.welcome-description { font-size: 16px; color: var(--vc-muted-2); line-height: 1.6; }
+.welcome-actions { margin: 28px auto 36px; text-align: center; }
+.vibe-connect { display: inline-flex; justify-content: center; align-items: center; gap: 12px; background: var(--studio-spotify); color: var(--studio-on-spotify); border-radius: var(--studio-radius-pill); padding: 0 24px; min-height: 48px; font-size: 14px; font-weight: 600; transition: background 120ms, transform 120ms; }
+.vibe-connect:hover { background: var(--studio-spotify-hover); }
+.vibe-connect:active { transform: scale(0.98); }
+.vibe-connect:disabled { opacity: .6; }
+.welcome-privacy { display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--vc-muted-2); font-size: 12px; margin-top: 16px; }
+.welcome-access { color: var(--vc-muted); font-size: 12px; margin-top: 6px; }
+.vibe-alert { border-left: 3px solid var(--vc-accent); background: var(--vc-panel); color: var(--studio-danger-text); text-align: left; font-size: 14px; padding: 16px; margin-bottom: 20px; }
+.section-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 16px; }
+.section-heading h2 { font-size: 14px; font-weight: 500; }
+.sample-record { background: var(--studio-paper); color: var(--studio-paper-text); border-radius: 6px; padding: 24px; }
+.sample-record .eyebrow { color: var(--studio-paper-muted); }
+.sample-record-heading { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+.sample-record-heading img { border-radius: 6px; flex-shrink: 0; }
+.sample-record-heading p { font: 400 28px/1.15 var(--font-display); margin-top: 4px; }
+.sample-record li { display: flex; align-items: center; gap: 18px; padding: 14px 0; border-top: 1px solid var(--studio-paper-rule); }
+.sample-record li div { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.sample-record li strong { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.sample-record li div span { font-size: 12px; color: var(--studio-paper-muted); }
+.sample-rank { font: 12px var(--font-mono); color: var(--studio-paper-accent); }
+.sample-record li svg { color: var(--studio-paper-muted); flex-shrink: 0; }
+.sample-record-footer { display: flex; justify-content: space-between; border-top: 1px solid var(--studio-paper-rule); padding-top: 16px; color: var(--studio-paper-muted); font: 10px var(--font-mono); }
+.welcome-links { display: flex; justify-content: space-between; gap: 16px; margin-top: 16px; }
+.welcome-links a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 12px; color: var(--vc-muted-2); }
+.welcome-links a:hover { color: var(--vc-fg); }
+.vibe-legal { max-width: 736px; margin: auto; padding: 40px 32px 64px; }
+.vibe-legal h2 { font-size: 18px; }
+.vibe-legal a { color: var(--studio-playing); }
+.vibe-legal p, .vibe-legal li { line-height: 1.8; }
+.panel, .panel-2 { background: var(--vc-panel); border: 1px solid var(--vc-rule); border-radius: 6px; }
+.glass, .glass-strong { background: var(--vc-panel); border: 1px solid var(--vc-rule); box-shadow: none; }
+.glass-dark { background: rgb(17 18 19 / 80%); border: 1px solid rgb(255 255 255 / 16%); backdrop-filter: blur(14px); }
+.vibe-profile { max-width: 736px; margin: auto; padding: 40px 32px 64px; }
+.profile-identity { display: flex; align-items: center; gap: 20px; padding-bottom: 28px; border-bottom: 1px solid var(--vc-rule); margin-bottom: 28px; }
+.profile-identity img { width: 64px; height: 64px; object-fit: cover; border-radius: 50%; }
+.profile-identity h1 { font: 400 36px/1.15 var(--font-display); margin-bottom: 8px; }
+.profile-identity p { font-size: 13px; color: var(--vc-muted); }
+.profile-vibe-label { background: var(--studio-pop); color: var(--studio-on-pop); border-radius: 18px; padding: 24px; margin-bottom: 32px; }
+.profile-vibe-label h2 { font: 400 34px/1.02 var(--font-display); text-transform: uppercase; margin-bottom: 14px; }
+.profile-genres { display: flex; flex-wrap: wrap; gap: 8px 16px; font: 12px var(--font-mono); color: inherit; opacity: .85; }
+.profile-share-button { width: 100%; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: var(--vc-accent); color: var(--studio-on-accent); border-radius: var(--studio-radius-pill); font-size: 14px; font-weight: 600; }
+.profile-share-button:hover { background: var(--studio-accent-hover); }
+.profile-share-button:disabled { opacity: .6; cursor: wait; }
+.friend-actions { border-block: 1px solid var(--vc-rule); padding: 24px 0; margin-bottom: 16px; }
+.friend-note { color: var(--vc-muted); font-size: 13px; line-height: 1.65; margin-bottom: 16px; }
+.friend-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--vc-rule-2); border-radius: var(--studio-radius-pill); font-size: 13px; overflow-wrap: anywhere; }
+.friend-secondary:hover { background: var(--vc-panel); }
+.friend-actions > .friend-secondary { margin-bottom: 16px; }
+.friend-copy { min-width: 0; }
+.friend-status { display: block; color: var(--studio-playing); font-size: 12px; min-height: 24px; padding-top: 4px; }
+.friend-copy-fallback { display: grid; gap: 8px; font-size: 13px; margin-bottom: 16px; }
+.friend-copy-fallback input { min-width: 0; width: 100%; padding: 12px; border: 1px solid var(--vc-rule); border-radius: 6px; background: var(--vc-panel); }
+.friend-dismiss { display: block; color: var(--vc-muted); font-size: 12px; text-decoration: underline; }
+.friend-invite { max-width: 600px; }
+.friend-invite h1 { font: 400 38px/1.15 var(--font-display); margin: 16px 0 28px; overflow-wrap: anywhere; }
+.friend-identity { display: flex; align-items: center; gap: 14px; padding-block: 20px; border-block: 1px solid var(--vc-rule); }
+.friend-identity > span { min-width: 0; flex: 1; }
+.friend-identity span span { display: block; font-size: 13px; color: var(--vc-muted); margin-top: 4px; }
+.friend-identity img { width: 48px; height: 48px; object-fit: cover; border-radius: 50%; }
+.invite-tracks { margin: 20px 0 28px; }
+.invite-tracks li { display: flex; gap: 12px; align-items: center; padding: 12px 0; }
+.invite-tracks img { width: 48px; height: 48px; border-radius: 4px; object-fit: cover; }
+.invite-tracks li > div { flex: 1; min-width: 0; }
+.invite-tracks strong { display: block; font-size: 14px; overflow-wrap: anywhere; }
+.invite-tracks div span { display: block; color: var(--vc-muted); font-size: 12px; }
+.invite-tracks a, .friend-listen { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; color: var(--studio-playing); }
+.friend-invite .profile-share-button { margin-bottom: 16px; }
+.friend-method { font-size: 12px; color: var(--vc-muted); line-height: 1.7; }
+.friend-method summary { cursor: pointer; padding-block: 12px; }
+.friend-profile-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 24px; }
+@media (max-width: 600px) { .friend-invite h1 { font-size: 32px; } .friend-profile-links { grid-template-columns: 1fr; } }
+.profile-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.profile-actions button { flex: 1; min-width: 100px; }
+.vibe-app button { min-height: 44px; }
+.vibe-app button:active:not(:disabled) { filter: brightness(.9); }
+.vibe-app :is(button, a)[class*="rounded-full"] { border-radius: 6px; }
+.vibe-app :is(.rounded-2xl, .rounded-xl) { border-radius: 8px; }
+.vibe-app .min-h-screen { min-height: calc(100dvh - 190px); }
+.vibe-app [class*="text-white/30"], .vibe-app [class*="text-white/40"] { color: var(--vc-muted); }
+.vibe-app [class*="bg-[#0a0908]"] { background: var(--vc-bg); }
+.vibe-profile .contrast-halo-light { text-shadow: none; }
+.vibe-profile > .mb-10 { margin-bottom: 32px; }
+.vibe-profile > .p-5 { border-radius: 0; background: transparent !important; border: 0 !important; border-top: 1px solid var(--vc-rule) !important; padding: 24px 0 0; backdrop-filter: none !important; }
+.contrast-halo-light { text-shadow: 0 1px 3px rgb(0 0 0 / 35%); }
+.contrast-halo-dark { text-shadow: 0 1px 3px rgb(255 255 255 / 35%); }
+.shimmer-text { color: var(--vc-fg); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--vc-rule-2); border-radius: 6px; }
+@media (max-width: 600px) {
+  .vibe-header-inner { padding: 10px 20px; gap: 12px; flex-wrap: wrap; min-height: 68px; }
+  .vibe-brand { gap: 10px; }
+  .vibe-brand-parent { font-size: 25px; }
+  .vibe-nav { order: 3; width: 100%; }
+  .vibe-nav a { flex: 1; }
+  .studio-link { margin-left: auto; }
+  .vibe-page, .vibe-profile, .vibe-legal { padding: 28px 20px 40px; }
+  .vibe-welcome { padding-top: 28px; }
+  .welcome-heading h1 { font-size: 40px; }
+  .welcome-description { font-size: 14px; }
+  .welcome-links { flex-direction: column; gap: 0; }
+  .welcome-links a { justify-content: space-between; }
+  .sample-record { padding: 20px; }
+  .sample-record-heading p { font-size: 24px; }
+  .vibe-footer { width: calc(100% - 40px); padding-top: 16px; }
+  .vibe-page-heading h1, .vibe-legal h1 { font-size: 34px; }
+  .profile-identity { gap: 16px; }
+  .profile-identity h1 { font-size: 30px; }
+  .profile-vibe-label h2 { font-size: 28px; }
 }
-.eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--vc-muted);
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .vibe-header, .glass-dark { background: var(--vc-bg); backdrop-filter: none; }
+  .vibe-header { border-bottom: 1px solid var(--vc-rule-2); }
 }
-
-/* Wordmark period — the red dot that ties vibecheck. to strummer. */
-.wordmark-dot {
-  color: var(--vc-accent);
-}
-
-/* Editorial serif accent — used for taglines, oversized hero punctuation,
-   the "vibe" → score moment in /compare. Pairs with Inter for the
-   playful-professional balance. */
-.font-serif-accent {
-  font-family: 'Instrument Serif', 'New York', Georgia, serif;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
-
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Scrollbar — strummer's warm rules */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--vc-rule-2);
-  border-radius: 6px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #45403a;
-  background-clip: padding-box;
-}
-
-/* Solid warm panels — strummer's surface language, for cards that sit on the
-   chrome (not over a dynamic gradient, where .glass is still right). */
-.panel {
-  background: var(--vc-panel);
-  border: 1px solid var(--vc-rule);
-  border-radius: 12px;
-}
-.panel-2 { background: var(--vc-panel-2); border: 1px solid var(--vc-rule); border-radius: 12px; }
-
-/* --------------------------------------------------------------------------
-   Glassmorphism utilities (v2.17)
-   Drop one of these on a card and it becomes a frosted layer over whatever
-   gradient or art is behind. `.glass` is the default; `-strong` for hero
-   surfaces; `-dark` when the parent is bright and you need the card to recede.
-   -------------------------------------------------------------------------- */
-
-/* Refined glass (v2.19) — less aggressive blur, subtler borders, calmer
-   shadows. Reads as "frosted material" instead of "smoke filter".
-*/
-.glass {
-  background: rgba(255, 255, 255, 0.045);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  backdrop-filter: blur(14px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.18),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.025);
-}
-
-.glass-strong {
-  background: rgba(255, 255, 255, 0.07);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
-  backdrop-filter: blur(22px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.22),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-
-.glass-dark {
-  background: rgba(0, 0, 0, 0.28);
-  -webkit-backdrop-filter: blur(16px) saturate(130%);
-  backdrop-filter: blur(16px) saturate(130%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28);
-}
-
-/* Restrained ambient (v2.19) — single soft conic drift instead of three
-   chaotic blobs. Reads as "premium dark" instead of "rave poster". */
-.ambient-bg {
-  position: relative;
-  isolation: isolate;
-}
-.ambient-bg::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  filter: blur(90px);
-  opacity: 0.40;
-  background:
-    radial-gradient(ellipse 70% 50% at 70% 15%, hsl(265 70% 45% / 0.55), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 25% 85%, hsl(190 60% 40% / 0.45), transparent 60%);
-  animation: ambient-drift 40s ease-in-out infinite alternate;
-}
-@keyframes ambient-drift {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  100% {
-    transform: translate3d(2%, -2%, 0) scale(1.06);
-  }
-}
-
-/* Number count-up sheen — applied to compat scores and meters */
-.shimmer-text {
-  background: linear-gradient(
-    100deg,
-    rgba(255, 255, 255, 0.85) 30%,
-    rgba(255, 255, 255, 1) 50%,
-    rgba(255, 255, 255, 0.85) 70%
-  );
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 4s linear infinite;
-}
-@keyframes shimmer {
-  to {
-    background-position: -200% 0;
-  }
-}
-
-/* Reduce motion preference — respect users who opted out */
 @media (prefers-reduced-motion: reduce) {
-  .ambient-bg::before,
-  .ambient-bg::after,
-  .shimmer-text {
-    animation: none !important;
-  }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  .vibe-connect:active { transform: none; }
 }
 
-/* --------------------------------------------------------------------------
-   Contrast halo (v2.18)
-   Apply this to any text whose color is computed from a dynamic gradient
-   (vibe cards, compare cards, tile labels). The double text-shadow paints
-   a soft dark glow on light text and a soft light glow on dark text, which
-   keeps the word legible even when the gradient passes through a tone too
-   close to the text color.
-   -------------------------------------------------------------------------- */
-
-.contrast-halo-light {
-  /* For white/light text: dark halo */
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.45),
-    0 0 14px rgba(0, 0, 0, 0.30);
-}
-.contrast-halo-dark {
-  /* For black/dark text: light halo */
-  text-shadow:
-    0 1px 2px rgba(255, 255, 255, 0.45),
-    0 0 14px rgba(255, 255, 255, 0.30);
-}
+/* Listening meters: a number, a label, and a thin mint level. Mint marks a
+   reading, not an action. */
+.vibe-meters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--studio-space-5); border-top: 1px solid var(--vc-rule); padding-block: var(--studio-space-5); margin-bottom: var(--studio-space-2); }
+.vibe-meter { min-width: 0; }
+.vibe-meter-value { display: block; font: 400 var(--studio-title-md)/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.vibe-meter-label { display: block; margin: var(--studio-space-2) 0 var(--studio-space-3); font: var(--studio-text-xs) var(--font-mono); text-transform: uppercase; color: var(--vc-muted); overflow-wrap: anywhere; }
+.vibe-meter-track { display: block; height: 8px; background: var(--vc-rule); border-radius: 2px; overflow: hidden; }
+.vibe-meter-level { display: block; height: 100%; background: var(--studio-playing); border-radius: 2px; }
+@media (max-width: 600px) { .vibe-meters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

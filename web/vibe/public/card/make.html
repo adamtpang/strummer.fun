@@ -3,18 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>make a playlist card</title>
+<title>Playlist card | Strummer Vibe</title>
 <meta name="description" content="turn any public spotify playlist into a small player card you can share or embed. no login.">
 <link rel="stylesheet" href="/vibe/card/card.css">
 <script type="module" src="/vibe/card/make.js"></script>
 </head>
-<body>
-<main class="maker">
-  <h1>make your own</h1>
-  <p class="lede">paste a public spotify playlist link. no login.</p>
+<body class="maker-page">
+<header class="maker-header">
+  <a class="maker-brand" href="/vibe/">strummer<span>.</span> <small>/ vibe</small></a>
+  <nav aria-label="Vibe"><a href="/vibe/">Your vibe</a><a href="/vibe/explore">Explore</a><a href="/">Studio</a></nav>
+</header>
+<main class="maker" id="content">
+  <p class="eyebrow">Made for sharing</p>
+  <h1>Make a playlist card</h1>
+  <p class="lede">A playlist worth passing on. No sign-in needed.</p>
+  <label class="field" for="link">Public Spotify playlist</label>
   <form id="form">
     <input id="link" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://open.spotify.com/playlist/..." aria-label="spotify playlist link" required>
-    <button type="submit">make card</button>
+    <button type="submit">Make card</button>
   </form>
   <p class="status" id="status" role="status"></p>
   <section id="out" hidden>
@@ -27,5 +33,6 @@
     <div class="row"><textarea id="embed" rows="4" readonly></textarea><button type="button" data-copy="embed">copy</button></div>
   </section>
 </main>
+<footer class="maker-footer"><span>Music brings us closer.</span><nav aria-label="Legal"><a href="/vibe/privacy">Privacy</a><a href="/vibe/terms">Terms</a></nav></footer>
 </body>
 </html>

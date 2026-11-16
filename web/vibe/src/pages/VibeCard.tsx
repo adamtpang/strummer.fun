@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Instagram, Link2 } from 'lucide-react';
+import { Instagram, Link2, LockKeyhole, Play } from 'lucide-react';
 import type { User } from '../App';
 import {
   spotifyApiGet,
@@ -12,13 +12,15 @@ import {
 } from '../utils/spotify-api';
 import { createVibeProfile, calculateLightCompatibility } from '../utils/vibe-analysis';
 import { getVibeLabel } from '../utils/vibe-labels';
-import { getVibeGradient, getContrastTextColor, getSubtleTextColor } from '../utils/vibe-colors';
+import { getVibeGradient, getContrastTextColor } from '../utils/vibe-colors';
 import { saveVibe, getVibe, getUsers, updatePrivacy, deleteVibe } from '../utils/api';
 import type { VibeData, VibeSummary } from '../utils/api';
 import StoryGenerator from '../components/StoryGenerator';
-import Footer from '../components/Footer';
+import FriendActions from '../components/FriendActions';
+import { spotifyTrackUrl } from '../utils/invitation';
 import { fadeUp, heroIn, staggerContainer, cardSpring } from '../utils/motion';
 import { generatePlaylistCover } from '../utils/playlist-cover';
+import { clearSpotifySession } from '../utils/session';
 
 interface VibeCardProps {
   currentUser: User | null;
@@ -75,6 +77,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
     () => import.meta.env.DEV && new URLSearchParams(window.location.search).has('story-preview')
   );
   const [copied, setCopied] = useState(false);
+  const [tracksExpanded, setTracksExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playlistError, setPlaylistError] = useState(false);
   const [playlistCreating, setPlaylistCreating] = useState(false);
@@ -123,20 +126,24 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   const isOwner = currentUser?.id === userId;
   // Treat undefined is_public as public — pre-migration rows lack the field.
   const isPrivate = vibeData?.is_public === false;
+  const viewerId = currentUser?.id;
+  const loadVibeRef = useRef(loadVibe);
+  loadVibeRef.current = loadVibe;
 
   useEffect(() => {
-    loadVibe();
-  }, [userId]);
+    void loadVibeRef.current();
+    setTracksExpanded(false);
+  }, [userId, isOwner]);
 
   // When viewing someone else's profile while logged in, fetch our own
   // saved vibe so we can compute a compatibility score on the client.
   useEffect(() => {
-    if (isOwner || !currentUser) {
+    if (isOwner || !viewerId) {
       setViewerVibe(null);
       return;
     }
     let cancelled = false;
-    getVibe(currentUser.id)
+    getVibe(viewerId)
       .then(v => {
         if (!cancelled) setViewerVibe(v);
       })
@@ -144,7 +151,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
     return () => {
       cancelled = true;
     };
-  }, [isOwner, currentUser?.id]);
+  }, [isOwner, viewerId]);
 
   const compatibilityScore = useMemo(() => {
     if (!vibeData?.average_features || !viewerVibe?.average_features) return null;
@@ -461,8 +468,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
       };
       setPlaylistSource(nextPlaylistSource);
 
-      // Top 5 tracks for display (with album art)
-      const top5 = sortedTracks.slice(0, 5).map((t: any) => ({
+      const savedTracks = sortedTracks.slice(0, 20).map((t: any) => ({
         name: t.name,
         artist: t.artists.map((a: any) => a.name).join(', '),
         albumArt: t.album?.images?.[1]?.url || t.album?.images?.[0]?.url || '',
@@ -480,7 +486,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         // average_features now stores VibeMetrics (mainstream/modernity/...).
         // The DB column is JSONB so the shape change is invisible to Postgres.
         average_features: profile.metrics as any,
-        top_tracks: top5,
+        top_tracks: savedTracks,
         top_genres: profile.topGenres,
         top_artists: topArtists,
         is_public: privacyOverride ?? vibeData?.is_public ?? false,
@@ -512,7 +518,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
       if (!background) {
         // If token is invalid, clear session and redirect to login
         if (String(err).includes('Authentication failed') || String(err).includes('No valid access token')) {
-          localStorage.clear();
+          clearSpotifySession(localStorage);
           setUser(null);
           navigate('/');
           return;
@@ -644,6 +650,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   }
 
   async function handleShare() {
+    if (isPrivate) return;
     // Copy the /share/:id URL so social platforms (Twitter/Discord/iMessage)
     // hit the OG-tagged HTML and render a per-user preview. Humans get
     // redirected to /:id transparently.
@@ -690,7 +697,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   }
 
   function handleLogout() {
-    localStorage.clear();
+    clearSpotifySession(localStorage);
     setUser(null);
     navigate('/');
   }
@@ -699,7 +706,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   // with the v2.14 scopes. We redirect home where the standard OAuth flow
   // takes over.
   function handleReconnect() {
-    localStorage.clear();
+    clearSpotifySession(localStorage);
     setUser(null);
     navigate('/');
   }
@@ -710,7 +717,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
     try {
       await deleteVibe(currentUser.id);
       // Wipe local session too — there's no profile left to come back to.
-      localStorage.clear();
+      clearSpotifySession(localStorage);
       setUser(null);
       navigate('/');
     } catch (err) {
@@ -724,7 +731,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   // --- Loading State ---
   if (loading && !vibeData) {
     return (
-      <div className="min-h-screen bg-[#0a0908] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--vc-bg)] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-white border-t-transparent mx-auto mb-4" />
           <p className="text-white/60">{generating ? 'Analyzing your music...' : 'Loading vibe...'}</p>
@@ -736,8 +743,9 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   // --- Error State ---
   if (error && !vibeData) {
     return (
-      <div className="ambient-bg min-h-screen bg-[#0a0908] flex items-center justify-center px-6">
+      <div className="ambient-bg min-h-screen bg-[var(--vc-bg)] flex items-center justify-center px-6">
         <div className="text-center max-w-md">
+          <h1 className="font-serif-accent text-3xl mb-4">Vibe unavailable</h1>
           <p className="text-white/70 text-lg mb-6">{error}</p>
           <div className="flex items-center justify-center gap-3">
             {isOwner && (
@@ -766,9 +774,9 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   // --- Private profile gate (visitor view only) ---
   if (!isOwner && isPrivate) {
     return (
-      <div className="min-h-screen bg-[#0a0908] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[var(--vc-bg)] flex items-center justify-center px-6">
         <div className="text-center max-w-md">
-          <div className="text-5xl mb-4">🔒</div>
+          <LockKeyhole className="mx-auto mb-4" size={32} aria-hidden="true" />
           <h1 className="text-3xl font-bold text-white mb-2">private vibe</h1>
           <p className="text-white/50 text-lg mb-8">
             this person hasn't made their vibe discoverable.
@@ -789,11 +797,8 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   const gradient = vibeData.vibe_gradient || 'linear-gradient(135deg, #1a1816, #211e1b, #121110)';
   // Detect new metric shape vs legacy audio-features shape
   const isNewMetrics = features.mainstream != null;
-  const colorRef = isNewMetrics
-    ? (features as any)
-    : { mainstream: features.valence ?? 0.5, modernity: features.energy ?? 0.5 };
-  const textColor = getContrastTextColor(colorRef as any);
-  const subtleColor = getSubtleTextColor(colorRef as any);
+  const textColor = '#f0f0ea';
+  const subtleColor = '#a1a8a9';
   // When a time-range tab is active (owner only), swap in that range's
   // freshly-fetched data; otherwise show the aggregated saved data.
   const activeRange = isOwner && timeRange ? rangeData[timeRange] : null;
@@ -835,12 +840,12 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   // Halo class for text rendered directly over the vibe gradient — keeps it
   // legible regardless of where the gradient passes through tones close to
   // the chosen text color.
-  const haloClass = textColor === '#000000' ? 'contrast-halo-dark' : 'contrast-halo-light';
+  const haloClass = 'contrast-halo-light';
 
   return (
-    <div className="min-h-screen" style={{ background: gradient }}>
+    <div className="bg-[var(--vc-bg)]">
       <motion.div
-        className="max-w-lg mx-auto px-6 py-12"
+        className="vibe-profile"
         variants={staggerContainer}
         initial="initial"
         animate="animate"
@@ -856,7 +861,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.99 }}
             transition={cardSpring}
-            className="glass-dark flex items-center gap-3 mb-6 p-3 rounded-2xl"
+            className="glass-dark flex items-center gap-3 mb-6 p-3 rounded-lg"
           >
             {nowPlaying.albumArt && (
               <img
@@ -885,100 +890,26 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
           </motion.a>
         )}
 
-        {/* Header */}
-        <motion.div variants={fadeUp} className="text-center mb-10">
-          {vibeData.avatar_url && (
-            <motion.img
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
-              src={vibeData.avatar_url}
-              alt=""
-              className="w-20 h-20 rounded-full mx-auto mb-4 border-2 shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
-              style={{ borderColor: textColor }}
-            />
-          )}
-          <h1
-            className={`text-3xl sm:text-4xl font-bold mb-1.5 tracking-tight ${haloClass}`}
-            style={{ color: textColor, letterSpacing: '-0.02em' }}
-          >
-            {vibeData.display_name}
-          </h1>
-          <p
-            className={`text-[10px] uppercase tracking-[0.25em] ${haloClass}`}
-            style={{ color: subtleColor }}
-          >
-            strummer.fun/vibe
-          </p>
+        <motion.div variants={fadeUp} className="profile-identity">
+          {vibeData.avatar_url && <img src={vibeData.avatar_url} alt="" />}
+          <div><h1>{vibeData.display_name}</h1><p>{isOwner ? 'Your listening portrait' : 'A listening portrait'}</p></div>
         </motion.div>
-
-        {/* Vibe Label — the hero, tighter typography */}
-        <motion.div variants={heroIn} className="text-center mb-12">
-          <div
-            className={`text-4xl sm:text-5xl font-bold leading-[1.05] tracking-tighter ${haloClass}`}
-            style={{ color: textColor, letterSpacing: '-0.04em' }}
-          >
-            {vibeData.vibe_label}
-          </div>
-          {topGenres.length > 0 && (
-            <motion.div
-              variants={staggerContainer}
-              initial="initial"
-              animate="animate"
-              className="flex flex-wrap justify-center gap-2 mt-4"
-            >
-              {topGenres.slice(0, 4).map((genre) => (
-                <motion.span
-                  key={genre}
-                  variants={fadeUp}
-                  whileHover={{ scale: 1.05, y: -1 }}
-                  transition={cardSpring}
-                  className="px-3 py-1 rounded-full text-xs font-medium"
-                  style={{
-                    background: `${textColor}15`,
-                    color: textColor,
-                    border: `1px solid ${textColor}30`,
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)',
-                  }}
-                >
-                  {genre}
-                </motion.span>
-              ))}
-            </motion.div>
-          )}
+        <motion.div variants={heroIn} className="profile-vibe-label">
+          <h2>{vibeData.vibe_label}</h2>
+          <div className="profile-genres">{topGenres.slice(0, 4).map(genre => <span key={genre}>{genre}</span>)}</div>
         </motion.div>
-
-        {isOwner && isPrivate && (
-          <motion.div
-            variants={fadeUp}
-            className="mb-10 flex flex-col gap-3 rounded-md border px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
-            style={{ background: `${textColor}0d`, borderColor: `${textColor}28` }}
-          >
-            <div>
-              <p className="text-sm font-semibold" style={{ color: textColor }}>Private draft</p>
-              <p className="mt-1 text-xs leading-relaxed" style={{ color: subtleColor }}>
-                Only you can open this page. Publish it when you want friends to check your vibe.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleTogglePrivacy}
-              disabled={savingPrivacy}
-              className="min-h-10 shrink-0 rounded-md px-4 text-sm font-semibold transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
-              style={{ background: textColor, color: gradient.includes('hsl') ? '#000' : '#fff' }}
-            >
-              {savingPrivacy ? 'Publishing...' : 'Publish profile'}
-            </button>
-          </motion.div>
-        )}
+        {isOwner && <FriendActions key={vibeData.spotify_id} vibe={vibeData} onPublish={handlePublishFromStory} />}
+        {!isOwner && <Link className="profile-share-button mb-4" to={`/?from=${encodeURIComponent(vibeData.spotify_id)}`}>Compare our music</Link>}
+        <button type="button" onClick={() => setShowStory(true)} className="friend-secondary mb-8">
+          <Instagram size={18} aria-hidden="true" /> Make an Instagram Story
+        </button>
 
         {/* Compatibility (only when logged-in viewer is looking at someone else) */}
         {!isOwner && currentUser && compatibilityScore != null && (
           <motion.div variants={fadeUp}>
           <Link
             to={`/compare/${currentUser.id}/${userId}`}
-            className="block mb-10 rounded-2xl p-5 text-center transition-transform hover:scale-[1.02]"
+            className="block mb-10 rounded-lg p-5 text-center transition-transform hover:scale-[1.02]"
             style={{
               background: `${textColor}10`,
               border: `1px solid ${textColor}20`,
@@ -1013,38 +944,19 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
           variants={staggerContainer}
           initial="initial"
           animate="animate"
-          className="grid grid-cols-4 gap-3 mb-10"
+          className="vibe-meters"
         >
           {meters.map(({ label, value }) => (
-            <motion.div key={label} variants={fadeUp} className="text-center">
-              <div
-                className="relative h-24 w-full rounded-xl overflow-hidden mb-2"
-                style={{
-                  background: `${textColor}10`,
-                  border: `1px solid ${textColor}15`,
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                }}
-              >
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: `${Math.round(value * 100)}%` }}
+            <motion.div key={label} variants={fadeUp} className="vibe-meter">
+              <span className="vibe-meter-value">{Math.round(value * 100)}</span>
+              <span className="vibe-meter-label">{label}</span>
+              <span className="vibe-meter-track" aria-hidden="true">
+                <motion.span
+                  className="vibe-meter-level"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.round(value * 100)}%` }}
                   transition={{ duration: 0.9, ease: [0.165, 0.84, 0.44, 1], delay: 0.15 }}
-                  className="absolute bottom-0 w-full rounded-xl"
-                  style={{ background: `${textColor}30` }}
                 />
-                <span
-                  className={`absolute inset-0 flex items-center justify-center text-lg font-semibold tabular-nums ${haloClass}`}
-                  style={{ color: textColor, letterSpacing: '-0.02em' }}
-                >
-                  {Math.round(value * 100)}
-                </span>
-              </div>
-              <span
-                className={`text-[10px] uppercase tracking-[0.18em] ${haloClass}`}
-                style={{ color: subtleColor }}
-              >
-                {label}
               </span>
             </motion.div>
           ))}
@@ -1059,7 +971,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
             ].map(stat => (
               <div
                 key={stat.label}
-                className="rounded-xl p-4 text-center"
+                className="rounded-lg p-4 text-center"
                 style={{
                   background: `${textColor}08`,
                   border: `1px solid ${textColor}15`,
@@ -1109,12 +1021,13 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
               return (
                 <button
                   key={opt.label}
+                  aria-pressed={active}
                   onClick={() => (opt.key ? handleTimeRange(opt.key) : setTimeRange(null))}
                   disabled={rangeLoading}
-                  className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all disabled:opacity-50 ${haloClass}`}
+                  className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all disabled:opacity-50 ${haloClass}`}
                   style={{
                     background: active ? textColor : `${textColor}12`,
-                    color: active ? (gradient.includes('hsl') ? '#000' : '#fff') : textColor,
+                    color: active ? ('#111213') : textColor,
                     border: `1px solid ${textColor}25`,
                   }}
                 >
@@ -1129,7 +1042,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         {topTracks.length > 0 && (
           <motion.div
             variants={fadeUp}
-            className="mb-10 p-5 rounded-2xl"
+            className="mb-10 p-5 rounded-lg"
             style={{
               background: `${textColor}08`,
               border: `1px solid ${textColor}15`,
@@ -1138,12 +1051,12 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
             }}
           >
             <h2 className="text-sm uppercase tracking-widest mb-4" style={{ color: subtleColor }}>
-              Top Tracks
+              The songs in this vibe
             </h2>
             <div className="space-y-3">
-              {topTracks.map((track: any, i: number) => (
+              {topTracks.slice(0, tracksExpanded ? topTracks.length : 5).map((track: any, i: number) => (
                 <div key={i} className="flex items-center gap-3">
-                  <span className="text-lg font-bold w-6" style={{ color: `${textColor}40` }}>
+                  <span className="text-lg font-bold w-6" style={{ color: subtleColor }}>
                     {i + 1}
                   </span>
                   {track.albumArt && (
@@ -1157,6 +1070,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                       {track.artist}
                     </p>
                   </div>
+                  {spotifyTrackUrl(track) && <a className="friend-listen" href={spotifyTrackUrl(track)!} target="_blank" rel="noopener noreferrer" aria-label={`Listen to ${track.name} on Spotify`} title={`Listen to ${track.name} on Spotify`}><Play size={18} aria-hidden="true" /></a>}
                   {/* Handoff to /tune. Passes song + artist only: chords and key
                       are NOT sent, because Spotify does not expose them (the
                       audio-features endpoint was revoked for new apps in Nov
@@ -1164,7 +1078,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                       chords already saved for that song. */}
                   <a
                     href={`/tune?song=${encodeURIComponent(track.name)}&artist=${encodeURIComponent(track.artist)}`}
-                    className="shrink-0 text-xs px-2 py-1 rounded border transition-opacity hover:opacity-70"
+                    className="shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] text-xs px-3 rounded-full border transition-opacity hover:opacity-70"
                     style={{ color: subtleColor, borderColor: `${textColor}25` }}
                     title={`Learn ${track.name} on guitar`}
                   >
@@ -1173,6 +1087,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                 </div>
               ))}
             </div>
+            {topTracks.length > 5 && <button type="button" className="friend-secondary mt-4" aria-expanded={tracksExpanded} onClick={() => setTracksExpanded(!tracksExpanded)}>{tracksExpanded ? 'Show fewer songs' : `Show all ${topTracks.length} songs`}</button>}
           </motion.div>
         )}
 
@@ -1180,7 +1095,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         {topArtists.length > 0 && (
           <motion.div
             variants={fadeUp}
-            className="mb-10 p-5 rounded-2xl"
+            className="mb-10 p-5 rounded-lg"
             style={{
               background: `${textColor}08`,
               border: `1px solid ${textColor}15`,
@@ -1221,7 +1136,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                       className="absolute -top-1 -left-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
                       style={{
                         background: `${textColor}`,
-                        color: gradient.includes('hsl') ? '#000' : '#fff',
+                        color: '#111213',
                       }}
                     >
                       {i + 1}
@@ -1245,7 +1160,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         {rangeGenres.length > 0 && (
           <motion.div
             variants={fadeUp}
-            className="mb-10 p-5 rounded-2xl"
+            className="mb-10 p-5 rounded-lg"
             style={{
               background: `${textColor}08`,
               border: `1px solid ${textColor}15`,
@@ -1275,7 +1190,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         {isOwner && recentlyPlayed.length > 0 && (
           <motion.div
             variants={fadeUp}
-            className="mb-10 p-5 rounded-2xl"
+            className="mb-10 p-5 rounded-lg"
             style={{
               background: `${textColor}08`,
               border: `1px solid ${textColor}15`,
@@ -1319,7 +1234,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
             the v2.14 scopes (so now-playing / recently-played 401/403'd) */}
         {isOwner && needsReconnect && (
           <div
-            className="mb-10 px-4 py-3 rounded-xl text-sm flex items-center justify-between gap-3"
+            className="mb-10 px-4 py-3 rounded-lg text-sm flex items-center justify-between gap-3"
             style={{
               background: `${textColor}10`,
               border: `1px solid ${textColor}25`,
@@ -1331,7 +1246,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
             </span>
             <button
               onClick={handleReconnect}
-              className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#1DB954] text-black hover:bg-[#1ed760] transition-colors"
+              className="flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#1DB954] text-black hover:bg-[#1ed760] transition-colors"
             >
               Reconnect
             </button>
@@ -1339,8 +1254,8 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         )}
 
         {/* Spotify Playlist Embed */}
-        {vibeData.playlist_id && (
-          <div className="mb-10 rounded-xl overflow-hidden">
+        {isOwner && vibeData.playlist_id && (
+          <div className="mb-10 rounded-lg overflow-hidden">
             <iframe
               src={`https://open.spotify.com/embed/playlist/${vibeData.playlist_id}?utm_source=generator&theme=0`}
               width="100%"
@@ -1348,7 +1263,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
               frameBorder="0"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               loading="lazy"
-              className="rounded-xl"
+              className="rounded-lg"
             />
           </div>
         )}
@@ -1357,7 +1272,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
             account until they ask; this makes it their explicit choice. */}
         {isOwner && (
           <div
-            className="mb-10 px-4 py-4 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+            className="mb-10 px-4 py-4 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
             style={{ background: `${textColor}10`, border: `1px solid ${textColor}22` }}
           >
             <div className="text-sm" style={{ color: textColor }}>
@@ -1401,7 +1316,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         )}
         {isOwner && playlistError && (
           <div
-            className="mb-10 px-4 py-3 rounded-xl text-sm"
+            className="mb-10 px-4 py-3 rounded-lg text-sm"
             style={{ background: '#dc262618', border: '1px solid #dc262640', color: '#fca5a5' }}
           >
             Couldn't save the playlist this time — your vibe itself is safe. Try again in a moment.
@@ -1428,11 +1343,11 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                 <Link
                   key={user.spotify_id}
                   to={`/${user.spotify_id}`}
-                  className="block rounded-xl overflow-hidden aspect-[3/4] relative transition-transform hover:scale-[1.03]"
+                  className="block rounded-lg overflow-hidden aspect-[3/4] relative transition-transform hover:scale-[1.03]"
                   style={{ background: user.vibe_gradient || gradient }}
                 >
                   <div
-                    className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-md"
+                    className="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-bold backdrop-blur-md"
                     style={{
                       background: 'rgba(0,0,0,0.4)',
                       color: '#fff',
@@ -1457,21 +1372,8 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={() => setShowStory(true)}
-            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md px-4 text-base font-semibold transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2"
-            style={{
-              background: textColor,
-              color: gradient.includes('hsl') ? '#000' : '#fff',
-            }}
-          >
-            <Instagram className="h-5 w-5" aria-hidden="true" />
-            Make an Instagram Story
-          </button>
-
           <div className="flex gap-3">
-            {vibeData.playlist_id && (
+            {isOwner && vibeData.playlist_id && (
               <a
                 href={`https://open.spotify.com/playlist/${vibeData.playlist_id}`}
                 target="_blank"
@@ -1485,21 +1387,22 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
             <button
               type="button"
               onClick={handleShare}
+              disabled={isPrivate}
               className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2"
               style={{ borderColor: `${textColor}40`, color: textColor }}
             >
               <Link2 className="h-4 w-4" aria-hidden="true" />
-              {copied ? 'Copied' : 'Share profile'}
+              {isPrivate ? 'Profile is private' : copied ? 'Copied' : 'Share profile'}
             </button>
           </div>
 
           {isOwner && (
             <>
-              <div className="flex gap-3 mt-2">
+              <div className="profile-actions mt-2">
                 <button
                   onClick={() => generateVibe(false)}
                   disabled={generating}
-                  className="flex-1 py-2 rounded-full text-sm font-medium border transition-all duration-200 disabled:opacity-50"
+                  className="flex-1 py-2 rounded-md text-sm font-medium border transition-all duration-200 disabled:opacity-50"
                   style={{ borderColor: `${textColor}20`, color: subtleColor }}
                 >
                   {generating ? 'Refreshing...' : 'Refresh Vibe'}
@@ -1507,15 +1410,15 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                 <button
                   onClick={handleTogglePrivacy}
                   disabled={savingPrivacy}
-                  className="py-2 px-4 rounded-full text-sm font-medium border transition-all duration-200 disabled:opacity-50"
+                  className="py-2 px-4 rounded-md text-sm font-medium border transition-all duration-200 disabled:opacity-50"
                   style={{ borderColor: `${textColor}20`, color: subtleColor }}
                   title={isPrivate ? 'Currently hidden from /explore' : 'Currently visible in /explore'}
                 >
-                  {savingPrivacy ? '...' : isPrivate ? '🔒 Private' : '🌍 Public'}
+                  {savingPrivacy ? 'Saving...' : isPrivate ? 'Private' : 'Public'}
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="py-2 px-4 rounded-full text-sm font-medium transition-all duration-200"
+                  className="py-2 px-4 rounded-md text-sm font-medium transition-all duration-200"
                   style={{ color: subtleColor }}
                 >
                   Logout
@@ -1559,14 +1462,14 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
               {!confirmDelete ? (
                 <button
                   onClick={() => setConfirmDelete(true)}
-                  className="w-full py-2 rounded-full text-xs font-medium transition-colors"
+                  className="w-full py-2 rounded-md text-xs font-medium transition-colors"
                   style={{ color: `${textColor}40` }}
                 >
                   Delete my vibe
                 </button>
               ) : (
                 <div
-                  className="px-4 py-4 rounded-2xl text-center"
+                  className="px-4 py-4 rounded-lg text-center"
                   style={{
                     background: `${textColor}08`,
                     border: `1px solid ${textColor}20`,
@@ -1583,14 +1486,14 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                     <button
                       onClick={handleDelete}
                       disabled={deleting}
-                      className="px-4 py-2 rounded-full text-xs font-semibold bg-red-500/80 text-white hover:bg-red-500 transition-colors disabled:opacity-50"
+                      className="px-4 py-2 rounded-md text-xs font-semibold bg-red-500/80 text-white hover:bg-red-500 transition-colors disabled:opacity-50"
                     >
                       {deleting ? 'Deleting...' : 'Yes, delete it'}
                     </button>
                     <button
                       onClick={() => setConfirmDelete(false)}
                       disabled={deleting}
-                      className="px-4 py-2 rounded-full text-xs font-medium border disabled:opacity-50"
+                      className="px-4 py-2 rounded-md text-xs font-medium border disabled:opacity-50"
                       style={{ borderColor: `${textColor}30`, color: textColor }}
                     >
                       Cancel
@@ -1602,11 +1505,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
           )}
         </div>
 
-        <p className="text-center mt-8 text-xs" style={{ color: `${textColor}30` }}>
-          strummer.fun/vibe
-        </p>
 
-        <Footer textColor={textColor} />
       </motion.div>
 
       {/* Story Generator */}

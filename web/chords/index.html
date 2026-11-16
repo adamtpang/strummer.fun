@@ -15,7 +15,7 @@
   <main>
     <div class="heading"><div><p class="eyebrow">SONG STARTERS</p><h1>Chord progressions</h1></div><button id="generate" class="primary">Generate progression</button></div>
     <div class="settings">
-      <label>Color<select id="style"><option value="greatest" selected>Greatest of all time</option><option value="pop">Pop / open</option><option value="soul">Soul / warm</option><option value="bossa">Bossa / floating</option><option value="minor">Minor / wistful</option><option value="personal">Your maj7 loop</option></select></label>
+      <label>Color<select id="style"><option value="greatest" selected>ULT + classic progressions</option><option value="pop">Pop / open</option><option value="soul">Soul / warm</option><option value="bossa">Bossa / floating</option><option value="minor">Minor / wistful</option><option value="personal">Your maj7 loop</option></select></label>
       <label>Tonic<select id="key"></select></label>
       <label>Tempo <span><input id="tempo" type="number" min="40" max="200" value="90"> BPM</span></label>
       <label>Bars per chord<select id="bars"><option value="1">1 bar</option><option value="2">2 bars</option></select></label>
@@ -25,8 +25,9 @@
       <div>
         <p id="greatest-formula" class="formula"></p>
         <p id="greatest-name" class="feel"></p>
-        <p class="eyebrow">HEARD IN</p>
+        <p class="eyebrow">REFERENCE</p>
         <ul id="greatest-songs"></ul>
+        <a id="source" hidden target="_blank" rel="noopener noreferrer">Research source</a>
       </div>
     </section>
     <p id="capo" class="capo" role="note"></p>

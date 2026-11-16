@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Learn songs | Strummer</title><meta name="description" content="Build your songbook, find chord arrangements and practice the chords in your favorite songs with Strummer."><link rel="canonical" href="https://strummer.fun/learn/"><link rel="stylesheet" href="/chords/style.css"><link rel="stylesheet" href="/chords/studio.css"><link rel="stylesheet" href="/learn/style.css"><script type="module" src="/learn/app.mjs"></script></head>
+<body><header><a class="brand" href="/">strummer<span>.</span></a><nav aria-label="Main"><a href="/chords/">Create</a><a href="/tune">Tune</a><a href="/learn/" aria-current="page">Learn</a></nav></header>
+<main><div class="heading"><div><p class="eyebrow">YOUR SONGBOOK</p><h1>Learn the songs you love.</h1></div></div>
+<form id="search-form" role="search"><label for="query">Song, artist or show</label><div class="search-row"><input id="query" type="search" placeholder="Everything Stays, Beatles, Adventure Time..." autocomplete="off" maxlength="200"><button class="primary">Search</button></div></form>
+<div class="filters"><label class="lock"><input id="saved-only" type="checkbox">My songbook</label><span id="count" aria-live="polite"></span></div>
+<div class="learn-layout"><section aria-label="Songs"><ul id="results"></ul><p id="empty" hidden>No catalog matches. Search the chord sources below.</p><section class="source-search"><h2>Find another song</h2><div id="search-links"></div><p>Search results open on the source site.</p></section></section>
+<section id="detail" aria-label="Selected song"></section></div><p id="status" role="status"></p>
+</main><footer><a href="/privacy">Privacy</a><span>Songbook saved on this browser</span></footer></body></html>

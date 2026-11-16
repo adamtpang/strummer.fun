@@ -1,0 +1,4 @@
+import {createServer} from 'node:http';
+import {readFile} from 'node:fs/promises';
+const files = new Set(['index.html','styles.css','app.js','tune.html','tune.js','tune.css','analyze.js','analyze-ui.js','privacy.html',...['index.html','style.css','app.mjs','catalog.mjs'].map(file=>'learn/'+file),...['index.html','style.css','studio.css','tokens.css','app.mjs','engine.mjs'].map(file=>'chords/'+file)]);
+createServer(async(req,res)=>{let name=new URL(req.url,'http://localhost').pathname.slice(1);if(!name)name='index.html';if(name==='tune')name='tune.html';if(name.endsWith('/'))name+='index.html';if(!files.has(name)){res.writeHead(404);res.end();return;}try{const data=await readFile(new URL('../'+name,import.meta.url));res.writeHead(200,{'Content-Type':/\.(mjs|js)$/.test(name)?'text/javascript':name.endsWith('.css')?'text/css':'text/html'});res.end(data);}catch{res.writeHead(500);res.end();}}).listen(4389,'127.0.0.1');

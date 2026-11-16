@@ -67,6 +67,22 @@
       ],
       "cwd": "C:\\Users\\adamp\\Aether\\strummer.fun",
       "port": 4391
+    },
+    {
+      "name": "vibe",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "web/vibe",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "4392",
+        "--strictPort"
+      ],
+      "cwd": "C:/Users/adamp/Aether/strummer.fun",
+      "port": 4392
     }
   ]
 }

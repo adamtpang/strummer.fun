@@ -33,6 +33,11 @@ const CHORD_SHAPES = [
 // Open-position fingerings for the chords a beginner actually needs.
 // Array is low-E → high-e; -1 = muted, 0 = open.
 const SHAPES = {
+  Cmaj7: [-1,3,2,0,0,0],
+  B7: [-1,2,1,2,0,2],
+  Am7: [-1,0,2,0,1,0],
+  G7: [3,2,0,0,0,1],
+  Cm: [-1,3,5,5,4,3],
   G:  [3, 2, 0, 0, 0, 3],
   D:  [-1, -1, 0, 2, 3, 2],
   Em: [0, 2, 2, 0, 0, 0],
@@ -506,7 +511,7 @@ function readHandoff() {
         if (!Object.prototype.hasOwnProperty.call(SHAPES, name)) continue;
         const chip = document.createElement('div');
         chip.className = 'shape-chip';
-        chip.textContent = name;
+        chip.innerHTML = chordDiagram(name);
         shapesEl.appendChild(chip);
       }
     }
@@ -515,6 +520,7 @@ function readHandoff() {
   }
 
   const back = document.getElementById('learning-back');
+  if (back && document.referrer.includes('/learn/')) { back.href = '/learn/'; back.textContent = 'back to songbook'; }
   if (back && document.referrer.includes('/vibe')) back.href = document.referrer;
 }
 

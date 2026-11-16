@@ -7,7 +7,6 @@ import type { VibeSummary, VibeLabelCount } from '../utils/api';
 import { calculateLightCompatibility } from '../utils/vibe-analysis';
 import { getContrastTextColor, getSubtleTextColor, asColorRef } from '../utils/vibe-colors';
 import { fadeUp, staggerContainer, cardSpring } from '../utils/motion';
-import Footer from '../components/Footer';
 
 interface ExploreProps {
   currentUser: User | null;
@@ -23,15 +22,17 @@ export default function Explore({ currentUser }: ExploreProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sort, setSort] = useState<SortMode>(currentUser ? 'match' : 'recent');
+  const viewerId = currentUser?.id;
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setMe(null);
 
     Promise.all([
       getUsers({ limit: 60 }),
-      currentUser ? getVibe(currentUser.id) : Promise.resolve(null),
+      viewerId ? getVibe(viewerId) : Promise.resolve(null),
     ])
       .then(([res, mine]) => {
         if (cancelled) return;
@@ -63,7 +64,7 @@ export default function Explore({ currentUser }: ExploreProps) {
     return () => {
       cancelled = true;
     };
-  }, [currentUser?.id]);
+  }, [viewerId]);
 
   // Compute compatibility once and memoize sorted view
   const visible = useMemo(() => {
@@ -86,47 +87,21 @@ export default function Explore({ currentUser }: ExploreProps) {
   }, [users, me, sort, currentUser?.id]);
 
   return (
-    <div className="ambient-bg min-h-screen bg-[#0a0908] overflow-hidden">
+    <div className="bg-[var(--vc-bg)]">
       <motion.div
-        className="max-w-6xl mx-auto px-6 py-12"
+        className="vibe-page"
         variants={staggerContainer}
         initial="initial"
         animate="animate"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-10">
+        <div className="vibe-page-heading">
           <div>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-1">
-              explore <span className="font-serif-accent italic">vibes</span>
-            </h1>
-            <p className="text-white/40 text-sm">
-              {currentUser
-                ? sort === 'match'
-                  ? 'sorted by how close their vibe is to yours'
-                  : 'most recent vibes'
-                : 'most recent vibes — log in to see your matches'}
-            </p>
+            <p className="eyebrow mb-3">The listening room</p>
+            <h1>Explore vibes</h1>
+            <p>{currentUser ? 'Find your people through the songs they love.' : 'A little window into someone else\'s world.'}</p>
           </div>
-          <Link
-            to={currentUser ? `/${currentUser.id}` : '/'}
-            className="text-white/60 hover:text-white text-sm font-medium transition-colors"
-          >
-            {currentUser ? 'my vibe →' : 'home →'}
-          </Link>
+          {!loading && total > 0 && <span className="eyebrow">{total.toLocaleString()} public {total === 1 ? 'vibe' : 'vibes'}</span>}
         </div>
-
-        {/* Stats badge */}
-        {!loading && total > 0 && (
-          <motion.div
-            variants={fadeUp}
-            className="glass inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-full"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-white/80 text-xs font-medium">
-              {total.toLocaleString()} {total === 1 ? 'vibe' : 'vibes'} generated
-            </span>
-          </motion.div>
-        )}
 
         {/* Top vibe labels — social proof */}
         {!loading && topLabels.length > 0 && (
@@ -146,7 +121,7 @@ export default function Explore({ currentUser }: ExploreProps) {
                   variants={fadeUp}
                   whileHover={{ scale: 1.05, y: -2 }}
                   transition={cardSpring}
-                  className="glass inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
+                  className="glass inline-flex items-center gap-2 px-3 py-1.5 rounded-md"
                 >
                   <span className="text-white text-sm font-medium">{label}</span>
                   <span className="text-white/50 text-xs">{count.toLocaleString()}</span>
@@ -158,7 +133,7 @@ export default function Explore({ currentUser }: ExploreProps) {
 
         {/* Sort toggle (only when logged-in) */}
         {currentUser && (
-          <motion.div variants={fadeUp} className="flex gap-2 mb-8">
+          <motion.div variants={fadeUp} className="flex gap-1 mb-8" role="group" aria-label="Sort vibes">
             <SortPill active={sort === 'match'} onClick={() => setSort('match')} label="matches" />
             <SortPill active={sort === 'recent'} onClick={() => setSort('recent')} label="recent" />
           </motion.div>
@@ -181,7 +156,7 @@ export default function Explore({ currentUser }: ExploreProps) {
         {/* Grid */}
         {!loading && !error && visible.length > 0 && (
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
             variants={staggerContainer}
             initial="initial"
             animate="animate"
@@ -191,8 +166,6 @@ export default function Explore({ currentUser }: ExploreProps) {
             ))}
           </motion.div>
         )}
-
-        <Footer />
       </motion.div>
     </div>
   );
@@ -212,7 +185,8 @@ function SortPill({
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+      aria-pressed={active}
+      className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
         active
           ? 'bg-white text-black'
           : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80'
@@ -232,10 +206,10 @@ function VibeCardTile({ user, score }: { user: VibeSummary; score: number | null
   const halo = text === '#000000' ? 'contrast-halo-dark' : 'contrast-halo-light';
 
   return (
-    <motion.div variants={fadeUp} className="rounded-2xl">
+    <motion.div variants={fadeUp} className="rounded-lg">
       <Link
         to={`/${user.spotify_id}`}
-        className="group relative block rounded-2xl overflow-hidden aspect-[4/5] shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
+        className="group relative block rounded-lg overflow-hidden aspect-[4/3] shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
         style={{ background: gradient }}
       >
         <motion.div
@@ -246,7 +220,7 @@ function VibeCardTile({ user, score }: { user: VibeSummary; score: number | null
           <div className="absolute inset-0" style={{ background: gradient }} />
           {/* Top-right compatibility badge — glass */}
           {score != null && (
-            <div className="glass-dark absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-semibold text-white z-10">
+            <div className="glass-dark absolute top-3 right-3 px-2.5 py-1 rounded-md text-xs font-semibold text-white z-10">
               {score}% match
             </div>
           )}
@@ -258,12 +232,12 @@ function VibeCardTile({ user, score }: { user: VibeSummary; score: number | null
                 <img
                   src={user.avatar_url}
                   alt=""
-                  className="w-10 h-10 rounded-full border-2 object-cover"
+                  className="w-10 h-10 rounded-md border-2 object-cover"
                   style={{ borderColor: text }}
                 />
               ) : (
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                  className="w-10 h-10 rounded-md flex items-center justify-center text-sm font-bold"
                   style={{ background: 'rgba(0,0,0,0.25)', color: text }}
                 >
                   {user.display_name?.[0] ?? '?'}
@@ -307,7 +281,7 @@ function GridSkeleton() {
       {Array.from({ length: 9 }).map((_, i) => (
         <div
           key={i}
-          className="aspect-[4/5] rounded-2xl bg-white/5 animate-pulse"
+          className="aspect-[4/3] rounded-lg bg-white/5 animate-pulse"
         />
       ))}
     </div>

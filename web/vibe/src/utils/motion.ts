@@ -10,30 +10,26 @@ export const staggerContainer: Variants = {
   initial: {},
   animate: {
     transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.05,
+      staggerChildren: 0.025,
     },
   },
 };
 
 /** Child variant used inside a staggerContainer */
 export const fadeUp: Variants = {
-  initial: { opacity: 0, y: 16 },
+  initial: { opacity: 0 },
   animate: {
     opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: easeOutQuart },
+    transition: { duration: 0.18 },
   },
 };
 
 /** A bigger, hero-ish entry (used for the vibe label) */
 export const heroIn: Variants = {
-  initial: { opacity: 0, y: 24, scale: 0.96 },
+  initial: { opacity: 0 },
   animate: {
     opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.7, ease: easeOutQuart },
+    transition: { duration: 0.18 },
   },
 };
 
@@ -41,5 +37,5 @@ export const heroIn: Variants = {
 export const cardSpring: Transition = {
   type: 'spring',
   stiffness: 320,
-  damping: 22,
+  damping: 36,
 };

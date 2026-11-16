@@ -2,6 +2,8 @@
 // Vite env var when available (set VITE_SPOTIFY_CLIENT_ID in Vercel for
 // staging or a fork) and falls back to the production app's id so a fresh
 // `npm run dev` works without configuration.
+import { clearSpotifySession } from './session';
+
 export const CLIENT_ID =
   (import.meta.env.VITE_SPOTIFY_CLIENT_ID as string | undefined) ||
   'e4435ec6b82f42189d94e6229acad817';
@@ -141,7 +143,7 @@ export async function spotifyApiRequest(
         } else {
             // Refresh failed — let the caller handle it
             console.error('Token refresh failed, clearing session');
-            localStorage.clear();
+            clearSpotifySession(localStorage);
             throw new Error('Authentication failed - please log in again');
         }
     }

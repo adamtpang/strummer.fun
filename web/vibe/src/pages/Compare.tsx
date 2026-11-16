@@ -4,11 +4,12 @@ import { motion } from 'framer-motion';
 import type { User } from '../App';
 import { getVibe } from '../utils/api';
 import type { VibeData } from '../utils/api';
-import { calculateCompatBreakdown } from '../utils/vibe-analysis';
+import { calculateCompatBreakdown, isVibeMetrics } from '../utils/vibe-analysis';
+import CopyLink from '../components/CopyLink';
+import { comparisonPath } from '../utils/invitation';
 import type { CompatBreakdown } from '../utils/vibe-analysis';
 import { getContrastTextColor, asColorRef } from '../utils/vibe-colors';
 import { fadeUp, heroIn, staggerContainer, cardSpring, easeOutQuart } from '../utils/motion';
-import Footer from '../components/Footer';
 
 interface CompareProps {
   currentUser: User | null;
@@ -20,13 +21,14 @@ export default function Compare({ currentUser }: CompareProps) {
   const [b, setB] = useState<VibeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!idA || !idB) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setA(null);
+    setB(null);
     Promise.all([getVibe(idA), getVibe(idB)])
       .then(([vibeA, vibeB]) => {
         if (cancelled) return;
@@ -60,7 +62,7 @@ export default function Compare({ currentUser }: CompareProps) {
   }, [idA, idB, currentUser?.id]);
 
   const breakdown: CompatBreakdown | null = useMemo(() => {
-    if (!a?.average_features || !b?.average_features) return null;
+    if (!isVibeMetrics(a?.average_features) || !isVibeMetrics(b?.average_features) || !a?.top_genres?.length || !b?.top_genres?.length) return null;
     return calculateCompatBreakdown(
       {
         metrics: a.average_features as any,
@@ -73,30 +75,22 @@ export default function Compare({ currentUser }: CompareProps) {
     );
   }, [a, b]);
 
-  function handleShare() {
-    // Same /share pattern as profile URLs — recipients get the per-pair OG
-    // image preview before being redirected into the SPA.
-    const url = `${window.location.origin}/vibe/share/compare/${idA}/${idB}`;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0908] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--vc-bg)] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-white border-t-transparent mx-auto mb-4" />
+          <div className="animate-spin rounded-md h-10 w-10 border-2 border-white border-t-transparent mx-auto mb-4" />
           <p className="text-white/60">comparing vibes...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !a || !b || !breakdown) {
+  if (error || !a || !b) {
     return (
-      <div className="min-h-screen bg-[#0a0908] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[var(--vc-bg)] flex items-center justify-center px-6">
         <div className="text-center max-w-md">
+          <h1 className="font-serif-accent text-3xl mb-4">Comparison unavailable</h1>
           <p className="text-white/60 text-lg mb-6">{error || 'no vibes to compare.'}</p>
           <Link to="/explore" className="text-[#1DB954] hover:underline font-medium">
             explore vibes →
@@ -106,17 +100,19 @@ export default function Compare({ currentUser }: CompareProps) {
     );
   }
 
-  const verdict = pickVerdict(breakdown);
-  const headline = pickHeadlineFeature(breakdown);
+  const verdict = breakdown ? pickVerdict(breakdown) : null;
+  const headline = breakdown ? pickHeadlineFeature(breakdown) : null;
+  const bothPublic = a.is_public !== false && b.is_public !== false;
 
   return (
-    <div className="ambient-bg min-h-screen bg-[#0a0908] overflow-hidden">
+    <div className="bg-[var(--vc-bg)]">
       <motion.div
-        className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12"
+        className="vibe-page max-w-3xl"
         variants={staggerContainer}
         initial="initial"
         animate="animate"
       >
+        <div className="vibe-page-heading"><div><p className="eyebrow mb-3">Common ground</p><h1>Compare vibes</h1></div></div>
         {/* Tiny nav */}
         <motion.div variants={fadeUp} className="flex items-center justify-between mb-6">
           <Link
@@ -125,25 +121,20 @@ export default function Compare({ currentUser }: CompareProps) {
           >
             ← explore
           </Link>
-          <button
-            onClick={handleShare}
-            className="text-white/70 hover:text-white text-sm font-medium transition-colors"
-          >
-            {copied ? 'link copied!' : 'share this comparison'}
-          </button>
+          {bothPublic && <CopyLink url={`${window.location.origin}/vibe${comparisonPath(a.spotify_id, b.spotify_id)}`} label="Copy comparison link" />}
         </motion.div>
+        {!bothPublic && <p className="friend-note mb-6">This comparison is private. Both profiles must be published before a friend can open it. <Link className="underline" to={`/${currentUser?.id}`}>Review your profile</Link></p>}
 
         {/* Headline — score scales in with shimmer, serif accent on % */}
-        <motion.div variants={heroIn} className="text-center mb-10 sm:mb-12">
+        {breakdown ? <motion.div variants={heroIn} className="text-center mb-10 sm:mb-12">
           <p className="text-white/50 text-[10px] uppercase tracking-[0.25em] mb-3">
-            vibe match
+            Music taste match
           </p>
           <motion.div
-            initial={{ scale: 0.7, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.8, ease: easeOutQuart, delay: 0.15 }}
-            className="text-7xl sm:text-[8rem] font-bold leading-none mb-3 shimmer-text tabular-nums tracking-tighter"
-            style={{ letterSpacing: '-0.05em' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.18, ease: easeOutQuart }}
+            className="text-6xl sm:text-7xl font-bold leading-none mb-3 shimmer-text tabular-nums tracking-tighter"
           >
             {breakdown.score}
             <span className="font-serif-accent italic text-white/85" style={{ fontWeight: 400 }}>
@@ -151,35 +142,37 @@ export default function Compare({ currentUser }: CompareProps) {
             </span>
           </motion.div>
           <p className="text-white/75 text-base sm:text-lg max-w-md mx-auto">{verdict}</p>
-        </motion.div>
+          <p className="friend-note mt-4">A playful similarity estimate, not a measure of personal compatibility.</p>
+        </motion.div> : <p className="friend-note mb-8">Not enough listening data for a score yet. You can still explore each other's songs.</p>}
 
         {/* Side-by-side cards */}
         <motion.div
           variants={fadeUp}
           className="grid grid-cols-2 gap-3 sm:gap-4 mb-8"
         >
-          <CompareCard vibe={a} side="left" />
-          <CompareCard vibe={b} side="right" />
+          <CompareCard vibe={a} />
+          <CompareCard vibe={b} />
         </motion.div>
 
         {/* Breakdown bars — glass container */}
-        <motion.div variants={fadeUp} className="glass mb-8 p-5 rounded-2xl space-y-4">
-          <BreakdownBar label="Vibe similarity" value={breakdown.audio} />
+        {breakdown && <motion.div variants={fadeUp} className="border-y border-[var(--vc-rule)] mb-8 py-6 space-y-4">
+          <BreakdownBar label="Listening-pattern similarity" value={breakdown.audio} />
           <BreakdownBar label="Genre overlap" value={breakdown.genre} />
-        </motion.div>
+          <details className="friend-method"><summary>What goes into this score?</summary><p>70% compares six listening patterns: popularity, release era, genre diversity, changes in recent listening, artist concentration, and era spread. 30% is overlap between saved top genres. It uses saved profiles, not audio analysis or a count of identical songs.</p></details>
+        </motion.div>}
 
         {/* Headline feature */}
         {headline && (
           <motion.div
             variants={fadeUp}
-            className="glass mb-8 px-5 py-4 rounded-2xl text-center"
+            className="mb-8 py-4 text-center"
           >
             <p className="text-white text-base sm:text-lg">{headline}</p>
           </motion.div>
         )}
 
         {/* Shared genres */}
-        {breakdown.sharedGenres.length > 0 && (
+        {breakdown && breakdown.sharedGenres.length > 0 && (
           <motion.div variants={fadeUp} className="mb-8">
             <p className="text-white/50 text-xs uppercase tracking-widest mb-3 text-center">
               shared genres ({breakdown.sharedGenres.length})
@@ -196,7 +189,7 @@ export default function Compare({ currentUser }: CompareProps) {
                   variants={fadeUp}
                   whileHover={{ scale: 1.05, y: -1 }}
                   transition={cardSpring}
-                  className="glass px-3 py-1 rounded-full text-xs font-medium text-white"
+                  className="glass px-3 py-1 rounded-md text-xs font-medium text-white"
                 >
                   {g}
                 </motion.span>
@@ -206,6 +199,10 @@ export default function Compare({ currentUser }: CompareProps) {
         )}
 
         {/* CTAs */}
+        <div className="friend-profile-links">
+          <Link className="friend-secondary" to={`/${encodeURIComponent(a.spotify_id)}`}>Hear {a.display_name}'s songs</Link>
+          <Link className="friend-secondary" to={`/${encodeURIComponent(b.spotify_id)}`}>Hear {b.display_name}'s songs</Link>
+        </div>
         <motion.div
           variants={fadeUp}
           className="flex flex-col sm:flex-row gap-3 justify-center mb-12"
@@ -213,20 +210,18 @@ export default function Compare({ currentUser }: CompareProps) {
           {currentUser && currentUser.id !== idA && currentUser.id !== idB && (
             <Link
               to={`/compare/${currentUser.id}/${idA}`}
-              className="glass px-6 py-3 rounded-full font-medium text-center text-white hover:bg-white/10 transition-colors"
+              className="glass px-6 py-3 rounded-md font-medium text-center text-white hover:bg-white/10 transition-colors"
             >
               Compare me with {a.display_name}
             </Link>
           )}
           <Link
             to="/"
-            className="px-6 py-3 rounded-full font-semibold text-center bg-[#1DB954] text-black hover:bg-[#1ed760] transition-colors shadow-[0_8px_32px_rgba(29,185,84,0.35)]"
+            className="px-6 py-3 rounded-full font-semibold text-center bg-[var(--vc-accent)] text-[var(--studio-on-accent)] hover:opacity-90 transition-colors"
           >
             {currentUser ? 'My Vibe' : 'Make Your Vibe'}
           </Link>
         </motion.div>
-
-        <Footer />
       </motion.div>
     </div>
   );
@@ -234,7 +229,7 @@ export default function Compare({ currentUser }: CompareProps) {
 
 // --- Subcomponents ---
 
-function CompareCard({ vibe, side }: { vibe: VibeData; side: 'left' | 'right' }) {
+function CompareCard({ vibe }: { vibe: VibeData }) {
   const gradient = vibe.vibe_gradient || 'linear-gradient(135deg, #1a1816, #211e1b, #121110)';
   const text = getContrastTextColor(asColorRef(vibe.average_features));
   const halo = text === '#000000' ? 'contrast-halo-dark' : 'contrast-halo-light';
@@ -242,7 +237,7 @@ function CompareCard({ vibe, side }: { vibe: VibeData; side: 'left' | 'right' })
   return (
     <Link
       to={`/${vibe.spotify_id}`}
-      className="group relative block rounded-2xl overflow-hidden aspect-[4/5] sm:aspect-[3/4] transition-transform hover:scale-[1.02]"
+      className="group relative block rounded-lg overflow-hidden aspect-[4/5] sm:aspect-[3/4] transition-transform hover:scale-[1.02]"
       style={{ background: gradient }}
     >
       <div className="absolute inset-0 p-3 sm:p-5 flex flex-col">
@@ -252,19 +247,19 @@ function CompareCard({ vibe, side }: { vibe: VibeData; side: 'left' | 'right' })
             <img
               src={vibe.avatar_url}
               alt=""
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 object-cover flex-shrink-0"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-md border-2 object-cover flex-shrink-0"
               style={{ borderColor: text }}
             />
           ) : (
             <div
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-md flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0"
               style={{ background: 'rgba(0,0,0,0.25)', color: text }}
             >
               {vibe.display_name?.[0] ?? '?'}
             </div>
           )}
           <p
-            className={`text-sm sm:text-base font-semibold truncate ${halo}`}
+            className={`text-sm sm:text-base font-semibold min-w-0 break-words ${halo}`}
             style={{ color: text }}
           >
             {vibe.display_name}
@@ -274,7 +269,7 @@ function CompareCard({ vibe, side }: { vibe: VibeData; side: 'left' | 'right' })
         {/* Middle: vibe label */}
         <div className="flex-1 flex items-center justify-center text-center">
           <p
-            className={`text-2xl sm:text-4xl font-bold leading-tight ${halo}`}
+            className={`text-lg sm:text-2xl font-bold leading-tight ${halo}`}
             style={{ color: text }}
           >
             {vibe.vibe_label}
@@ -292,16 +287,6 @@ function CompareCard({ vibe, side }: { vibe: VibeData; side: 'left' | 'right' })
         )}
       </div>
 
-      {/* Side label */}
-      <div
-        className={`absolute top-2 ${side === 'left' ? 'right-2' : 'left-2'} px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-md`}
-        style={{
-          background: 'rgba(0,0,0,0.35)',
-          color: '#fff',
-        }}
-      >
-        {side === 'left' ? 'A' : 'B'}
-      </div>
     </Link>
   );
 }
@@ -313,9 +298,9 @@ function BreakdownBar({ label, value }: { label: string; value: number }) {
         <span className="text-white/60 text-sm">{label}</span>
         <span className="text-white font-semibold text-sm">{value}%</span>
       </div>
-      <div className="relative h-2 w-full rounded-full bg-white/10 overflow-hidden">
+      <div className="relative h-2 w-full rounded-md bg-white/10 overflow-hidden">
         <div
-          className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-[#dc2626] to-[#7f1d1d] transition-all duration-700"
+          className="absolute left-0 top-0 h-full rounded-md bg-[var(--studio-playing)] transition-all duration-700"
           style={{ width: `${value}%` }}
         />
       </div>
@@ -326,11 +311,11 @@ function BreakdownBar({ label, value }: { label: string; value: number }) {
 // --- Verdict generators ---
 
 function pickVerdict(b: CompatBreakdown): string {
-  if (b.score >= 90) return 'separated at birth.';
+  if (b.score >= 90) return 'A lot of familiar ground in your listening.';
   if (b.score >= 80) return 'serious overlap. make a joint playlist.';
   if (b.score >= 70) return 'a lot in common. you\'d share aux without fighting.';
   if (b.score >= 55) return 'some shared territory, some surprises.';
-  if (b.score >= 40) return 'different lanes — but bridges exist.';
+  if (b.score >= 40) return 'Different favorites. Plenty to discover.';
   if (b.score >= 25) return 'opposites. could go either way.';
   return 'parallel universes.';
 }
@@ -352,5 +337,5 @@ function pickHeadlineFeature(b: CompatBreakdown): string | null {
 
   const top = sorted[0];
   if (!top || top.delta > 0.12) return null;
-  return `${top.copy} — within ${(top.delta * 100).toFixed(0)} pts.`;
+  return `${top.copy}: within ${(top.delta * 100).toFixed(0)} pts.`;
 }
