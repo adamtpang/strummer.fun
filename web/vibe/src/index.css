@@ -242,3 +242,31 @@
   .compare-people { grid-template-columns: 1fr; }
   .compare-score-value { font-size: 72px; }
 }
+
+/* Explore page. A list of common vibes, a sort toggle, then one tile per
+   listener: their gradient as a band, then who they are and what they play. */
+.explore-labels { margin-bottom: var(--studio-space-6); }
+.explore-labels ul { display: flex; flex-wrap: wrap; gap: var(--studio-space-2); list-style: none; padding: 0; margin: 0; }
+.explore-labels li { display: inline-flex; align-items: baseline; gap: var(--studio-space-2); padding: 6px 12px; border: 1px solid var(--vc-rule-2); border-radius: var(--studio-radius-pill); font-size: var(--studio-text-sm); }
+.explore-labels li span { font: var(--studio-text-xs) var(--font-mono); color: var(--vc-muted); }
+.explore-sort { display: flex; gap: var(--studio-space-2); margin-bottom: var(--studio-space-5); }
+.explore-sort-pill { min-height: 44px; padding: 0 18px; border: 1px solid var(--vc-rule-2); border-radius: var(--studio-radius-pill); font-size: var(--studio-text-sm); font-weight: 600; color: var(--vc-muted-2); transition: background var(--studio-quick), color var(--studio-quick); }
+.explore-sort-pill:hover { background: var(--vc-panel); color: var(--vc-fg); }
+.explore-sort-pill[aria-pressed="true"] { background: var(--vc-fg); border-color: var(--vc-fg); color: var(--vc-bg); }
+.explore-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--studio-space-4); }
+.explore-tile-wrap { min-width: 0; display: flex; }
+.explore-tile { flex: 1; display: flex; flex-direction: column; gap: var(--studio-space-3); min-width: 0; padding: 0 var(--studio-space-5) var(--studio-space-5); background: var(--vc-panel); border: 1px solid var(--vc-rule); border-radius: var(--studio-radius); overflow: hidden; text-decoration: none; color: var(--vc-fg); transition: border-color var(--studio-quick), transform var(--studio-quick); }
+.explore-tile:hover { border-color: var(--vc-rule-2); transform: translateY(-2px); }
+.explore-tile-band { height: 56px; margin: 0 calc(var(--studio-space-5) * -1) var(--studio-space-2); }
+.explore-tile-who { display: flex; align-items: center; gap: var(--studio-space-3); min-width: 0; }
+.explore-tile-who img, .explore-tile-initial { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none; }
+.explore-tile-initial { display: grid; place-items: center; background: var(--vc-panel-2); font-weight: 700; }
+.explore-tile-who strong { flex: 1; min-width: 0; font-size: var(--studio-text-md); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.explore-tile-match { flex: none; padding: 4px 10px; border-radius: var(--studio-radius-pill); background: var(--vc-accent); color: var(--studio-on-accent); font: 700 var(--studio-text-xs) var(--font-mono); }
+.explore-tile-label { font: 400 var(--studio-title-sm)/1.05 var(--font-display); text-transform: uppercase; overflow-wrap: anywhere; }
+.explore-tile-genre { margin-top: auto; font: var(--studio-text-xs) var(--font-mono); text-transform: uppercase; color: var(--vc-muted); }
+.explore-tile-skeleton { min-height: 190px; animation: pulse 2s cubic-bezier(.4, 0, .6, 1) infinite; }
+.explore-empty { display: grid; justify-items: center; gap: var(--studio-space-4); max-width: 360px; margin: 0 auto; padding: var(--studio-space-7) 0; text-align: center; color: var(--vc-muted); }
+@media (max-width: 900px) { .explore-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .explore-grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .explore-tile, .explore-tile:hover { transition: none; transform: none; } .explore-tile-skeleton { animation: none; } }

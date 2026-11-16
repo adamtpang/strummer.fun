@@ -5,8 +5,7 @@ import type { User } from '../App';
 import { getUsers, getVibe } from '../utils/api';
 import type { VibeSummary, VibeLabelCount } from '../utils/api';
 import { calculateLightCompatibility } from '../utils/vibe-analysis';
-import { getContrastTextColor, getSubtleTextColor, asColorRef } from '../utils/vibe-colors';
-import { fadeUp, staggerContainer, cardSpring } from '../utils/motion';
+import { fadeUp, staggerContainer } from '../utils/motion';
 
 interface ExploreProps {
   currentUser: User | null;
@@ -103,60 +102,45 @@ export default function Explore({ currentUser }: ExploreProps) {
           {!loading && total > 0 && <span className="eyebrow">{total.toLocaleString()} public {total === 1 ? 'vibe' : 'vibes'}</span>}
         </div>
 
-        {/* Top vibe labels — social proof */}
+        {/* What the room is listening to */}
         {!loading && topLabels.length > 0 && (
-          <motion.div variants={fadeUp} className="mb-8">
-            <p className="text-white/40 text-xs uppercase tracking-widest mb-3">
-              what people are vibing on
-            </p>
-            <motion.div
-              className="flex flex-wrap gap-2"
-              variants={staggerContainer}
-              initial="initial"
-              animate="animate"
-            >
+          <motion.div variants={fadeUp} className="explore-labels">
+            <p className="eyebrow mb-3">Most common vibes</p>
+            <ul>
               {topLabels.map(({ label, count }) => (
-                <motion.div
-                  key={label}
-                  variants={fadeUp}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  transition={cardSpring}
-                  className="glass inline-flex items-center gap-2 px-3 py-1.5 rounded-md"
-                >
-                  <span className="text-white text-sm font-medium">{label}</span>
-                  <span className="text-white/50 text-xs">{count.toLocaleString()}</span>
-                </motion.div>
+                <li key={label}>{label}<span>{count.toLocaleString()}</span></li>
               ))}
-            </motion.div>
+            </ul>
           </motion.div>
         )}
 
         {/* Sort toggle (only when logged-in) */}
         {currentUser && (
-          <motion.div variants={fadeUp} className="flex gap-1 mb-8" role="group" aria-label="Sort vibes">
-            <SortPill active={sort === 'match'} onClick={() => setSort('match')} label="matches" />
-            <SortPill active={sort === 'recent'} onClick={() => setSort('recent')} label="recent" />
+          <motion.div variants={fadeUp} className="explore-sort" role="group" aria-label="Sort vibes">
+            <SortPill active={sort === 'match'} onClick={() => setSort('match')} label="Best match" />
+            <SortPill active={sort === 'recent'} onClick={() => setSort('recent')} label="Newest" />
           </motion.div>
         )}
 
         {/* States */}
         {loading && <GridSkeleton />}
         {!loading && error && (
-          <p className="text-white/60 text-center py-20">{error}</p>
+          <div className="explore-empty" role="alert">
+            <p>{error}</p>
+            <button type="button" className="friend-secondary" onClick={() => window.location.reload()}>Try again</button>
+          </div>
         )}
         {!loading && !error && visible.length === 0 && (
-          <motion.div variants={fadeUp} className="text-center py-20">
-            <p className="text-white/60 mb-4">no vibes here yet.</p>
-            <Link to="/" className="text-[#1DB954] hover:underline font-medium">
-              be the first →
-            </Link>
+          <motion.div variants={fadeUp} className="explore-empty">
+            <p>No public vibes yet.</p>
+            <Link to="/" className="profile-share-button">{currentUser ? 'Publish yours' : 'Make the first one'}</Link>
           </motion.div>
         )}
 
         {/* Grid */}
         {!loading && !error && visible.length > 0 && (
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+            className="explore-grid"
             variants={staggerContainer}
             initial="initial"
             animate="animate"
@@ -183,93 +167,32 @@ function SortPill({
   label: string;
 }) {
   return (
-    <button
-      onClick={onClick}
-      aria-pressed={active}
-      className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-        active
-          ? 'bg-white text-black'
-          : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80'
-      }`}
-    >
+    <button type="button" onClick={onClick} aria-pressed={active} className="explore-sort-pill">
       {label}
     </button>
   );
 }
 
 function VibeCardTile({ user, score }: { user: VibeSummary; score: number | null }) {
-  const gradient = user.vibe_gradient || 'linear-gradient(135deg, #1a1816, #211e1b, #121110)';
-  const ref = asColorRef(user.average_features);
-  const text = getContrastTextColor(ref);
-  const subtle = getSubtleTextColor(ref);
+  // The listener's own gradient is their color; it leads the tile.
+  const gradient = user.vibe_gradient || 'var(--vc-rule-2)';
   const topGenre = user.top_genres?.[0];
-  const halo = text === '#000000' ? 'contrast-halo-dark' : 'contrast-halo-light';
 
   return (
-    <motion.div variants={fadeUp} className="rounded-lg">
-      <Link
-        to={`/${user.spotify_id}`}
-        className="group relative block rounded-lg overflow-hidden aspect-[4/3] shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
-        style={{ background: gradient }}
-      >
-        <motion.div
-          className="absolute inset-0"
-          whileHover={{ scale: 1.04 }}
-          transition={cardSpring}
-        >
-          <div className="absolute inset-0" style={{ background: gradient }} />
-          {/* Top-right compatibility badge — glass */}
-          {score != null && (
-            <div className="glass-dark absolute top-3 right-3 px-2.5 py-1 rounded-md text-xs font-semibold text-white z-10">
-              {score}% match
-            </div>
+    <motion.div variants={fadeUp} className="explore-tile-wrap">
+      <Link to={`/${encodeURIComponent(user.spotify_id)}`} className="explore-tile">
+        <span className="explore-tile-band" style={{ background: gradient }} aria-hidden="true" />
+        <span className="explore-tile-who">
+          {user.avatar_url ? (
+            <img src={user.avatar_url} alt="" />
+          ) : (
+            <span className="explore-tile-initial" aria-hidden="true">{user.display_name?.[0] ?? '?'}</span>
           )}
-
-          <div className="absolute inset-0 p-5 flex flex-col justify-between">
-            {/* Top: avatar + name */}
-            <div className="flex items-center gap-3">
-              {user.avatar_url ? (
-                <img
-                  src={user.avatar_url}
-                  alt=""
-                  className="w-10 h-10 rounded-md border-2 object-cover"
-                  style={{ borderColor: text }}
-                />
-              ) : (
-                <div
-                  className="w-10 h-10 rounded-md flex items-center justify-center text-sm font-bold"
-                  style={{ background: 'rgba(0,0,0,0.25)', color: text }}
-                >
-                  {user.display_name?.[0] ?? '?'}
-                </div>
-              )}
-              <p
-                className={`text-base font-semibold truncate ${halo}`}
-                style={{ color: text }}
-              >
-                {user.display_name}
-              </p>
-            </div>
-
-            {/* Bottom: vibe label + top genre */}
-            <div>
-              <p
-                className={`text-2xl font-bold leading-tight mb-1 ${halo}`}
-                style={{ color: text }}
-              >
-                {user.vibe_label}
-              </p>
-              {topGenre && (
-                <p
-                  className={`text-xs uppercase tracking-wider truncate ${halo}`}
-                  style={{ color: subtle }}
-                >
-                  {topGenre}
-                </p>
-              )}
-            </div>
-          </div>
-        </motion.div>
+          <strong>{user.display_name}</strong>
+          {score != null && <span className="explore-tile-match">{score}% match</span>}
+        </span>
+        <span className="explore-tile-label">{user.vibe_label}</span>
+        {topGenre && <span className="explore-tile-genre">{topGenre}</span>}
       </Link>
     </motion.div>
   );
@@ -277,12 +200,9 @@ function VibeCardTile({ user, score }: { user: VibeSummary; score: number | null
 
 function GridSkeleton() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {Array.from({ length: 9 }).map((_, i) => (
-        <div
-          key={i}
-          className="aspect-[4/3] rounded-lg bg-white/5 animate-pulse"
-        />
+    <div className="explore-grid" aria-busy="true" aria-label="Loading vibes">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="explore-tile explore-tile-skeleton" />
       ))}
     </div>
   );
