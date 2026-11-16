@@ -11,11 +11,16 @@ const PAPER = '#f6f3ea';
 const INK = '#1b1b1b';
 const STORY_W = 1080;
 const STORY_H = 1920;
-const STORY_BG = '#111213';
-const STORY_ACCENT = '#c8323e';
+const STORY_BG = '#0b0b0b';
+const STORY_ACCENT = '#d7ff3f';
+const STORY_ON_ACCENT = '#0b0b0b';
+const DISPLAY_FONT = '"Strummer Display", "Arial Black", Impact, sans-serif';
+// Canvas text only uses a font that has already loaded, and the story is drawn
+// without waiting, so the display face is requested as the page opens.
+document.fonts?.load(`58px ${DISPLAY_FONT}`).catch(() => {});
 const POST_W = 1080;
 const POST_H = 1350;
-const TITLE_FONT = '"Instrument Serif", Georgia, serif';
+const TITLE_FONT = DISPLAY_FONT;
 let current = null;
 let openToken = 0;
 let searchToken = 0;
@@ -219,7 +224,7 @@ function wrapTitle(context, text, maxWidth) {
 async function renderReceipt(receipt, canvas, { title = false } = {}) {
   await document.fonts.load(`${FONT_SIZE}px "JetBrains Mono"`);
   await document.fonts.load(`700 ${FONT_SIZE}px "JetBrains Mono"`);
-  if (title) await document.fonts.load(`italic 96px ${TITLE_FONT}`);
+  if (title) await document.fonts.load(`96px ${TITLE_FONT}`);
   const context = canvas.getContext('2d');
   context.font = `${FONT_SIZE}px "JetBrains Mono", ui-monospace, monospace`;
   const cols = Math.floor((WIDTH - PAD * 2) / context.measureText('M').width);
@@ -254,7 +259,7 @@ async function renderReceipt(receipt, canvas, { title = false } = {}) {
     let size = 132;
     let lines;
     do {
-      context.font = `italic ${size}px ${TITLE_FONT}`;
+      context.font = `${size}px ${TITLE_FONT}`;
       lines = wrapTitle(context, receipt.album, WIDTH - PAD * 2);
       size -= 8;
     } while ((lines.length * size * 1.05 > ART || lines.length > 3) && size > 48);
@@ -423,7 +428,7 @@ find('download').onclick = async () => {
   status('Receipt downloaded.');
 };
 
-// A 9:16 story: the receipt centred, a short header, and a red CTA band at
+// A 9:16 story: the receipt centred, a short header, and a lime CTA band at
 // the bottom that leaves clear space for Instagram's link sticker.
 function storyCanvas() {
   const receipt = find('receipt');
@@ -434,11 +439,11 @@ function storyCanvas() {
   context.fillStyle = STORY_BG;
   context.fillRect(0, 0, STORY_W, STORY_H);
 
-  context.fillStyle = '#f0f0ea';
+  context.fillStyle = '#ffffff';
   context.textAlign = 'center';
   context.textBaseline = 'top';
-  context.font = '700 34px "JetBrains Mono", ui-monospace, monospace';
-  context.fillText('MY ALBUM RECEIPT', STORY_W / 2, 96);
+  context.font = `44px ${DISPLAY_FONT}`;
+  context.fillText('MY ALBUM RECEIPT', STORY_W / 2, 86);
 
   const top = 170;
   const bottomBand = 300;
@@ -457,11 +462,11 @@ function storyCanvas() {
   const bandY = STORY_H - bottomBand;
   context.fillStyle = STORY_ACCENT;
   context.fillRect(0, bandY, STORY_W, bottomBand);
-  context.fillStyle = '#ffffff';
-  context.font = '700 58px "JetBrains Mono", ui-monospace, monospace';
-  context.fillText('MAKE YOURS FREE', STORY_W / 2, bandY + 70);
-  context.font = '400 44px "JetBrains Mono", ui-monospace, monospace';
-  context.fillText(LINK, STORY_W / 2, bandY + 150);
+  context.fillStyle = STORY_ON_ACCENT;
+  context.font = `64px ${DISPLAY_FONT}`;
+  context.fillText('MAKE YOURS FREE', STORY_W / 2, bandY + 62);
+  context.font = '700 42px "JetBrains Mono", ui-monospace, monospace';
+  context.fillText(LINK, STORY_W / 2, bandY + 152);
   return story;
 }
 
