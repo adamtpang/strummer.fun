@@ -39,6 +39,9 @@ const STORY_THEME_KEY = 'strummer-vibe-story-theme';
 const STORY_LAYOUT_KEY = 'strummer-vibe-story-layout';
 const EMPTY_TRACKS: StoryTrack[] = [];
 
+// Canvas copy of the site's display face (see web/chords/tokens.css).
+const DISPLAY_FONT = "'Strummer Display', 'Arial Black', Impact, sans-serif";
+
 const THEMES: Array<{
   id: StoryTheme;
   label: string;
@@ -55,34 +58,34 @@ const THEMES: Array<{
     background: '#17111b',
     foreground: '#f7f4ef',
     muted: 'rgba(247,244,239,0.64)',
-    accent: '#f7f4ef',
+    accent: '#d7ff3f',
   },
   {
     id: 'paper',
     label: 'Paper',
-    swatch: 'linear-gradient(135deg, #f3f0e8 50%, #dc2626 50%)',
+    swatch: 'linear-gradient(135deg, #f3f0e8 50%, #5b3df5 50%)',
     background: '#f3f0e8',
     foreground: '#161412',
     muted: 'rgba(22,20,18,0.62)',
-    accent: '#dc2626',
+    accent: '#5b3df5',
   },
   {
     id: 'night',
     label: 'Night',
-    swatch: 'linear-gradient(135deg, #0a0908 50%, #f5f5f4 50%)',
-    background: '#0a0908',
-    foreground: '#f5f5f4',
-    muted: 'rgba(245,245,244,0.58)',
-    accent: '#dc2626',
+    swatch: 'linear-gradient(135deg, #0b0b0b 50%, #d7ff3f 50%)',
+    background: '#0b0b0b',
+    foreground: '#ffffff',
+    muted: 'rgba(255,255,255,0.66)',
+    accent: '#d7ff3f',
   },
   {
     id: 'signal',
     label: 'Signal',
-    swatch: 'linear-gradient(135deg, #dc2626 50%, #f5f5f4 50%)',
-    background: '#c92222',
-    foreground: '#fffaf4',
-    muted: 'rgba(255,250,244,0.68)',
-    accent: '#0a0908',
+    swatch: 'linear-gradient(135deg, #5b3df5 50%, #d7ff3f 50%)',
+    background: '#5b3df5',
+    foreground: '#ffffff',
+    muted: 'rgba(255,255,255,0.78)',
+    accent: '#d7ff3f',
   },
 ];
 
@@ -278,7 +281,7 @@ export default function StoryGenerator({
                 <Badge variant="outline" className="border-border font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
                   1080 × 1920 PNG
                 </Badge>
-                <Badge className="border-transparent bg-primary/15 text-[#f29a9f] shadow-none hover:bg-primary/15">
+                <Badge className="border-transparent bg-primary/15 text-[var(--studio-playing)] shadow-none hover:bg-primary/15">
                   Instagram ready
                 </Badge>
               </div>
@@ -450,7 +453,7 @@ async function drawStory(input: DrawStoryInput): Promise<string> {
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = input.theme.foreground;
   ctx.textAlign = 'left';
-  ctx.font = '600 34px Inter, Arial, sans-serif';
+  ctx.font = `34px ${DISPLAY_FONT}`;
   ctx.fillText('strummer.fun/vibe', 84, 170);
 
   ctx.textAlign = 'right';
@@ -469,8 +472,8 @@ async function drawStory(input: DrawStoryInput): Promise<string> {
   ctx.fillStyle = input.theme.muted;
   ctx.font = '500 28px Inter, Arial, sans-serif';
   ctx.fillText('MY MUSIC SAYS I AM', 84, 282);
-  drawWrappedText(ctx, input.vibeLabel || 'hard to put in a box', 84, 360, 912, 88, {
-    font: '700 82px Inter, Arial, sans-serif',
+  drawWrappedText(ctx, (input.vibeLabel || 'hard to put in a box').toUpperCase(), 84, 360, 912, 84, {
+    font: `74px ${DISPLAY_FONT}`,
     color: input.theme.foreground,
     maxLines: 2,
   });
@@ -515,7 +518,7 @@ async function paintSpotlight(ctx: CanvasRenderingContext2D, input: DrawStoryInp
   ctx.font = '700 26px Inter, Arial, sans-serif';
   ctx.fillText(`${String(input.featuredRank).padStart(2, '0')}  FEATURED SONG`, 120, 1535);
   drawWrappedText(ctx, track?.name || 'Your top song', 120, 1602, 840, 58, {
-    font: '700 48px Inter, Arial, sans-serif',
+    font: `46px ${DISPLAY_FONT}`,
     color: input.theme.foreground,
     maxLines: 2,
   });
@@ -539,7 +542,7 @@ function paintRanked(ctx: CanvasRenderingContext2D, input: DrawStoryInput) {
     ctx.fillText(String(index + 1).padStart(2, '0'), 84, y + 60);
 
     ctx.fillStyle = input.theme.foreground;
-    ctx.font = '700 42px Inter, Arial, sans-serif';
+    ctx.font = `38px ${DISPLAY_FONT}`;
     ctx.fillText(truncateText(ctx, track.name, 760), 190, y + 52);
     ctx.fillStyle = input.theme.muted;
     ctx.font = '500 29px Inter, Arial, sans-serif';
@@ -567,7 +570,7 @@ function paintBackground(
   if (theme.id === 'vibe') {
     const colors = extractGradientColors(vibeGradient || '').filter(color => isCanvasColor(ctx, color));
     const gradient = ctx.createLinearGradient(0, 0, STORY_WIDTH, STORY_HEIGHT);
-    (colors.length ? colors : ['#5f2d73', '#176b68', '#17111b']).forEach((color, index, all) => {
+    (colors.length ? colors : ['#5b3df5', '#ff5fa2', '#0b0b0b']).forEach((color, index, all) => {
       gradient.addColorStop(index / Math.max(all.length - 1, 1), color);
     });
     ctx.fillStyle = gradient;
