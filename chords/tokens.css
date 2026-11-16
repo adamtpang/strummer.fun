@@ -1,16 +1,87 @@
+/* The display face is self-hosted Archivo Black (OFL, see web/fonts). It is
+   registered for every weight and for italic, so titles written for the old
+   italic serif pick it up upright without changing each rule. */
+@font-face { font-family: 'Strummer Display'; src: url('../fonts/archivo-black.woff2') format('woff2'); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Strummer Display'; src: url('../fonts/archivo-black.woff2') format('woff2'); font-weight: 100 900; font-style: italic; font-display: swap; }
+
+/* Strummer Studio tokens. Every web tool reads these; see web/DESIGN-SYSTEM.md.
+   Names are stable; a route restyles by reading them, not by adding its own. */
 :root {
   color-scheme: dark;
-  --studio-bg: #111213;
-  --studio-surface: #191b1c;
-  --studio-raised: #242729;
-  --studio-text: #f0f0ea;
-  --studio-muted: #a1a8a9;
-  --studio-border: #363a3c;
-  --studio-accent: #c8323e;
-  --studio-playing: #8adbb3;
-  --studio-focus: #f29a9f;
-  --studio-display: 'Instrument Serif', Georgia, serif;
+
+  /* Surfaces, darkest to lightest. Page, section, control, popover. */
+  --studio-bg: #0b0b0b;
+  --studio-surface: #151515;
+  --studio-raised: #1f1f1f;
+  --studio-elevated: #2a2a2a;
+
+  /* Text. Body, secondary, and the step between for longer secondary copy. */
+  --studio-text: #ffffff;
+  --studio-text-soft: #d6d6d6;
+  --studio-muted: #b9b9b9;
+
+  /* Rules and control outlines. */
+  --studio-border: #2c2c2c;
+  --studio-border-strong: #484848;
+
+  /* Lime is the one action color, always with dark text on it. Pink means
+     active or playing, never an action. Violet is the block color for a
+     listener's headline label. */
+  --studio-accent: #d7ff3f;
+  --studio-accent-hover: #e6ff7a;
+  --studio-accent-dim: #5d6f17;
+  --studio-on-accent: #0b0b0b;
+  --studio-playing: #ff5fa2;
+  --studio-focus: #ff9cc6;
+  --studio-danger-text: #ff9aa8;
+  --studio-pop: #5b3df5;
+  --studio-on-pop: #ffffff;
+
+  /* Spotify green appears only on controls that go to Spotify. */
+  --studio-spotify: #1db954;
+  --studio-spotify-hover: #37d56f;
+  --studio-on-spotify: #06190d;
+
+  /* Paper: the one light surface, for printed things (receipts, sample cards). */
+  --studio-paper: #f0f0ea;
+  --studio-paper-text: #222526;
+  --studio-paper-muted: #5c6260;
+  --studio-paper-rule: #cbceca;
+  --studio-paper-accent: #b62b37;
+
+  /* Type. Heavy display for names and titles, sans for controls, mono for
+     numbers. */
+  --studio-display: 'Strummer Display', 'Archivo Black', 'Arial Black', Impact, sans-serif;
   --studio-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --studio-mono: 'JetBrains Mono', ui-monospace, monospace;
-  --studio-radius: 6px;
+  --studio-text-xs: 11px;
+  --studio-text-sm: 13px;
+  --studio-text-md: 14px;
+  --studio-text-lg: 16px;
+  --studio-title-sm: 28px;
+  --studio-title-md: 36px;
+  --studio-title-lg: 48px;
+
+  /* Space, on a 4px grid. */
+  --studio-space-1: 4px;
+  --studio-space-2: 8px;
+  --studio-space-3: 12px;
+  --studio-space-4: 16px;
+  --studio-space-5: 24px;
+  --studio-space-6: 32px;
+  --studio-space-7: 48px;
+  --studio-space-8: 64px;
+
+  /* Shape, targets, motion. */
+  --studio-radius: 10px;
+  --studio-radius-sm: 6px;
+  --studio-radius-pill: 999px;
+  --studio-target: 44px;
+  --studio-measure: 736px;
+  --studio-page: 1060px;
+  --studio-quick: 120ms;
+}
+
+@media (prefers-contrast: more) {
+  :root { --studio-muted: #d1d5d5; --studio-border: #777e80; }
 }

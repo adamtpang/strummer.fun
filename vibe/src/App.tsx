@@ -1,8 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import Home from './pages/Home';
 import { CLIENT_ID } from './utils/spotify-api';
+import { clearSpotifySession, readStoredUser, validateOAuthCallback } from './utils/session';
 import './index.css';
+import { MotionConfig } from 'framer-motion';
+import VibeShell from './components/VibeShell';
 
 // Code-split routes (v2.18) — Home is eager because it's the landing page;
 // everything else lazy-loads on first navigation. Cuts initial bundle from
@@ -13,6 +16,7 @@ const Explore = lazy(() => import('./pages/Explore'));
 const Compare = lazy(() => import('./pages/Compare'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
+const Invite = lazy(() => import('./pages/Invite'));
 
 function RouteFallback() {
   return (
@@ -45,15 +49,12 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const callbackStarted = useRef(false);
 
   useEffect(() => {
+    if (callbackStarted.current) return;
     // Check for existing user data
-    const userData = localStorage.getItem('user_data');
-    const token = localStorage.getItem('access_token');
-
-    if (userData && token) {
-      setUser(JSON.parse(userData));
-    }
+    try { setUser(readStoredUser(localStorage)); } catch { setUser(null); }
 
     // Check for OAuth callback
     const urlParams = new URLSearchParams(window.location.search);
@@ -74,19 +75,19 @@ export default function App() {
     }
 
     if (code) {
-      handleOAuthCallback(code);
+      if (!callbackStarted.current) {
+        callbackStarted.current = true;
+        void handleOAuthCallback(code, urlParams.get('state'));
+      }
     } else {
       setLoading(false);
     }
   }, []);
 
-  const handleOAuthCallback = async (code: string) => {
+  const handleOAuthCallback = async (code: string, state: string | null) => {
     try {
-      const codeVerifier = localStorage.getItem('code_verifier');
-      if (!codeVerifier)
-        throw new Error(
-          'Your sign-in link expired or was opened in a different browser. Tap Connect to start over.'
-        );
+      const codeVerifier = validateOAuthCallback(localStorage, state);
+      window.history.replaceState({}, document.title, BASE);
 
       const response = await fetch('https://accounts.spotify.com/api/token', {
         method: 'POST',
@@ -112,6 +113,8 @@ export default function App() {
       }
 
       localStorage.removeItem('code_verifier');
+      localStorage.removeItem('oauth_state');
+      localStorage.removeItem('oauth_started_at');
 
       // Get user profile
       const userRes = await fetch('https://api.spotify.com/v1/me', {
@@ -139,11 +142,8 @@ export default function App() {
       window.history.replaceState({}, document.title, `${BASE}/${user.id}`);
     } catch (err) {
       console.error('OAuth error:', err);
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('token_expires_at');
-      localStorage.removeItem('user_data');
-      localStorage.removeItem('code_verifier');
+      try { clearSpotifySession(localStorage); } catch { /* Storage can be disabled. */ }
+      setUser(null);
       setAuthError(err instanceof Error ? err.message : 'Something went wrong signing in. Please try again.');
       window.history.replaceState({}, document.title, BASE);
     } finally {
@@ -160,17 +160,22 @@ export default function App() {
   }
 
   return (
+    <MotionConfig reducedMotion="user" transition={{ type: 'spring', stiffness: 320, damping: 36 }}>
     <Router basename={BASE}>
+      <VibeShell user={user}>
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<Home user={user} authError={authError} />} />
           <Route path="/explore" element={<Explore currentUser={user} />} />
+          <Route path="/invite/:inviterId" element={<Invite />} />
           <Route path="/compare/:idA/:idB" element={<Compare currentUser={user} />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/:userId" element={<VibeCard currentUser={user} setUser={setUser} />} />
         </Routes>
       </Suspense>
+      </VibeShell>
     </Router>
+    </MotionConfig>
   );
 }

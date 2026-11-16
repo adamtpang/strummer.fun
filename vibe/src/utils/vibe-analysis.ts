@@ -289,12 +289,12 @@ function metricsToVector(m: VibeMetrics): number[] {
     ];
 }
 
-function isVibeMetrics(x: any): x is VibeMetrics {
+  export function isVibeMetrics(x: any): x is VibeMetrics {
     return (
         x &&
         typeof x === 'object' &&
-        typeof x.mainstream === 'number' &&
-        typeof x.modernity === 'number'
+          ['mainstream', 'modernity', 'diversity', 'recencyShift', 'artistConcentration', 'eraSpread']
+              .every(key => Number.isFinite(x[key]) && x[key] >= 0 && x[key] <= 1)
     );
 }
 

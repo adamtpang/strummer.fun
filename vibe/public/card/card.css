@@ -2,11 +2,11 @@
    No fonts or images are fetched, and nothing comes from Spotify until play.
    Dark by default; light when the visitor's system is light, which is also
    what a host page following the system theme will be showing. */
-:root { color-scheme: dark; --bg: #0a0a0a; --surface: #111113; --line: rgba(255, 255, 255, 0.12); --text: #ffffff; --dim: rgba(255, 255, 255, 0.6); --accent: #60a5fa; --on-accent: #0a0a0a; }
+:root { color-scheme: dark; --bg: #111213; --surface: #191b1c; --line: #363a3c; --text: #f0f0ea; --dim: #a1a8a9; --accent: #c8323e; --on-accent: #ffffff; }
 @media (prefers-color-scheme: light) {
-  :root { color-scheme: light; --bg: #fafafa; --surface: #ffffff; --line: rgba(0, 0, 0, 0.14); --text: #1a1a1a; --dim: rgba(0, 0, 0, 0.62); --accent: #2563eb; --on-accent: #ffffff; }
+  :root { color-scheme: light; --bg: #fafafa; --surface: #ffffff; --line: rgba(0, 0, 0, 0.14); --text: #1a1a1a; --dim: rgba(0, 0, 0, 0.62); --accent: #b32c38; --on-accent: #ffffff; }
 }
-* { box-sizing: border-box; }
+* { box-sizing: border-box; letter-spacing: 0 !important; }
 html, body { margin: 0; }
 body { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 420px); place-content: center; padding: 16px; background: var(--bg); color: var(--text); font: 16px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 .embed body { min-height: 0; display: block; padding: 0; background: transparent; }
@@ -40,3 +40,30 @@ body { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 420px)
 .status { min-height: 1.4em; margin: 10px 0 0; font-size: 14px; color: var(--dim); }
 #preview { display: block; width: 100%; border: 0; margin: 6px 0 4px; }
 .field { display: block; margin: 14px 0 6px; font-size: 13px; color: var(--dim); }
+
+.card, .stage, .stage iframe { border-radius: 8px; }
+.maker-page { --bg: #111213; --surface: #191b1c; --line: #363a3c; --text: #f0f0ea; --dim: #a1a8a9; --accent: #c8323e; color-scheme: dark; display: flex; flex-direction: column; align-items: center; min-height: 100dvh; padding: 0 32px; }
+.maker-header { width: 100%; max-width: 1056px; min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.maker-header a, .maker-footer a { text-decoration: none; color: var(--dim); display: inline-flex; align-items: center; min-height: 44px; }
+.maker-header .maker-brand { font: italic 28px Georgia, serif; color: var(--text); }
+.maker-brand span { color: var(--accent); }
+.maker-brand small { margin-left: 14px; font: 500 16px system-ui, sans-serif; }
+.maker-header nav, .maker-footer nav { display: flex; gap: 24px; font-size: 13px; }
+.maker-page .maker { max-width: 672px; margin: 40px auto 64px; flex: 1; }
+.maker-page .eyebrow { color: var(--dim); text-transform: uppercase; font: 11px ui-monospace, monospace; margin: 0 0 16px; }
+.maker-page h1 { font: 400 40px/1.1 Georgia, serif; }
+.maker-page .lede { font-size: 14px; margin: 16px 0 32px; }
+.maker input, .maker textarea, .maker button { border-radius: 6px; min-height: 44px; }
+.maker button:active { filter: brightness(.85); }
+.maker-footer { width: 100%; max-width: 1056px; border-top: 1px solid var(--line); padding: 20px 0; color: var(--dim); font-size: 12px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.maker-page :focus-visible { outline: 2px solid #f29a9f; outline-offset: 4px; }
+.maker-page { font-family: Inter, system-ui, sans-serif; }
+.maker-page h1, .maker-header .maker-brand { font-family: 'Instrument Serif', Georgia, serif; }
+@media (max-width: 600px) {
+  .maker-page { padding: 0 20px; }
+  .maker-header { padding: 12px 0; flex-wrap: wrap; }
+  .maker-header nav { width: 100%; justify-content: space-between; }
+  .maker-page .maker { margin-top: 28px; }
+  .maker-page h1 { font-size: 34px; }
+  .maker form { flex-direction: column; }
+}

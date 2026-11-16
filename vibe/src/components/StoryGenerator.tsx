@@ -10,6 +10,7 @@ import {
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
+import { fitStoryLines } from '../utils/story-text';
 
 export interface StoryTrack {
   name: string;
@@ -36,6 +37,7 @@ const STORY_WIDTH = 1080;
 const STORY_HEIGHT = 1920;
 const STORY_THEME_KEY = 'strummer-vibe-story-theme';
 const STORY_LAYOUT_KEY = 'strummer-vibe-story-layout';
+const EMPTY_TRACKS: StoryTrack[] = [];
 
 const THEMES: Array<{
   id: StoryTheme;
@@ -86,7 +88,7 @@ const THEMES: Array<{
 
 export default function StoryGenerator({
   user,
-  topTracks = [],
+  topTracks = EMPTY_TRACKS,
   vibeLabel,
   gradient,
   profileUrl,
@@ -94,7 +96,7 @@ export default function StoryGenerator({
   onPublish,
   onClose,
 }: StoryGeneratorProps) {
-  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [returnFocus] = useState(() => document.activeElement instanceof HTMLElement ? document.activeElement : null);
   const [themeId, setThemeId] = useState<StoryTheme>(() =>
     readPreference(STORY_THEME_KEY, ['vibe', 'paper', 'night', 'signal'], 'vibe')
   );
@@ -102,7 +104,7 @@ export default function StoryGenerator({
     readPreference(STORY_LAYOUT_KEY, ['spotlight', 'ranked'], 'spotlight')
   );
   const [featuredIndex, setFeaturedIndex] = useState(0);
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [generated, setGenerated] = useState<{ key: string; image: string; file: File } | null>(null);
   const [rendering, setRendering] = useState(true);
   const [renderAttempt, setRenderAttempt] = useState(0);
   const [sharing, setSharing] = useState(false);
@@ -118,37 +120,47 @@ export default function StoryGenerator({
     () => `${safeFileName(user.display_name || 'my')}-strummer-vibe-story.png`,
     [user.display_name]
   );
+  const renderKey = JSON.stringify([themeId, layout, featuredIndex, gradient, profileUrl,
+    canShareProfile, user.display_name, vibeLabel, topTracks]);
+  const generatedImage = generated?.key === renderKey ? generated.image : null;
 
   useEffect(() => {
-    localStorage.setItem(STORY_THEME_KEY, themeId);
+    try { localStorage.setItem(STORY_THEME_KEY, themeId); } catch { /* Preferences are optional. */ }
   }, [themeId]);
 
   useEffect(() => {
-    localStorage.setItem(STORY_LAYOUT_KEY, layout);
+    try { localStorage.setItem(STORY_LAYOUT_KEY, layout); } catch { /* Preferences are optional. */ }
   }, [layout]);
 
   useEffect(() => {
-    if (!canvas) return;
     let cancelled = false;
     const render = async () => {
       setRendering(true);
       setNotice(null);
       try {
+        const canvas = document.createElement('canvas');
         const image = await drawStory({
           canvas,
           userName: user.display_name,
           vibeLabel,
           topTracks,
           featuredTrack,
-          profileUrl,
+          profileUrl: canShareProfile ? profileUrl : new URL('/vibe/', profileUrl).href,
           theme: selectedTheme,
           layout,
           vibeGradient: gradient,
+          featuredRank: Math.max(1, topTracks.indexOf(featuredTrack) + 1),
         });
-        if (!cancelled) setGeneratedImage(image);
+        const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
+          value => value ? resolve(value) : reject(new Error('Image export failed')), 'image/png'
+        ));
+        if (!cancelled) setGenerated({ key: renderKey, image, file: new File([blob], imageName, { type: 'image/png' }) });
       } catch (error) {
         console.error('Story render failed:', error);
-        if (!cancelled) setNotice('The preview could not render. Choose another look and try again.');
+        if (!cancelled) {
+          setGenerated(null);
+          setNotice('The preview could not render. Choose another look and try again.');
+        }
       } finally {
         if (!cancelled) setRendering(false);
       }
@@ -157,7 +169,7 @@ export default function StoryGenerator({
     return () => {
       cancelled = true;
     };
-  }, [canvas, featuredTrack, gradient, layout, profileUrl, renderAttempt, selectedTheme, topTracks, user.display_name, vibeLabel]);
+  }, [canShareProfile, featuredTrack, gradient, imageName, layout, profileUrl, renderAttempt, renderKey, selectedTheme, topTracks, user.display_name, vibeLabel]);
 
   const downloadImage = () => {
     if (!generatedImage) return;
@@ -169,6 +181,7 @@ export default function StoryGenerator({
   };
 
   const copyProfileLink = async () => {
+    if (!canShareProfile) return;
     try {
       await navigator.clipboard.writeText(profileUrl);
       setNotice('Profile link copied for your Story link sticker.');
@@ -193,29 +206,23 @@ export default function StoryGenerator({
   };
 
   const shareImage = async () => {
-    if (!generatedImage || sharing) return;
-    if (!canShareProfile) {
-      setNotice('Publish your vibe page first so friends can open the link.');
-      return;
-    }
+    if (!generatedImage || !generated || sharing) return;
 
     setSharing(true);
     setNotice(null);
     try {
-      const blob = await (await fetch(generatedImage)).blob();
-      const file = new File([blob], imageName, { type: 'image/png' });
-      await navigator.clipboard?.writeText(profileUrl).catch(() => undefined);
+      const file = generated.file;
 
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           title: `${user.display_name}'s vibe`,
-          text: `get to know me through my music: ${profileUrl}`,
+          text: canShareProfile ? `get to know me through my music: ${profileUrl}` : 'get to know me through my music',
           files: [file],
         });
-        setNotice('Profile link copied too, ready for an Instagram link sticker.');
+        setNotice('Image shared. Your profile visibility has not changed.');
       } else {
         downloadImage();
-        setNotice('Your browser saved the image. Share it from Instagram and paste the copied profile link.');
+        setNotice('Story downloaded. Your profile visibility has not changed.');
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -228,11 +235,10 @@ export default function StoryGenerator({
 
   return (
     <Dialog open onOpenChange={open => !open && onClose()}>
-      <DialogContent className="max-h-[96vh] w-[calc(100%_-_1rem)] max-w-5xl overflow-y-auto border-border bg-background p-0 text-foreground sm:rounded-lg">
+      <DialogContent onCloseAutoFocus={event => { event.preventDefault(); returnFocus?.focus({ preventScroll: true }); }} className="max-h-[96vh] w-[calc(100%_-_1rem)] max-w-5xl overflow-y-auto border-border bg-background p-0 text-foreground sm:rounded-lg">
         <div className="grid min-h-0 lg:grid-cols-[minmax(300px,420px)_minmax(0,1fr)]">
-          <div className="flex min-h-[440px] items-center justify-center border-b border-border bg-black p-5 sm:min-h-[520px] sm:p-7 lg:border-b-0 lg:border-r">
-            <canvas ref={setCanvas} className="hidden" aria-hidden="true" />
-            <div className="relative aspect-[9/16] w-full max-w-[300px] overflow-hidden rounded-md border border-white/10 bg-white/5 shadow-2xl sm:max-w-[320px]">
+          <div className="flex items-center justify-center border-b border-border bg-black p-5 sm:p-7 lg:border-b-0 lg:border-r">
+            <div className="relative aspect-[9/16] w-full max-w-[190px] overflow-hidden rounded-md border border-white/10 bg-white/5 shadow-2xl sm:max-w-[300px]">
               {generatedImage && (
                 <img
                   src={generatedImage}
@@ -272,20 +278,20 @@ export default function StoryGenerator({
                 <Badge variant="outline" className="border-border font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
                   1080 × 1920 PNG
                 </Badge>
-                <Badge className="border-transparent bg-primary/15 text-primary shadow-none hover:bg-primary/15">
+                <Badge className="border-transparent bg-primary/15 text-[#f29a9f] shadow-none hover:bg-primary/15">
                   Instagram ready
                 </Badge>
               </div>
-              <DialogTitle className="text-2xl">Make your Story</DialogTitle>
+              <DialogTitle className="font-serif-accent text-3xl">Make your Story</DialogTitle>
               <DialogDescription className="mt-2 text-muted-foreground">
                 A portrait of your taste, ready to share.
               </DialogDescription>
             </DialogHeader>
 
             <div className="mt-7 space-y-6">
-              <fieldset>
+              <fieldset className="min-w-0">
                 <legend className="eyebrow mb-3">Look</legend>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-label="Story look">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label="Story look">
                   {THEMES.map(theme => {
                     const selected = theme.id === themeId;
                     return (
@@ -293,8 +299,7 @@ export default function StoryGenerator({
                         key={theme.id}
                         type="button"
                         variant="outline"
-                        role="radio"
-                        aria-checked={selected}
+                        aria-pressed={selected}
                         onClick={() => setThemeId(theme.id)}
                         className={`h-auto min-h-16 flex-col gap-2 px-2 py-2 text-xs shadow-none ${
                           selected
@@ -314,7 +319,7 @@ export default function StoryGenerator({
                 </div>
               </fieldset>
 
-              <fieldset>
+              <fieldset className="min-w-0">
                 <legend className="eyebrow mb-3">Layout</legend>
                 <Tabs value={layout} onValueChange={value => setLayout(value as StoryLayout)}>
                   <TabsList className="grid h-11 w-full grid-cols-2 bg-muted">
@@ -325,7 +330,7 @@ export default function StoryGenerator({
               </fieldset>
 
               {layout === 'spotlight' && topTracks.length > 1 && (
-                <fieldset>
+                <fieldset className="min-w-0">
                   <legend className="eyebrow mb-3">Featured song</legend>
                   <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
                     {topTracks.slice(0, 5).map((track, index) => (
@@ -333,6 +338,7 @@ export default function StoryGenerator({
                         key={`${track.name}-${index}`}
                         type="button"
                         variant="ghost"
+                        aria-pressed={featuredIndex === index}
                         onClick={() => setFeaturedIndex(index)}
                         className={`h-auto min-h-12 w-full justify-start gap-3 whitespace-normal px-3 py-2 text-left ${
                           featuredIndex === index ? 'bg-accent text-foreground' : 'text-foreground'
@@ -356,12 +362,12 @@ export default function StoryGenerator({
                 <div className="mb-4 rounded-md border border-border bg-card p-4 text-card-foreground">
                   <p className="text-sm font-medium">Your vibe page is private</p>
                   <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    The image is always yours. Publish the page only when you want friends to open its link.
+                    Sharing an image keeps your page private. Publish only to share your profile link.
                   </p>
                   <Button
                     type="button"
                     onClick={publishProfile}
-                    disabled={publishing}
+                    disabled={publishing || !onPublish}
                     className="mt-3 gap-2"
                   >
                     {publishing && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
@@ -388,6 +394,7 @@ export default function StoryGenerator({
                   variant="outline"
                   size="icon"
                   onClick={copyProfileLink}
+                  disabled={!canShareProfile}
                   className="h-12 w-12"
                   aria-label="Copy profile link"
                   title="Copy profile link"
@@ -425,12 +432,13 @@ interface DrawStoryInput {
   theme: (typeof THEMES)[number];
   layout: StoryLayout;
   vibeGradient?: string;
+  featuredRank: number;
 }
 
 async function drawStory(input: DrawStoryInput): Promise<string> {
   const { canvas } = input;
   if (!canvas) throw new Error('Canvas unavailable');
-  await document.fonts?.ready;
+  await Promise.race([document.fonts?.ready, new Promise(resolve => setTimeout(resolve, 1500))]);
   canvas.width = STORY_WIDTH;
   canvas.height = STORY_HEIGHT;
   const ctx = canvas.getContext('2d');
@@ -464,7 +472,7 @@ async function drawStory(input: DrawStoryInput): Promise<string> {
   drawWrappedText(ctx, input.vibeLabel || 'hard to put in a box', 84, 360, 912, 88, {
     font: '700 82px Inter, Arial, sans-serif',
     color: input.theme.foreground,
-    maxLines: 3,
+    maxLines: 2,
   });
   ctx.fillStyle = input.theme.muted;
   ctx.font = '500 25px Inter, Arial, sans-serif';
@@ -505,7 +513,7 @@ async function paintSpotlight(ctx: CanvasRenderingContext2D, input: DrawStoryInp
   ctx.textAlign = 'left';
   ctx.fillStyle = input.theme.accent;
   ctx.font = '700 26px Inter, Arial, sans-serif';
-  ctx.fillText('01  TOP SONG', 120, 1535);
+  ctx.fillText(`${String(input.featuredRank).padStart(2, '0')}  FEATURED SONG`, 120, 1535);
   drawWrappedText(ctx, track?.name || 'Your top song', 120, 1602, 840, 58, {
     font: '700 48px Inter, Arial, sans-serif',
     color: input.theme.foreground,
@@ -583,17 +591,19 @@ function paintTexture(ctx: CanvasRenderingContext2D, theme: StoryTheme) {
 
 async function loadCanvasImage(url: string): Promise<HTMLImageElement | null> {
   try {
-    const response = await fetch(url, { mode: 'cors' });
+    const response = await fetch(url, { mode: 'cors', signal: AbortSignal.timeout(5000) });
     if (!response.ok) return null;
     const objectUrl = URL.createObjectURL(await response.blob());
-    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = objectUrl;
-    });
-    URL.revokeObjectURL(objectUrl);
-    return image;
+    try {
+      return await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = objectUrl;
+      });
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
   } catch {
     return null;
   }
@@ -611,23 +621,7 @@ function drawWrappedText(
   ctx.font = options.font;
   ctx.fillStyle = options.color;
   ctx.textAlign = 'left';
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let line = '';
-  words.forEach(word => {
-    const candidate = line ? `${line} ${word}` : word;
-    if (ctx.measureText(candidate).width <= maxWidth || !line) {
-      line = candidate;
-    } else {
-      lines.push(line);
-      line = word;
-    }
-  });
-  if (line) lines.push(line);
-  const visible = lines.slice(0, options.maxLines);
-  if (lines.length > options.maxLines) {
-    visible[visible.length - 1] = truncateText(ctx, `${visible[visible.length - 1]}...`, maxWidth);
-  }
+  const visible = fitStoryLines(text, value => ctx.measureText(value).width, maxWidth, options.maxLines);
   visible.forEach((value, index) => ctx.fillText(value, x, y + index * lineHeight));
 }
 

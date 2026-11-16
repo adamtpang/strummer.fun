@@ -37,12 +37,18 @@ test('shapeFor wraps pitch classes and returns null for chords with no shape', (
   assert.equal(shapeFor(1, 'maj7'), null);
 });
 
-test('every greatest progression plays with open shapes in its home key', () => {
+test('every catalog progression has playable shapes; classic defaults need no capo', () => {
   for (const progression of GREATEST) {
     const chords = progression.chords.map(chord => ({ root: rootOf(chord, progression.key), quality: chord[1] }));
     const fit = findCapo(chords);
     assert.ok(fit, `${progression.id} has no playable shapes in ${progression.key}`);
-    assert.equal(fit.capo, 0, `${progression.id} needs a capo in its own home key`);
+    if (!progression.id.startsWith('ult-')) assert.equal(fit.capo, 0, `${progression.id} needs a capo in its own home key`);
+    fit.shapes.forEach((shape, index) => {
+      const pitches = soundedPitchClasses(shape.frets).map(pitch => (pitch + fit.capo) % 12);
+      const chord = chords[index];
+      const expected = INTERVALS[chord.quality].map(interval => (chord.root + interval) % 12);
+      assert.ok(pitches.every(pitch => expected.includes(pitch)), `${progression.id} capo shape has wrong pitches`);
+    });
   }
 });
 

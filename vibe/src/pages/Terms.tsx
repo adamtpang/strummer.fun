@@ -1,19 +1,10 @@
-import { Link } from 'react-router-dom';
-
 const LAST_UPDATED = 'August 27, 2026';
 const CONTACT_EMAIL = 'adamtpang@gmail.com';
 
 export default function Terms() {
   return (
-    <div className="min-h-screen bg-[#0a0908] text-white/80">
-      <div className="max-w-2xl mx-auto px-6 py-16">
-        <Link
-          to="/"
-          className="text-white/40 hover:text-white text-sm font-medium transition-colors inline-block mb-12"
-        >
-          ← Strummer Vibe
-        </Link>
-
+    <div className="text-white/80">
+      <div className="vibe-legal">
         <h1 className="text-4xl font-bold text-white mb-3">Terms of Service</h1>
         <p className="text-white/40 text-sm mb-12">Last updated: {LAST_UPDATED}</p>
 
