@@ -3,8 +3,13 @@ updates:
   - package-ecosystem: npm
     directories:
       - /
+      - /songs
       - /web
+      - /web/api
+      - /web/vibe
       - /vibecheck
+      - /vibecheck/api
+      - /vibecheck/client
     schedule:
       interval: monthly
     open-pull-requests-limit: 5
