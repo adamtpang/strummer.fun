@@ -23,7 +23,7 @@ export default function VibeShell({ user, children }: { user: User | null; child
       <header className="vibe-header">
         <div className="vibe-header-inner">
           <Link to="/" className="vibe-brand" aria-label="Vibe by Strummer">
-            <span className="vibe-brand-parent">strummer<span className="wordmark-dot">.</span></span>
+            <span className="vibe-brand-parent"><img className="brand-mark" src={`${import.meta.env.BASE_URL}guitar.svg`} alt="" width="24" height="24" />strummer<span className="wordmark-dot">.</span></span>
             <span className="vibe-brand-divider" aria-hidden="true" />
             <span>vibe</span>
           </Link>

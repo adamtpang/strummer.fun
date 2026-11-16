@@ -67,3 +67,6 @@ body { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 420px)
   .maker-page h1 { font-size: 34px; }
   .maker form { flex-direction: column; }
 }
+
+/* The guitar that sits before the wordmark. Sized from the wordmark's type. */
+.brand-mark { display: inline-block; height: 0.85em; width: auto; vertical-align: -0.1em; margin-right: 0.3em; }

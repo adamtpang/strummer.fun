@@ -8,6 +8,7 @@ const STRUMMER_STATIC = [
   'tune.html', 'tune.js', 'tune.css', 'analyze.js', 'analyze-ui.js',
   'about.html', 'contact.html', 'privacy.html',
   'robots.txt', 'llms.txt', 'sitemap.xml',
+  'favicon.ico', 'guitar.svg', 'apple-touch-icon.png',
 ];
 
 if (existsSync(OUT)) rmSync(OUT, { recursive: true, force: true });
