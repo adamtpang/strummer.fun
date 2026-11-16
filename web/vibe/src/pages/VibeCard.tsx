@@ -18,7 +18,7 @@ import type { VibeData, VibeSummary } from '../utils/api';
 import StoryGenerator from '../components/StoryGenerator';
 import FriendActions from '../components/FriendActions';
 import { spotifyTrackUrl } from '../utils/invitation';
-import { fadeUp, heroIn, staggerContainer, cardSpring } from '../utils/motion';
+import { fadeUp, heroIn, staggerContainer } from '../utils/motion';
 import { generatePlaylistCover } from '../utils/playlist-cover';
 import { clearSpotifySession } from '../utils/session';
 
@@ -722,7 +722,7 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
       navigate('/');
     } catch (err) {
       console.error('Delete failed:', err);
-      alert('Failed to delete your vibe. Please try again or email adamtpang@gmail.com.');
+      alert('Failed to delete your vibe. Please try again, or write to us from strummer.fun/contact.');
       setDeleting(false);
       setConfirmDelete(false);
     }
@@ -731,11 +731,9 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   // --- Loading State ---
   if (loading && !vibeData) {
     return (
-      <div className="min-h-screen bg-[var(--vc-bg)] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-white border-t-transparent mx-auto mb-4" />
-          <p className="text-white/60">{generating ? 'Analyzing your music...' : 'Loading vibe...'}</p>
-        </div>
+      <div className="profile-state" role="status">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-[var(--vc-fg)] border-t-transparent" aria-hidden="true" />
+        <p>{generating ? 'Analyzing your music...' : 'Loading vibe...'}</p>
       </div>
     );
   }
@@ -743,27 +741,16 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   // --- Error State ---
   if (error && !vibeData) {
     return (
-      <div className="ambient-bg min-h-screen bg-[var(--vc-bg)] flex items-center justify-center px-6">
-        <div className="text-center max-w-md">
-          <h1 className="font-serif-accent text-3xl mb-4">Vibe unavailable</h1>
-          <p className="text-white/70 text-lg mb-6">{error}</p>
-          <div className="flex items-center justify-center gap-3">
-            {isOwner && (
-              <button
-                onClick={() => loadVibe()}
-                disabled={loading || generating}
-                className="rounded-full bg-white/10 hover:bg-white/15 px-5 py-2.5 text-sm font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-50"
-              >
-                {loading || generating ? 'Trying…' : 'Try again'}
-              </button>
-            )}
-            <a
-              href="/vibe"
-              className="rounded-full bg-[#1DB954] hover:bg-[#1ed760] px-5 py-2.5 text-sm font-semibold text-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1DB954] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0908]"
-            >
-              {isOwner ? 'Back home' : 'Create your vibe'}
-            </a>
-          </div>
+      <div className="profile-state">
+        <h1>Vibe unavailable</h1>
+        <p role="alert">{error}</p>
+        <div className="profile-notice-actions">
+          {isOwner && (
+            <button type="button" onClick={() => loadVibe()} disabled={loading || generating} className="friend-secondary">
+              {loading || generating ? 'Trying...' : 'Try again'}
+            </button>
+          )}
+          <a href="/vibe" className="profile-cta">{isOwner ? 'Back home' : 'Make your vibe'}</a>
         </div>
       </div>
     );
@@ -774,20 +761,13 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   // --- Private profile gate (visitor view only) ---
   if (!isOwner && isPrivate) {
     return (
-      <div className="min-h-screen bg-[var(--vc-bg)] flex items-center justify-center px-6">
-        <div className="text-center max-w-md">
-          <LockKeyhole className="mx-auto mb-4" size={32} aria-hidden="true" />
-          <h1 className="text-3xl font-bold text-white mb-2">private vibe</h1>
-          <p className="text-white/50 text-lg mb-8">
-            this person hasn't made their vibe discoverable.
-          </p>
-          <Link
-            to={currentUser ? `/${currentUser.id}` : '/'}
-            className="inline-block bg-[#1DB954] text-black px-8 py-3 rounded-full font-semibold hover:bg-[#1ed760] transition-colors"
-          >
-            {currentUser ? 'Back to My Vibe' : 'Create Your Own'}
-          </Link>
-        </div>
+      <div className="profile-state">
+        <LockKeyhole size={32} aria-hidden="true" />
+        <h1>Private vibe</h1>
+        <p>This person hasn't made their vibe public.</p>
+        <Link to={currentUser ? `/${currentUser.id}` : '/'} className="profile-cta">
+          {currentUser ? 'Back to my vibe' : 'Make your vibe'}
+        </Link>
       </div>
     );
   }
@@ -797,8 +777,6 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
   const gradient = vibeData.vibe_gradient || 'linear-gradient(135deg, #1a1816, #211e1b, #121110)';
   // Detect new metric shape vs legacy audio-features shape
   const isNewMetrics = features.mainstream != null;
-  const textColor = '#f0f0ea';
-  const subtleColor = '#a1a8a9';
   // When a time-range tab is active (owner only), swap in that range's
   // freshly-fetched data; otherwise show the aggregated saved data.
   const activeRange = isOwner && timeRange ? rangeData[timeRange] : null;
@@ -837,11 +815,6 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         { label: 'Acoustic', value: features.acousticness ?? 0 },
       ];
 
-  // Halo class for text rendered directly over the vibe gradient — keeps it
-  // legible regardless of where the gradient passes through tones close to
-  // the chosen text color.
-  const haloClass = 'contrast-halo-light';
-
   return (
     <div className="bg-[var(--vc-bg)]">
       <motion.div
@@ -851,42 +824,15 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
         animate="animate"
       >
 
-        {/* Now Playing — owner only, shows a live pulsing pill at the top */}
+        {/* Now playing, owner only */}
         {isOwner && nowPlaying && nowPlaying.isPlaying && (
-          <motion.a
-            variants={fadeUp}
-            href={nowPlaying.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.99 }}
-            transition={cardSpring}
-            className="glass-dark flex items-center gap-3 mb-6 p-3 rounded-lg"
-          >
-            {nowPlaying.albumArt && (
-              <img
-                src={nowPlaying.albumArt}
-                alt=""
-                className="w-12 h-12 rounded-lg flex-shrink-0"
-              />
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#1DB954' }} />
-                  <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#1DB954' }} />
-                </span>
-                <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: subtleColor }}>
-                  now playing
-                </span>
-              </div>
-              <p className="text-sm font-semibold truncate" style={{ color: textColor }}>
-                {nowPlaying.name}
-              </p>
-              <p className="text-xs truncate" style={{ color: subtleColor }}>
-                {nowPlaying.artist}
-              </p>
-            </div>
+          <motion.a variants={fadeUp} href={nowPlaying.url} target="_blank" rel="noopener noreferrer" className="profile-now">
+            {nowPlaying.albumArt && <img src={nowPlaying.albumArt} alt="" />}
+            <span className="profile-row-text">
+              <span className="profile-now-tag"><span className="profile-now-dot" aria-hidden="true" />Now playing</span>
+              <strong>{nowPlaying.name}</strong>
+              <span>{nowPlaying.artist}</span>
+            </span>
           </motion.a>
         )}
 
@@ -904,38 +850,25 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
           <Instagram size={18} aria-hidden="true" /> Make an Instagram Story
         </button>
 
-        {/* Compatibility (only when logged-in viewer is looking at someone else) */}
+        {/* Match (only when a signed-in viewer is looking at someone else) */}
         {!isOwner && currentUser && compatibilityScore != null && (
           <motion.div variants={fadeUp}>
-          <Link
-            to={`/compare/${currentUser.id}/${userId}`}
-            className="block mb-10 rounded-lg p-5 text-center transition-transform hover:scale-[1.02]"
-            style={{
-              background: `${textColor}10`,
-              border: `1px solid ${textColor}20`,
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-            }}
-          >
-            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: subtleColor }}>
-              your vibe match
-            </p>
-            <p className="text-5xl font-bold mb-1" style={{ color: textColor }}>
-              {compatibilityScore}%
-            </p>
-            <p className="text-sm mb-2" style={{ color: subtleColor }}>
-              {compatibilityScore >= 85
-                ? 'you two are basically the same person'
-                : compatibilityScore >= 70
-                ? 'serious overlap — make a joint playlist'
-                : compatibilityScore >= 50
-                ? 'some shared territory'
-                : 'opposites attract'}
-            </p>
-            <p className="text-xs font-medium" style={{ color: textColor }}>
-              see full breakdown →
-            </p>
-          </Link>
+            <Link to={`/compare/${currentUser.id}/${userId}`} className="profile-match">
+              <span className="profile-match-value">{compatibilityScore}%</span>
+              <span className="profile-match-text">
+                <strong>Your music match</strong>
+                <span>
+                  {compatibilityScore >= 85
+                    ? 'You two are basically the same listener.'
+                    : compatibilityScore >= 70
+                    ? 'Serious overlap. Make a joint playlist.'
+                    : compatibilityScore >= 50
+                    ? 'Some shared territory.'
+                    : 'Different favorites. Plenty to discover.'}
+                </span>
+              </span>
+              <span className="profile-match-more">See the breakdown</span>
+            </Link>
           </motion.div>
         )}
 
@@ -962,114 +895,60 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
           ))}
         </motion.div>
 
-        {/* Library stats — owner only, two compact stat cards */}
+        {/* Library stats, owner only */}
         {isOwner && libraryStats && (libraryStats.tracks > 0 || libraryStats.albums > 0) && (
-          <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 mb-10">
+          <motion.div variants={fadeUp} className="profile-stats">
             {[
-              { label: 'Saved Songs', value: libraryStats.tracks },
-              { label: 'Saved Albums', value: libraryStats.albums },
+              { label: 'Saved songs', value: libraryStats.tracks },
+              { label: 'Saved albums', value: libraryStats.albums },
             ].map(stat => (
-              <div
-                key={stat.label}
-                className="rounded-lg p-4 text-center"
-                style={{
-                  background: `${textColor}08`,
-                  border: `1px solid ${textColor}15`,
-                  backdropFilter: 'blur(14px)',
-                  WebkitBackdropFilter: 'blur(14px)',
-                }}
-              >
-                <div
-                  className={`text-3xl font-semibold tabular-nums ${haloClass}`}
-                  style={{ color: textColor, letterSpacing: '-0.02em' }}
-                >
-                  {stat.value.toLocaleString()}
-                </div>
-                <div
-                  className={`text-[10px] uppercase tracking-[0.18em] mt-1 ${haloClass}`}
-                  style={{ color: subtleColor }}
-                >
-                  {stat.label}
-                </div>
+              <div key={stat.label} className="vibe-meter">
+                <span className="vibe-meter-value">{stat.value.toLocaleString()}</span>
+                <span className="vibe-meter-label">{stat.label}</span>
               </div>
             ))}
           </motion.div>
         )}
 
-        {/* Time-range tabs (owner only) — toggle which range's top tracks
-            and artists render below. Defaults off (shows aggregated). */}
+        {/* Time-range tabs (owner only): which window the lists below show.
+            Defaults to the saved, combined vibe. */}
         {isOwner && (
-          <motion.div
-            variants={fadeUp}
-            className="flex items-center gap-1.5 mb-6 justify-center flex-wrap"
-          >
-            <span
-              className="text-[10px] uppercase tracking-[0.2em] mr-2"
-              style={{ color: subtleColor }}
-            >
-              View
-            </span>
+          <motion.div variants={fadeUp} className="profile-tabs" role="group" aria-label="Time range">
             {(
               [
-                { key: null, label: 'My Vibe' },
-                { key: 'short_term' as TimeRange, label: '4 Weeks' },
-                { key: 'medium_term' as TimeRange, label: '6 Months' },
-                { key: 'long_term' as TimeRange, label: '1 Year' },
+                { key: null, label: 'My vibe' },
+                { key: 'short_term' as TimeRange, label: '4 weeks' },
+                { key: 'medium_term' as TimeRange, label: '6 months' },
+                { key: 'long_term' as TimeRange, label: '1 year' },
               ]
-            ).map(opt => {
-              const active = timeRange === opt.key;
-              return (
-                <button
-                  key={opt.label}
-                  aria-pressed={active}
-                  onClick={() => (opt.key ? handleTimeRange(opt.key) : setTimeRange(null))}
-                  disabled={rangeLoading}
-                  className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all disabled:opacity-50 ${haloClass}`}
-                  style={{
-                    background: active ? textColor : `${textColor}12`,
-                    color: active ? ('#111213') : textColor,
-                    border: `1px solid ${textColor}25`,
-                  }}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
+            ).map(opt => (
+              <button
+                key={opt.label}
+                type="button"
+                aria-pressed={timeRange === opt.key}
+                onClick={() => (opt.key ? handleTimeRange(opt.key) : setTimeRange(null))}
+                disabled={rangeLoading}
+                className="explore-sort-pill"
+              >
+                {opt.label}
+              </button>
+            ))}
           </motion.div>
         )}
 
-        {/* Top 5 Tracks */}
+        {/* Top tracks */}
         {topTracks.length > 0 && (
-          <motion.div
-            variants={fadeUp}
-            className="mb-10 p-5 rounded-lg"
-            style={{
-              background: `${textColor}08`,
-              border: `1px solid ${textColor}15`,
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            }}
-          >
-            <h2 className="text-sm uppercase tracking-widest mb-4" style={{ color: subtleColor }}>
-              The songs in this vibe
-            </h2>
-            <div className="space-y-3">
+          <motion.section variants={fadeUp} className="profile-section">
+            <h2>The songs in this vibe</h2>
+            <ol className="profile-rows">
               {topTracks.slice(0, tracksExpanded ? topTracks.length : 5).map((track: any, i: number) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="text-lg font-bold w-6" style={{ color: subtleColor }}>
-                    {i + 1}
+                <li key={i} className="profile-row">
+                  <span className="profile-row-rank">{i + 1}</span>
+                  {track.albumArt && <img src={track.albumArt} alt="" />}
+                  <span className="profile-row-text">
+                    <strong>{track.name}</strong>
+                    <span>{track.artist}</span>
                   </span>
-                  {track.albumArt && (
-                    <img src={track.albumArt} alt="" className="w-12 h-12 rounded" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate" style={{ color: textColor }}>
-                      {track.name}
-                    </p>
-                    <p className="text-sm truncate" style={{ color: subtleColor }}>
-                      {track.artist}
-                    </p>
-                  </div>
                   {spotifyTrackUrl(track) && <a className="friend-listen" href={spotifyTrackUrl(track)!} target="_blank" rel="noopener noreferrer" aria-label={`Listen to ${track.name} on Spotify`} title={`Listen to ${track.name} on Spotify`}><Play size={18} aria-hidden="true" /></a>}
                   {/* Handoff to /tune. Passes song + artist only: chords and key
                       are NOT sent, because Spotify does not expose them (the
@@ -1078,186 +957,95 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                       chords already saved for that song. */}
                   <a
                     href={`/tune?song=${encodeURIComponent(track.name)}&artist=${encodeURIComponent(track.artist)}`}
-                    className="shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] text-xs px-3 rounded-full border transition-opacity hover:opacity-70"
-                    style={{ color: subtleColor, borderColor: `${textColor}25` }}
+                    className="profile-chip"
                     title={`Learn ${track.name} on guitar`}
                   >
-                    chords
+                    Chords
                   </a>
-                </div>
+                </li>
               ))}
-            </div>
+            </ol>
             {topTracks.length > 5 && <button type="button" className="friend-secondary mt-4" aria-expanded={tracksExpanded} onClick={() => setTracksExpanded(!tracksExpanded)}>{tracksExpanded ? 'Show fewer songs' : `Show all ${topTracks.length} songs`}</button>}
-          </motion.div>
+          </motion.section>
         )}
 
-        {/* Top Artists */}
+        {/* Top artists */}
         {topArtists.length > 0 && (
-          <motion.div
-            variants={fadeUp}
-            className="mb-10 p-5 rounded-lg"
-            style={{
-              background: `${textColor}08`,
-              border: `1px solid ${textColor}15`,
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            }}
-          >
-            <h2 className="text-sm uppercase tracking-widest mb-4" style={{ color: subtleColor }}>
-              Top Artists
-            </h2>
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+          <motion.section variants={fadeUp} className="profile-section">
+            <h2>Top artists</h2>
+            <div className="profile-artists">
               {topArtists.slice(0, 10).map((artist, i) => (
                 <a
                   key={artist.id}
                   href={artist.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group block text-center"
+                  className="profile-artist"
                   title={artist.genres?.slice(0, 3).join(', ') || ''}
                 >
-                  <div className="relative">
-                    {artist.image ? (
-                      <img
-                        src={artist.image}
-                        alt={artist.name}
-                        className="w-full aspect-square rounded-full object-cover mb-2 transition-transform group-hover:scale-105"
-                        style={{ border: `2px solid ${textColor}20` }}
-                      />
-                    ) : (
-                      <div
-                        className="w-full aspect-square rounded-full mb-2 flex items-center justify-center text-xl font-bold"
-                        style={{ background: `${textColor}15`, color: textColor }}
-                      >
-                        {artist.name?.[0] ?? '?'}
-                      </div>
-                    )}
-                    <span
-                      className="absolute -top-1 -left-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
-                      style={{
-                        background: `${textColor}`,
-                        color: '#111213',
-                      }}
-                    >
-                      {i + 1}
-                    </span>
-                  </div>
-                  <p
-                    className="text-xs font-semibold truncate leading-tight"
-                    style={{ color: textColor }}
-                  >
-                    {artist.name}
-                  </p>
-                </a>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Top Genres — ranked by artist frequency in the active window, the
-            statsforspotify-style breakdown (distinct from the tag pills under
-            the vibe label above, which only show the top 4). */}
-        {rangeGenres.length > 0 && (
-          <motion.div
-            variants={fadeUp}
-            className="mb-10 p-5 rounded-lg"
-            style={{
-              background: `${textColor}08`,
-              border: `1px solid ${textColor}15`,
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            }}
-          >
-            <h2 className="text-sm uppercase tracking-widest mb-4" style={{ color: subtleColor }}>
-              Top Genres
-            </h2>
-            <div className="space-y-2.5">
-              {rangeGenres.map((genre, i) => (
-                <div key={genre} className="flex items-center gap-3">
-                  <span className="text-lg font-bold w-6" style={{ color: `${textColor}40` }}>
-                    {i + 1}
-                  </span>
-                  <span className="font-medium capitalize" style={{ color: textColor }}>
-                    {genre}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Recently Played (owner only) — last 10 tracks scrobbled to Spotify */}
-        {isOwner && recentlyPlayed.length > 0 && (
-          <motion.div
-            variants={fadeUp}
-            className="mb-10 p-5 rounded-lg"
-            style={{
-              background: `${textColor}08`,
-              border: `1px solid ${textColor}15`,
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            }}
-          >
-            <h2 className="text-sm uppercase tracking-widest mb-4" style={{ color: subtleColor }}>
-              Recently Played
-            </h2>
-            <div className="space-y-2">
-              {recentlyPlayed.slice(0, 6).map((track, i) => (
-                <a
-                  key={`${track.url}-${i}`}
-                  href={track.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-white/5"
-                >
-                  {track.albumArt && (
-                    <img src={track.albumArt} alt="" className="w-10 h-10 rounded flex-shrink-0" />
+                  {artist.image ? (
+                    <img src={artist.image} alt="" />
+                  ) : (
+                    <span className="profile-artist-initial" aria-hidden="true">{artist.name?.[0] ?? '?'}</span>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: textColor }}>
-                      {track.name}
-                    </p>
-                    <p className="text-xs truncate" style={{ color: subtleColor }}>
-                      {track.artist}
-                    </p>
-                  </div>
-                  <span className="text-[10px] uppercase tracking-widest flex-shrink-0" style={{ color: subtleColor }}>
-                    {formatTimeAgo(track.playedAt)}
-                  </span>
+                  <span className="profile-artist-rank">{i + 1}</span>
+                  <span className="profile-artist-name">{artist.name}</span>
                 </a>
               ))}
             </div>
-          </motion.div>
+          </motion.section>
         )}
 
-        {/* Reconnect Spotify nudge — surfaces when an existing token lacks
-            the v2.14 scopes (so now-playing / recently-played 401/403'd) */}
+        {/* Top genres: ranked by artist frequency in the active window
+            (distinct from the tags under the vibe label, which show four). */}
+        {rangeGenres.length > 0 && (
+          <motion.section variants={fadeUp} className="profile-section">
+            <h2>Top genres</h2>
+            <ol className="profile-rows">
+              {rangeGenres.map((genre, i) => (
+                <li key={genre} className="profile-row">
+                  <span className="profile-row-rank">{i + 1}</span>
+                  <span className="capitalize">{genre}</span>
+                </li>
+              ))}
+            </ol>
+          </motion.section>
+        )}
+
+        {/* Recently played, owner only */}
+        {isOwner && recentlyPlayed.length > 0 && (
+          <motion.section variants={fadeUp} className="profile-section">
+            <h2>Recently played</h2>
+            <div className="profile-rows">
+              {recentlyPlayed.slice(0, 6).map((track, i) => (
+                <a key={`${track.url}-${i}`} href={track.url} target="_blank" rel="noopener noreferrer" className="profile-row profile-row-link">
+                  {track.albumArt && <img src={track.albumArt} alt="" />}
+                  <span className="profile-row-text">
+                    <strong>{track.name}</strong>
+                    <span>{track.artist}</span>
+                  </span>
+                  <span className="profile-row-time">{formatTimeAgo(track.playedAt)}</span>
+                </a>
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        {/* Reconnect Spotify: shown when an existing token lacks the scopes
+            for now-playing and recently-played. */}
         {isOwner && needsReconnect && (
-          <div
-            className="mb-10 px-4 py-3 rounded-lg text-sm flex items-center justify-between gap-3"
-            style={{
-              background: `${textColor}10`,
-              border: `1px solid ${textColor}25`,
-              color: textColor,
-            }}
-          >
-            <span>
-              Reconnect Spotify to unlock now-playing and recently-played.
-            </span>
-            <button
-              onClick={handleReconnect}
-              className="flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#1DB954] text-black hover:bg-[#1ed760] transition-colors"
-            >
-              Reconnect
-            </button>
+          <div className="profile-notice">
+            <p>Reconnect Spotify to unlock now playing and recently played.</p>
+            <button type="button" onClick={handleReconnect} className="profile-cta">Reconnect</button>
           </div>
         )}
 
-        {/* Spotify Playlist Embed */}
+        {/* Spotify playlist embed */}
         {isOwner && vibeData.playlist_id && (
           <div className="mb-10 rounded-lg overflow-hidden">
             <iframe
               src={`https://open.spotify.com/embed/playlist/${vibeData.playlist_id}?utm_source=generator&theme=0`}
+              title="Your playlist on Spotify"
               width="100%"
               height="352"
               frameBorder="0"
@@ -1268,18 +1056,13 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
           </div>
         )}
 
-        {/* Spotify playlist — opt-in (owner only). We don't touch the user's
+        {/* Spotify playlist, opt-in (owner only). We don't touch the user's
             account until they ask; this makes it their explicit choice. */}
         {isOwner && (
-          <div
-            className="mb-10 px-4 py-4 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-            style={{ background: `${textColor}10`, border: `1px solid ${textColor}22` }}
-          >
-            <div className="text-sm" style={{ color: textColor }}>
-              <p className="font-medium">
-                {vibeData.playlist_id ? 'Your living ult is on Spotify' : 'Build your living ult'}
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: subtleColor }}>
+          <div className="profile-notice">
+            <div>
+              <p><strong>{vibeData.playlist_id ? 'Your living ult is on Spotify' : 'Build your living ult'}</strong></p>
+              <p className="profile-notice-sub">
                 {vibeData.playlist_id
                   ? playlistSynced
                     ? 'Synced with your newest taste across 4 weeks, 6 months, and 1 year.'
@@ -1287,225 +1070,97 @@ export default function VibeCard({ currentUser, setUser }: VibeCardProps) {
                   : 'Ranks your last 4 weeks, 6 months, and 1 year into one private playlist.'}
               </p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="profile-notice-actions">
               {vibeData.playlist_id && (
-                <a
-                  href={`https://open.spotify.com/playlist/${vibeData.playlist_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-full px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2"
-                  style={{ background: `${textColor}14`, color: textColor }}
-                >
+                <a href={`https://open.spotify.com/playlist/${vibeData.playlist_id}`} target="_blank" rel="noopener noreferrer" className="friend-secondary">
                   Open
                 </a>
               )}
-              <button
-                onClick={createSpotifyPlaylist}
-                disabled={playlistCreating}
-                className="rounded-full bg-[#1DB954] hover:bg-[#1ed760] px-4 py-2 text-sm font-semibold text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1DB954] focus-visible:ring-offset-2"
-                style={{ ['--tw-ring-offset-color' as any]: '#0a0908' }}
-              >
-                {playlistCreating
-                  ? 'Merging…'
-                  : vibeData.playlist_id
-                    ? 'Sync now'
-                    : 'Create my ult'}
+              <button type="button" onClick={createSpotifyPlaylist} disabled={playlistCreating} className="profile-cta">
+                {playlistCreating ? 'Merging...' : vibeData.playlist_id ? 'Sync now' : 'Create my ult'}
               </button>
             </div>
           </div>
         )}
         {isOwner && playlistError && (
-          <div
-            className="mb-10 px-4 py-3 rounded-lg text-sm"
-            style={{ background: '#dc262618', border: '1px solid #dc262640', color: '#fca5a5' }}
-          >
-            Couldn't save the playlist this time — your vibe itself is safe. Try again in a moment.
-          </div>
+          <p role="alert" className="vibe-alert mb-8">
+            Couldn't save the playlist this time. Your vibe itself is safe. Try again in a moment.
+          </p>
         )}
 
-        {/* Vibe Twins (owner only) — your most-compatible public users */}
+        {/* Vibe twins (owner only): your closest public listeners */}
         {isOwner && twins.length > 0 && (
-          <div className="mb-10">
-            <div className="flex items-baseline justify-between mb-4">
-              <h2 className="text-sm uppercase tracking-widest" style={{ color: subtleColor }}>
-                Your Vibe Twins
-              </h2>
-              <Link
-                to="/explore"
-                className="text-xs font-medium hover:underline"
-                style={{ color: subtleColor }}
-              >
-                see all →
-              </Link>
+          <section className="profile-section">
+            <div className="profile-section-head">
+              <h2>Your vibe twins</h2>
+              <Link to="/explore">See all</Link>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="explore-grid profile-twins">
               {twins.map(({ user, score }) => (
-                <Link
-                  key={user.spotify_id}
-                  to={`/${user.spotify_id}`}
-                  className="block rounded-lg overflow-hidden aspect-[3/4] relative transition-transform hover:scale-[1.03]"
-                  style={{ background: user.vibe_gradient || gradient }}
-                >
-                  <div
-                    className="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-bold backdrop-blur-md"
-                    style={{
-                      background: 'rgba(0,0,0,0.4)',
-                      color: '#fff',
-                      border: '1px solid rgba(255,255,255,0.25)',
-                    }}
-                  >
-                    {score}%
-                  </div>
-                  <div className="absolute inset-0 p-3 flex flex-col justify-end">
-                    <p className="text-white text-xs font-semibold truncate drop-shadow">
-                      {user.display_name}
-                    </p>
-                    <p className="text-white/80 text-[11px] truncate drop-shadow">
-                      {user.vibe_label}
-                    </p>
-                  </div>
+                <Link key={user.spotify_id} to={`/${encodeURIComponent(user.spotify_id)}`} className="explore-tile">
+                  <span className="explore-tile-band" style={{ background: user.vibe_gradient || gradient }} aria-hidden="true" />
+                  <span className="explore-tile-who">
+                    <strong>{user.display_name}</strong>
+                    <span className="explore-tile-match">{score}%</span>
+                  </span>
+                  <span className="explore-tile-label">{user.vibe_label}</span>
                 </Link>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
         {/* Actions */}
-        <div className="flex flex-col gap-3">
-          <div className="flex gap-3">
-            {isOwner && vibeData.playlist_id && (
-              <a
-                href={`https://open.spotify.com/playlist/${vibeData.playlist_id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex min-h-12 flex-1 items-center justify-center rounded-md border px-3 text-center text-sm font-medium transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2"
-                style={{ borderColor: `${textColor}40`, color: textColor }}
-              >
-                Open in Spotify
-              </a>
-            )}
-            <button
-              type="button"
-              onClick={handleShare}
-              disabled={isPrivate}
-              className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2"
-              style={{ borderColor: `${textColor}40`, color: textColor }}
-            >
-              <Link2 className="h-4 w-4" aria-hidden="true" />
-              {isPrivate ? 'Profile is private' : copied ? 'Copied' : 'Share profile'}
-            </button>
-          </div>
+        <div className="profile-section profile-footer">
+          <button type="button" onClick={handleShare} disabled={isPrivate} className="friend-secondary">
+            <Link2 className="h-4 w-4" aria-hidden="true" />
+            {isPrivate ? 'Profile is private' : copied ? 'Copied' : 'Share profile'}
+          </button>
 
           {isOwner && (
-            <>
-              <div className="profile-actions mt-2">
-                <button
-                  onClick={() => generateVibe(false)}
-                  disabled={generating}
-                  className="flex-1 py-2 rounded-md text-sm font-medium border transition-all duration-200 disabled:opacity-50"
-                  style={{ borderColor: `${textColor}20`, color: subtleColor }}
-                >
-                  {generating ? 'Refreshing...' : 'Refresh Vibe'}
-                </button>
-                <button
-                  onClick={handleTogglePrivacy}
-                  disabled={savingPrivacy}
-                  className="py-2 px-4 rounded-md text-sm font-medium border transition-all duration-200 disabled:opacity-50"
-                  style={{ borderColor: `${textColor}20`, color: subtleColor }}
-                  title={isPrivate ? 'Currently hidden from /explore' : 'Currently visible in /explore'}
-                >
-                  {savingPrivacy ? 'Saving...' : isPrivate ? 'Private' : 'Public'}
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="py-2 px-4 rounded-md text-sm font-medium transition-all duration-200"
-                  style={{ color: subtleColor }}
-                >
-                  Logout
-                </button>
-              </div>
-            </>
-          )}
-
-          {!isOwner && (
-            <div className="flex gap-3">
-              <Link
-                to="/explore"
-                className="flex-1 py-3 rounded-full font-medium text-center border transition-all duration-200"
-                style={{ borderColor: `${textColor}40`, color: textColor }}
+            <div className="profile-actions">
+              <button type="button" onClick={() => generateVibe(false)} disabled={generating} className="friend-secondary">
+                {generating ? 'Refreshing...' : 'Refresh vibe'}
+              </button>
+              <button
+                type="button"
+                onClick={handleTogglePrivacy}
+                disabled={savingPrivacy}
+                className="friend-secondary"
+                title={isPrivate ? 'Currently hidden from Explore' : 'Currently visible in Explore'}
               >
-                Explore
-              </Link>
-              <Link
-                to={currentUser ? `/${currentUser.id}` : '/'}
-                className="flex-1 py-3 rounded-full font-medium text-center border transition-all duration-200"
-                style={{ borderColor: `${textColor}40`, color: textColor }}
-              >
-                {currentUser ? 'My Vibe' : 'Create Yours'}
-              </Link>
+                {savingPrivacy ? 'Saving...' : isPrivate ? 'Make public' : 'Make private'}
+              </button>
+              <button type="button" onClick={handleLogout} className="friend-secondary">Log out</button>
             </div>
           )}
 
-          {isOwner && (
-            <Link
-              to="/explore"
-              className="w-full py-3 rounded-full font-medium text-center border transition-all duration-200 block mt-2"
-              style={{ borderColor: `${textColor}30`, color: subtleColor }}
-            >
-              Explore Other Vibes
-            </Link>
-          )}
+          {!isOwner && !currentUser && <Link to="/" className="friend-secondary">Make your own vibe</Link>}
 
-          {/* Danger zone — owner-only, intentionally low-emphasis */}
+          {/* Danger zone, owner only, intentionally low-emphasis */}
           {isOwner && (
-            <div className="mt-6 pt-6 border-t" style={{ borderColor: `${textColor}15` }}>
-              {!confirmDelete ? (
-                <button
-                  onClick={() => setConfirmDelete(true)}
-                  className="w-full py-2 rounded-md text-xs font-medium transition-colors"
-                  style={{ color: `${textColor}40` }}
-                >
-                  Delete my vibe
-                </button>
-              ) : (
-                <div
-                  className="px-4 py-4 rounded-lg text-center"
-                  style={{
-                    background: `${textColor}08`,
-                    border: `1px solid ${textColor}20`,
-                  }}
-                >
-                  <p className="text-sm mb-3" style={{ color: textColor }}>
-                    This permanently removes your vibe from our database.
-                  </p>
-                  <p className="text-xs mb-4" style={{ color: subtleColor }}>
-                    Your Spotify account isn't affected — you can always come
-                    back and generate a new one.
-                  </p>
-                  <div className="flex gap-2 justify-center">
-                    <button
-                      onClick={handleDelete}
-                      disabled={deleting}
-                      className="px-4 py-2 rounded-md text-xs font-semibold bg-red-500/80 text-white hover:bg-red-500 transition-colors disabled:opacity-50"
-                    >
-                      {deleting ? 'Deleting...' : 'Yes, delete it'}
-                    </button>
-                    <button
-                      onClick={() => setConfirmDelete(false)}
-                      disabled={deleting}
-                      className="px-4 py-2 rounded-md text-xs font-medium border disabled:opacity-50"
-                      style={{ borderColor: `${textColor}30`, color: textColor }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
+            !confirmDelete ? (
+              <button type="button" onClick={() => setConfirmDelete(true)} className="profile-danger">
+                Delete my vibe
+              </button>
+            ) : (
+              <div className="profile-notice" role="alertdialog" aria-label="Delete my vibe">
+                <div>
+                  <p><strong>This permanently removes your vibe from our database.</strong></p>
+                  <p className="profile-notice-sub">Your Spotify account isn't affected. You can always come back and make a new one.</p>
                 </div>
-              )}
-            </div>
+                <div className="profile-notice-actions">
+                  <button type="button" onClick={handleDelete} disabled={deleting} className="profile-cta profile-delete">
+                    {deleting ? 'Deleting...' : 'Yes, delete it'}
+                  </button>
+                  <button type="button" onClick={() => setConfirmDelete(false)} disabled={deleting} className="friend-secondary">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )
           )}
         </div>
-
-
       </motion.div>
 
       {/* Story Generator */}
