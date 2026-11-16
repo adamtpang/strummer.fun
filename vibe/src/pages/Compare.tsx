@@ -8,8 +8,7 @@ import { calculateCompatBreakdown, isVibeMetrics } from '../utils/vibe-analysis'
 import CopyLink from '../components/CopyLink';
 import { comparisonPath } from '../utils/invitation';
 import type { CompatBreakdown } from '../utils/vibe-analysis';
-import { getContrastTextColor, asColorRef } from '../utils/vibe-colors';
-import { fadeUp, heroIn, staggerContainer, cardSpring, easeOutQuart } from '../utils/motion';
+import { fadeUp, heroIn, staggerContainer, easeOutQuart } from '../utils/motion';
 
 interface CompareProps {
   currentUser: User | null;
@@ -112,115 +111,65 @@ export default function Compare({ currentUser }: CompareProps) {
         initial="initial"
         animate="animate"
       >
-        <div className="vibe-page-heading"><div><p className="eyebrow mb-3">Common ground</p><h1>Compare vibes</h1></div></div>
-        {/* Tiny nav */}
-        <motion.div variants={fadeUp} className="flex items-center justify-between mb-6">
-          <Link
-            to="/explore"
-            className="text-white/50 hover:text-white text-sm font-medium transition-colors"
-          >
-            ← explore
-          </Link>
+        <div className="vibe-page-heading">
+          <div><p className="eyebrow mb-3">Common ground</p><h1>Compare vibes</h1></div>
           {bothPublic && <CopyLink url={`${window.location.origin}/vibe${comparisonPath(a.spotify_id, b.spotify_id)}`} label="Copy comparison link" />}
-        </motion.div>
+        </div>
         {!bothPublic && <p className="friend-note mb-6">This comparison is private. Both profiles must be published before a friend can open it. <Link className="underline" to={`/${currentUser?.id}`}>Review your profile</Link></p>}
 
-        {/* Headline — score scales in with shimmer, serif accent on % */}
-        {breakdown ? <motion.div variants={heroIn} className="text-center mb-10 sm:mb-12">
-          <p className="text-white/50 text-[10px] uppercase tracking-[0.25em] mb-3">
-            Music taste match
-          </p>
-          <motion.div
+        {/* The score, as the page's one loud block */}
+        {breakdown ? <motion.div variants={heroIn} className="compare-score">
+          <p className="compare-score-label">Music taste match</p>
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.18, ease: easeOutQuart }}
-            className="text-6xl sm:text-7xl font-bold leading-none mb-3 shimmer-text tabular-nums tracking-tighter"
+            className="compare-score-value"
           >
-            {breakdown.score}
-            <span className="font-serif-accent italic text-white/85" style={{ fontWeight: 400 }}>
-              %
-            </span>
-          </motion.div>
-          <p className="text-white/75 text-base sm:text-lg max-w-md mx-auto">{verdict}</p>
-          <p className="friend-note mt-4">A playful similarity estimate, not a measure of personal compatibility.</p>
+            {breakdown.score}%
+          </motion.p>
+          <p className="compare-score-verdict">{verdict}</p>
         </motion.div> : <p className="friend-note mb-8">Not enough listening data for a score yet. You can still explore each other's songs.</p>}
+        {breakdown && <p className="friend-note compare-caveat">A playful similarity estimate, not a measure of personal compatibility.</p>}
 
-        {/* Side-by-side cards */}
-        <motion.div
-          variants={fadeUp}
-          className="grid grid-cols-2 gap-3 sm:gap-4 mb-8"
-        >
+        {/* The two listeners */}
+        <motion.div variants={fadeUp} className="compare-people">
           <CompareCard vibe={a} />
           <CompareCard vibe={b} />
         </motion.div>
 
         {/* Breakdown bars — glass container */}
-        {breakdown && <motion.div variants={fadeUp} className="border-y border-[var(--vc-rule)] mb-8 py-6 space-y-4">
+        {breakdown && <motion.div variants={fadeUp} className="compare-section space-y-4">
           <BreakdownBar label="Listening-pattern similarity" value={breakdown.audio} />
           <BreakdownBar label="Genre overlap" value={breakdown.genre} />
           <details className="friend-method"><summary>What goes into this score?</summary><p>70% compares six listening patterns: popularity, release era, genre diversity, changes in recent listening, artist concentration, and era spread. 30% is overlap between saved top genres. It uses saved profiles, not audio analysis or a count of identical songs.</p></details>
         </motion.div>}
 
-        {/* Headline feature */}
-        {headline && (
-          <motion.div
-            variants={fadeUp}
-            className="mb-8 py-4 text-center"
-          >
-            <p className="text-white text-base sm:text-lg">{headline}</p>
+        {/* What they share */}
+        {(headline || (breakdown && breakdown.sharedGenres.length > 0)) && (
+          <motion.div variants={fadeUp} className="compare-section">
+            {headline && <p className="compare-headline">{headline}</p>}
+            {breakdown && breakdown.sharedGenres.length > 0 && (
+              <>
+                <p className="eyebrow mb-3">Shared genres ({breakdown.sharedGenres.length})</p>
+                <ul className="compare-genres">
+                  {breakdown.sharedGenres.slice(0, 8).map(g => <li key={g}>{g}</li>)}
+                </ul>
+              </>
+            )}
           </motion.div>
         )}
 
-        {/* Shared genres */}
-        {breakdown && breakdown.sharedGenres.length > 0 && (
-          <motion.div variants={fadeUp} className="mb-8">
-            <p className="text-white/50 text-xs uppercase tracking-widest mb-3 text-center">
-              shared genres ({breakdown.sharedGenres.length})
-            </p>
-            <motion.div
-              className="flex flex-wrap gap-2 justify-center"
-              variants={staggerContainer}
-              initial="initial"
-              animate="animate"
-            >
-              {breakdown.sharedGenres.slice(0, 8).map(g => (
-                <motion.span
-                  key={g}
-                  variants={fadeUp}
-                  whileHover={{ scale: 1.05, y: -1 }}
-                  transition={cardSpring}
-                  className="glass px-3 py-1 rounded-md text-xs font-medium text-white"
-                >
-                  {g}
-                </motion.span>
-              ))}
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* CTAs */}
-        <div className="friend-profile-links">
-          <Link className="friend-secondary" to={`/${encodeURIComponent(a.spotify_id)}`}>Hear {a.display_name}'s songs</Link>
-          <Link className="friend-secondary" to={`/${encodeURIComponent(b.spotify_id)}`}>Hear {b.display_name}'s songs</Link>
-        </div>
-        <motion.div
-          variants={fadeUp}
-          className="flex flex-col sm:flex-row gap-3 justify-center mb-12"
-        >
+        {/* Next steps */}
+        <motion.div variants={fadeUp} className="compare-actions">
+          <Link to="/" className="profile-share-button">
+            {currentUser ? 'My Vibe' : 'Make Your Vibe'}
+          </Link>
           {currentUser && currentUser.id !== idA && currentUser.id !== idB && (
-            <Link
-              to={`/compare/${currentUser.id}/${idA}`}
-              className="glass px-6 py-3 rounded-md font-medium text-center text-white hover:bg-white/10 transition-colors"
-            >
+            <Link to={`/compare/${currentUser.id}/${idA}`} className="friend-secondary">
               Compare me with {a.display_name}
             </Link>
           )}
-          <Link
-            to="/"
-            className="px-6 py-3 rounded-full font-semibold text-center bg-[var(--vc-accent)] text-[var(--studio-on-accent)] hover:opacity-90 transition-colors"
-          >
-            {currentUser ? 'My Vibe' : 'Make Your Vibe'}
-          </Link>
         </motion.div>
       </motion.div>
     </div>
@@ -230,63 +179,23 @@ export default function Compare({ currentUser }: CompareProps) {
 // --- Subcomponents ---
 
 function CompareCard({ vibe }: { vibe: VibeData }) {
-  const gradient = vibe.vibe_gradient || 'linear-gradient(135deg, #1a1816, #211e1b, #121110)';
-  const text = getContrastTextColor(asColorRef(vibe.average_features));
-  const halo = text === '#000000' ? 'contrast-halo-dark' : 'contrast-halo-light';
+  // The listener's own gradient is their color; it marks the card's edge.
+  const gradient = vibe.vibe_gradient || 'var(--vc-rule-2)';
 
   return (
-    <Link
-      to={`/${vibe.spotify_id}`}
-      className="group relative block rounded-lg overflow-hidden aspect-[4/5] sm:aspect-[3/4] transition-transform hover:scale-[1.02]"
-      style={{ background: gradient }}
-    >
-      <div className="absolute inset-0 p-3 sm:p-5 flex flex-col">
-        {/* Top */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {vibe.avatar_url ? (
-            <img
-              src={vibe.avatar_url}
-              alt=""
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-md border-2 object-cover flex-shrink-0"
-              style={{ borderColor: text }}
-            />
-          ) : (
-            <div
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-md flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0"
-              style={{ background: 'rgba(0,0,0,0.25)', color: text }}
-            >
-              {vibe.display_name?.[0] ?? '?'}
-            </div>
-          )}
-          <p
-            className={`text-sm sm:text-base font-semibold min-w-0 break-words ${halo}`}
-            style={{ color: text }}
-          >
-            {vibe.display_name}
-          </p>
-        </div>
-
-        {/* Middle: vibe label */}
-        <div className="flex-1 flex items-center justify-center text-center">
-          <p
-            className={`text-lg sm:text-2xl font-bold leading-tight ${halo}`}
-            style={{ color: text }}
-          >
-            {vibe.vibe_label}
-          </p>
-        </div>
-
-        {/* Bottom: top genre */}
-        {vibe.top_genres?.[0] && (
-          <p
-            className={`text-[10px] sm:text-xs uppercase tracking-widest text-center truncate ${halo}`}
-            style={{ color: `${text}90` }}
-          >
-            {vibe.top_genres[0]}
-          </p>
+    <Link to={`/${encodeURIComponent(vibe.spotify_id)}`} className="compare-person">
+      <span className="compare-person-edge" style={{ background: gradient }} aria-hidden="true" />
+      <span className="compare-person-who">
+        {vibe.avatar_url ? (
+          <img src={vibe.avatar_url} alt="" />
+        ) : (
+          <span className="compare-person-initial" aria-hidden="true">{vibe.display_name?.[0] ?? '?'}</span>
         )}
-      </div>
-
+        <strong>{vibe.display_name}</strong>
+      </span>
+      <span className="compare-person-label">{vibe.vibe_label}</span>
+      {vibe.top_genres?.[0] && <span className="compare-person-genre">{vibe.top_genres[0]}</span>}
+      <span className="compare-person-link">Hear {vibe.display_name}'s songs</span>
     </Link>
   );
 }
@@ -295,10 +204,10 @@ function BreakdownBar({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1.5">
-        <span className="text-white/60 text-sm">{label}</span>
-        <span className="text-white font-semibold text-sm">{value}%</span>
+        <span className="text-[var(--vc-muted)] text-sm">{label}</span>
+        <span className="font-mono-stat text-sm">{value}%</span>
       </div>
-      <div className="relative h-2 w-full rounded-md bg-white/10 overflow-hidden">
+      <div className="relative h-2 w-full rounded-md bg-[var(--vc-rule)] overflow-hidden">
         <div
           className="absolute left-0 top-0 h-full rounded-md bg-[var(--studio-playing)] transition-all duration-700"
           style={{ width: `${value}%` }}
@@ -312,23 +221,23 @@ function BreakdownBar({ label, value }: { label: string; value: number }) {
 
 function pickVerdict(b: CompatBreakdown): string {
   if (b.score >= 90) return 'A lot of familiar ground in your listening.';
-  if (b.score >= 80) return 'serious overlap. make a joint playlist.';
-  if (b.score >= 70) return 'a lot in common. you\'d share aux without fighting.';
-  if (b.score >= 55) return 'some shared territory, some surprises.';
+  if (b.score >= 80) return 'Serious overlap. Make a joint playlist.';
+  if (b.score >= 70) return 'A lot in common. You\'d share the aux without fighting.';
+  if (b.score >= 55) return 'Some shared territory, some surprises.';
   if (b.score >= 40) return 'Different favorites. Plenty to discover.';
-  if (b.score >= 25) return 'opposites. could go either way.';
-  return 'parallel universes.';
+  if (b.score >= 25) return 'Opposites. Could go either way.';
+  return 'Parallel universes.';
 }
 
 function pickHeadlineFeature(b: CompatBreakdown): string | null {
   // Pick the dimension with the smallest delta (most aligned) and surface it
   // as a "you both ___" line. Skips if nothing is meaningfully close.
   const features: Array<[keyof CompatBreakdown['featureDeltas'], string, string]> = [
-    ['mainstream', 'mainstream-ness', 'you both pull from the same chart territory'],
-    ['modernity', 'era', 'you both live in the same musical decade'],
-    ['diversity', 'breadth', 'your genre spreads basically mirror each other'],
-    ['recencyShift', 'discovery rate', 'you both update your taste at the same pace'],
-    ['eraSpread', 'time-range', 'you both stretch across the same eras'],
+    ['mainstream', 'mainstream-ness', 'You both pull from the same chart territory'],
+    ['modernity', 'era', 'You both live in the same musical decade'],
+    ['diversity', 'breadth', 'Your genre spreads basically mirror each other'],
+    ['recencyShift', 'discovery rate', 'You both update your taste at the same pace'],
+    ['eraSpread', 'time-range', 'You both stretch across the same eras'],
   ];
 
   const sorted = features
@@ -337,5 +246,5 @@ function pickHeadlineFeature(b: CompatBreakdown): string | null {
 
   const top = sorted[0];
   if (!top || top.delta > 0.12) return null;
-  return `${top.copy}: within ${(top.delta * 100).toFixed(0)} pts.`;
+  return `${top.copy}, within ${(top.delta * 100).toFixed(0)} points.`;
 }
